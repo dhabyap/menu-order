@@ -1,4 +1,4 @@
-Menu Order Prototype
+# Menu Order Prototype
 
 Web pemesanan minuman berbasis menu digital dengan katalog, keranjang, dan checkout WhatsApp/Telegram.
 
