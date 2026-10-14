@@ -1,6 +1,6 @@
-# Website-Pacar (Menu Order Prototype)
+Menu Order Prototype
 
-Web pemesanan minuman/pacar berbasis menu digital dengan katalog, keranjang, dan checkout WhatsApp/Telegram.
+Web pemesanan minuman berbasis menu digital dengan katalog, keranjang, dan checkout WhatsApp/Telegram.
 
 ## Ringkasan
 
