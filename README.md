@@ -1,40 +1,52 @@
-# Menu Order Prototype
+# Racik Tea — Prototype Pemesanan Digital
 
-Web pemesanan minuman berbasis menu digital dengan katalog, keranjang, dan checkout WhatsApp/Telegram.
+Prototype web pemesanan minuman Racik Tea. Pelanggan dapat menjelajahi menu, menyesuaikan minuman, mengatur pesanan, lalu menyiapkan checkout melalui WhatsApp. Dashboard pengelola menyediakan contoh pengelolaan menu dan ringkasan pesanan.
 
-## Ringkasan
-
-- **Prototype utama:** `menu-order-prototype.html`
-- **PRD:** `PRD_V2.md`
-- **Brief:** `PROJECT_BRIEF.md`
-- **Repo:** https://github.com/dhabyap/menu-order
-
-## Deploy
+## Demo
 
 - **GitHub Pages:** https://dhabyap.github.io/menu-order/menu-order-prototype.html
-- **Lokal:** buka `menu-order-prototype.html` di browser.
+- **Jalankan lokal:** buka `menu-order-prototype.html` di browser.
 
-## Stack
+## Berkas
 
-- Single-file HTML prototype dengan CSS dan JavaScript murni.
-- Mockup data menu di dalam file; data tersimpan di localStorage.
-- Tidak memakai backend sampai versi produksi Laravel.
+- [`menu-order-prototype.html`](./menu-order-prototype.html) — aplikasi prototype dalam satu file HTML.
+- [`PRD_V2.md`](./PRD_V2.md) — dokumen kebutuhan produk.
 
-## Fitur saat ini
+## Fitur
 
-- Katalog menu dengan kategori Artisan Tea dan Basic tea.
-- Pencarian dan filter kategori.
-- Keranjang persisten (localStorage).
-- Checkout WhatsApp dan Telegram (mock prototype).
-- Dashboard admin: overview, menu & kategori, pesanan, pengaturan.
-- Mobile-friendly: drawer keranjang, kategori sticky, tabel admin scrollable.
+### Pemesanan pelanggan
 
-## Status
+- Katalog menu dengan pencarian dan filter kategori.
+- Penyesuaian pilihan minuman, seperti ukuran, tingkat kemanisan, dan penyajian.
+- Keranjang dengan pengaturan jumlah, catatan, serta pilihan ambil di kedai atau antar.
+- Formulir data pemesan yang tersimpan otomatis di browser.
+- Rincian pesanan dapat disalin atau disiapkan untuk dikirim melalui WhatsApp.
+- Tampilan responsif untuk perangkat desktop dan mobile.
+- Modal dan drawer dengan latar belakang blur, dukungan keyboard, dan penguncian scroll saat terbuka.
 
-- Prototype interaktif sudah siap.
-- Integrasi WhatsApp/Telegram dan backend Laravel belum terhubung.
-- Admin dashboard saat ini menggunakan penyimpanan lokal sebagai contoh.
+### Dashboard pengelola
+
+- Ringkasan jumlah pesanan, menu tersedia/habis, dan estimasi omzet.
+- Tambah, edit, hapus, serta ubah ketersediaan menu.
+- Tabel menu dan riwayat pesanan untuk demonstrasi.
+
+## Teknologi dan penyimpanan
+
+- HTML, CSS, dan JavaScript murni; tidak memerlukan proses build atau instalasi dependensi.
+- Data menu, keranjang, profil pelanggan, dan pesanan disimpan di `localStorage` browser.
+- Tidak ada backend atau sinkronisasi data antarperangkat. Menghapus data browser akan menghapus data prototype yang tersimpan.
+
+## Batasan prototype
+
+- Dashboard pengelola hanya contoh antarmuka lokal dan belum dilindungi autentikasi.
+- Checkout mencatat pesanan di browser dan membuka WhatsApp dengan rincian pesanan; belum ada pemrosesan pembayaran atau konfirmasi pesanan dari server.
+- Nomor WhatsApp tujuan pada kode masih berupa nomor contoh dan perlu disesuaikan sebelum digunakan.
+- Harga ongkos antar dan data pesanan hanya untuk demonstrasi.
+
+## Pengembangan
+
+Edit `menu-order-prototype.html`, lalu buka kembali file tersebut di browser untuk melihat perubahan.
 
 ## Lisensi
 
-Proprietary untuk uso internal hingga distandarkan.
+Prototype ini ditujukan untuk penggunaan internal dan evaluasi produk.
