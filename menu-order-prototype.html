@@ -35,6 +35,16 @@
       --safe-bottom: max(16px, env(safe-area-inset-bottom, 16px));
     }
 
+    .btn-sm-step {
+      width: 34px;
+      height: 34px;
+    }
+
+    .btn-remove {
+      min-height: 36px;
+      padding: 6px 8px;
+    }
+
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -141,6 +151,11 @@
       padding: 5px 10px;
       border-radius: 99px;
       font-weight: 600;
+    }
+
+    .badge-demo {
+      color: #80581f;
+      background: var(--gold-light);
     }
 
     .btn-admin {
@@ -502,7 +517,21 @@
       font: bold 15px "Fraunces", serif;
       margin: 0 0 4px;
       color: var(--ink);
-      cursor: pointer;
+    }
+
+    .prod-title-button {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+    }
+
+    .prod-title-button:hover {
+      color: var(--green);
     }
 
     .desc {
@@ -619,6 +648,7 @@
 
     /* Floating Bottom Cart Bar */
     .float-cart {
+      width: calc(100% - 32px);
       position: fixed;
       left: 16px;
       right: 16px;
@@ -635,6 +665,9 @@
       transition: transform 0.2s ease;
       max-width: 560px;
       margin: auto;
+      border: 0;
+      font: inherit;
+      text-align: left;
     }
 
     .float-cart:active {
@@ -992,6 +1025,13 @@
       transform: scale(0.98);
     }
 
+    .btn-primary-action:disabled,
+    .btn-sec-action:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      box-shadow: none;
+    }
+
     .checkout-sub-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1103,6 +1143,12 @@
       gap: 8px;
     }
 
+    .group-option-list {
+      display: grid;
+      grid-template-columns: inherit;
+      gap: inherit;
+    }
+
     .btn-opt-card {
       border: 1px solid var(--line);
       background: #fff;
@@ -1122,7 +1168,8 @@
       font-weight: 700;
     }
 
-    .btn-opt-card:hover {
+    .btn-opt-card:hover,
+    .btn-opt-card:focus-visible {
       border-color: #a8b6a5;
     }
 
@@ -1207,6 +1254,85 @@
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 12px;
       margin: 18px 0;
+    }
+
+    .checkout-hint {
+      margin: 9px 2px 0;
+      color: var(--muted);
+      font-size: 10.5px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .field-hint {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10.5px;
+    }
+
+    .field-error {
+      display: block;
+      min-height: 0;
+      margin-top: 4px;
+      color: var(--rose);
+      font-size: 11px;
+    }
+
+    .field-error:empty {
+      display: none;
+    }
+
+    .field.has-error input,
+    .field.has-error textarea {
+      border-color: var(--rose);
+      box-shadow: 0 0 0 2px rgba(168, 86, 74, 0.1);
+    }
+
+    .cart-line-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .cart-line-actions .cart-stepper-row {
+      margin-top: 0;
+    }
+
+    .btn-edit-line {
+      min-height: 36px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--green);
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+
+    .prototype-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 16px 0 0;
+      padding: 10px 12px;
+      border: 1px solid #eddfc5;
+      border-radius: 12px;
+      background: #fff9ed;
+      color: #6d542c;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .prototype-notice strong {
+      white-space: nowrap;
+    }
+
+    .modal-note {
+      flex: 0 0 auto;
+      padding: 0 20px 14px;
     }
 
     .stat-card {
@@ -1324,6 +1450,10 @@
       .group-options {
         grid-template-columns: 1fr;
       }
+
+      .group-option-list {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 520px) {
@@ -1388,6 +1518,10 @@
         padding: 14px 18px;
       }
 
+      .modal-note {
+        padding: 0 18px 12px;
+      }
+
       .modal-foot {
         padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
       }
@@ -1426,7 +1560,7 @@
         </div>
       </div>
       <div class="top-actions">
-        <span class="badge-open" id="statusBadge">● Buka Hari Ini</span>
+        <span class="badge-open badge-demo" id="statusBadge">Demo Prototype</span>
         <button class="btn-cart-top" id="topCartBtn">
           <span>Keranjang</span>
           <span id="topCartCount"
@@ -1452,10 +1586,15 @@
           </div>
         </div>
         <div class="promo-box">
-          <b>Pesan Cepat via WhatsApp</b>
-          <span>Pilih es, gula, dan varian. Checkout langsung terhubung ke kasir tanpa akun berbelit.</span>
+          <b>Pesan dengan mudah</b>
+          <span>Pilih menu dan variannya. Rincian pesanan akan disiapkan sebagai draft WhatsApp.</span>
         </div>
       </section>
+
+      <div class="prototype-notice" role="note">
+        <strong>Mode demo</strong>
+        <span>Menu dan draft tersimpan di browser ini saja. Nomor WhatsApp, harga, dan ongkir masih contoh. Draft belum terkirim sampai kamu menekan Kirim di WhatsApp.</span>
+      </div>
 
       <!-- Catalog Sticky Tools -->
       <section class="catalog-tools">
@@ -1475,15 +1614,14 @@
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px">
         <div>
           <h1 style="font: bold 28px 'Fraunces', serif; margin: 0">Dashboard Pengelola</h1>
-          <p style="color: var(--muted); font-size: 12px; margin: 2px 0 0">Kelola stok menu, pantau pesanan masuk, dan
-            atur info toko.</p>
+          <p style="color: var(--muted); font-size: 12px; margin: 2px 0 0">Kelola contoh menu dan tinjau draft WhatsApp yang tersimpan di browser ini.</p>
         </div>
         <button class="btn-add" id="btnAdminBack" style="height: 38px">← Kembali ke Menu</button>
       </div>
 
       <div class="admin-stats">
         <div class="stat-card">
-          <span>Total Pesanan</span>
+          <span>Draft Lokal</span>
           <b id="statTotalOrders">0</b>
         </div>
         <div class="stat-card">
@@ -1495,7 +1633,7 @@
           <b id="statSoldOutMenu">0</b>
         </div>
         <div class="stat-card">
-          <span>Estimasi Omzet</span>
+          <span>Nilai Pesanan (demo)</span>
           <b id="statRevenue">Rp0</b>
         </div>
       </div>
@@ -1519,7 +1657,7 @@
         </table>
       </div>
 
-      <h2 style="font: bold 18px 'Fraunces', serif; margin: 32px 0 12px">Riwayat Pesanan Masuk</h2>
+      <h2 style="font: bold 18px 'Fraunces', serif; margin: 32px 0 12px">Draft Pesanan di Browser Ini</h2>
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -1539,7 +1677,7 @@
   </div>
 
   <!-- Floating Bottom Cart Bar -->
-  <div class="float-cart" id="floatingCart" style="display: none">
+  <button class="float-cart" id="floatingCart" type="button" aria-label="Buka keranjang pesanan" style="display: none">
     <div class="float-info">
       <div class="cart-badge" id="floatBadge">0</div>
       <div>
@@ -1551,7 +1689,7 @@
       <span class="float-total" id="floatTotal">Rp0</span>
       <span>→</span>
     </div>
-  </div>
+  </button>
 
   <!-- Cart Drawer / Bottom Sheet -->
   <div class="drawer-backdrop" id="cartBackdrop"></div>
@@ -1569,30 +1707,31 @@
 
       <div
         style="background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 14px">
-        <span style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 10px">Data Pemesan (Tersimpan
-          Otomatis)</span>
+        <span style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px">Data Pemesan</span>
+        <span class="field-hint" style="margin-bottom: 10px">Tersimpan hanya di browser/perangkat ini.</span>
 
         <div class="field">
           <label>Metode Pengambilan</label>
           <div class="service-toggle">
-            <button class="btn-srv active" data-srv="Ambil Sendiri" id="srvPickup">Ambil di Kedai (~12m)</button>
-            <button class="btn-srv" data-srv="Antar" id="srvDelivery">Antar (+Rp8.000)</button>
+            <button class="btn-srv active" type="button" data-srv="Ambil Sendiri" id="srvPickup" aria-pressed="true">Ambil di Kedai (~12m)</button>
+            <button class="btn-srv" type="button" data-srv="Antar" id="srvDelivery" aria-pressed="false">Antar (demo +Rp8.000)</button>
           </div>
         </div>
 
         <div class="field">
           <label for="inputName">Nama Kamu *</label>
-          <input type="text" id="inputName" placeholder="Contoh: Rian" />
+          <input type="text" id="inputName" autocomplete="name" maxlength="80" placeholder="Contoh: Rian" />
         </div>
 
-        <div class="field">
+        <div class="field" id="fieldPhone">
           <label for="inputPhone">Nomor WhatsApp *</label>
-          <input type="tel" id="inputPhone" placeholder="0812xxxxxxxx" />
+          <input type="tel" id="inputPhone" autocomplete="tel" inputmode="tel" aria-describedby="phoneError" placeholder="Contoh: 0812 3456 7890" />
+          <span class="field-error" id="phoneError" aria-live="polite"></span>
         </div>
 
         <div class="field" id="fieldAddress" style="display: none">
           <label for="inputAddress">Alamat Pengantaran *</label>
-          <textarea id="inputAddress" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
+          <textarea id="inputAddress" autocomplete="street-address" maxlength="240" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
         </div>
 
         <div class="field">
@@ -1619,10 +1758,12 @@
         <span id="cartGrandTotal" style="color: var(--green); font-variant-numeric: tabular-nums">Rp0</span>
       </div>
 
+      <p id="checkoutFeedback" class="checkout-hint" role="status" aria-live="polite" style="margin: -6px 0 8px"></p>
       <button class="btn-primary-action" id="btnCheckoutWA">
         <span>Kirim Pesanan via WhatsApp</span>
         <span id="btnCheckoutTotal">Rp0</span>
       </button>
+      <p class="checkout-hint" id="checkoutHint">WhatsApp akan terbuka dengan draft pesanan. Tekan Kirim di WhatsApp untuk mengirimkannya ke kedai.</p>
       <div class="checkout-sub-actions">
         <button class="btn-sec-action" id="btnCopyOrder">Salin Format Teks</button>
         <button class="btn-sec-action" id="btnClearCart" style="color: var(--rose)">Kosongkan</button>
@@ -1641,11 +1782,17 @@
         <button class="btn-close" id="btnCloseModal" type="button" aria-label="Tutup penyesuaian menu">×</button>
       </div>
       <div class="modal-scroll" id="modalOptionsBody"></div>
+      <div class="modal-note">
+        <div class="field" style="margin-bottom: 0">
+          <label for="customItemNote">Catatan untuk minuman ini (opsional)</label>
+          <textarea id="customItemNote" rows="2" maxlength="120" placeholder="Contoh: es dipisah, jangan pakai sedotan"></textarea>
+        </div>
+      </div>
       <div class="modal-foot">
         <div class="modal-stepper">
-          <button id="modalQtyMinus">−</button>
-          <span id="modalQtyVal">1</span>
-          <button id="modalQtyPlus">+</button>
+          <button type="button" id="modalQtyMinus" aria-label="Kurangi jumlah">−</button>
+          <span id="modalQtyVal" aria-live="polite">1</span>
+          <button type="button" id="modalQtyPlus" aria-label="Tambah jumlah">+</button>
         </div>
         <button class="btn-primary-action" id="btnConfirmCustom" style="flex: 1">
           <span>Tambah ke Pesanan</span>
@@ -1765,7 +1912,23 @@
     </div>
   </div>
 
-  <div id="toastRoot"></div>
+  <div class="modal-wrap" id="removeCartItemModal" aria-hidden="true" inert>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="removeCartItemTitle" aria-describedby="removeCartItemText" style="width: min(400px, 100%)">
+      <div class="modal-head">
+        <div>
+          <h3 id="removeCartItemTitle">Hapus Menu dari Pesanan?</h3>
+          <p id="removeCartItemText">Menu ini akan dihapus dari keranjang.</p>
+        </div>
+        <button class="btn-close" id="btnCloseRemoveCartItem" type="button" aria-label="Tutup konfirmasi hapus menu">×</button>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-sec-action" id="btnCancelRemoveCartItem" type="button">Batal</button>
+        <button class="btn-danger-action" id="btnConfirmRemoveCartItem" type="button">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastRoot" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     // --- Data Initializer ---
@@ -2027,6 +2190,8 @@
     let currentCustomItem = null;
     let currentCustomOpts = {};
     let currentCustomQty = 1;
+    let editingCartIndex = null;
+    let removingCartIndex = null;
     const activeLayers = [];
     const layerReturnFocus = new WeakMap();
 
@@ -2054,6 +2219,14 @@
         );
         if (target && !target.disabled) target.focus({ preventScroll: true });
       });
+    }
+
+    function resetCatalog() {
+      activeCategory = "Semua";
+      searchQuery = "";
+      document.getElementById("searchInput").value = "";
+      renderCategories();
+      renderProducts();
     }
 
     function closeLayer(layer) {
@@ -2100,6 +2273,7 @@
         menuEditorModal: closeMenuEditor,
         deleteMenuModal: closeDeleteMenu,
         clearCartModal: closeClearCart,
+        removeCartItemModal: closeRemoveCartItem,
       };
       closeById[layer.id]?.();
     }
@@ -2153,7 +2327,7 @@
     function renderCategories() {
       const cats = ["Semua", ...new Set(products.map((p) => p.category))];
       const nav = document.getElementById("categoryNav");
-      nav.innerHTML = cats.map((c) => `<button class="cat-btn ${c === activeCategory ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+      nav.innerHTML = cats.map((c) => `<button type="button" class="cat-btn ${c === activeCategory ? "active" : ""}" data-cat="${esc(c)}" aria-pressed="${c === activeCategory}">${esc(c)}</button>`).join("");
       nav.querySelectorAll("[data-cat]").forEach((b) => {
         b.onclick = () => {
           activeCategory = b.dataset.cat;
@@ -2175,9 +2349,10 @@
       });
 
       if (!filtered.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border-radius:16px;border:1px solid var(--line)">
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border-radius:16px;border:1px solid var(--line)" role="status">
       <b style="font-size:15px">Menu Tidak Ditemukan</b>
-      <p style="color:var(--muted);font-size:12px;margin-top:4px">Coba kata kunci lain atau pilih kategori Semua.</p>
+      <p style="color:var(--muted);font-size:12px;margin-top:4px">Coba kata kunci lain atau reset pencarian dan kategori.</p>
+      <button class="btn-sec-action" type="button" onclick="resetCatalog()" style="margin:12px auto 0">Tampilkan Semua Menu</button>
     </div>`;
         return;
       }
@@ -2186,7 +2361,7 @@
         .map((p) => {
           const inCartQty = cart.filter((c) => c.id === p.id).reduce((s, x) => s + x.qty, 0);
           return `<article class="product">
-      <div class="prod-art ${p.tone || "green"}" onclick="openCustomize('${esc(p.id)}')">
+      <div class="prod-art ${p.tone || "green"}" role="img" aria-label="${esc(p.name)}">
         <span class="tag">${esc((p.labels || [])[0] || p.category)}</span>
         <div class="steam-group">
           <div class="steam"></div><div class="steam"></div><div class="steam"></div>
@@ -2196,7 +2371,9 @@
       </div>
       <div class="prod-body">
         <div>
-          <h3 class="prod-title" onclick="openCustomize('${esc(p.id)}')">${esc(p.name)}</h3>
+          <h3 class="prod-title">
+            <button class="prod-title-button" type="button" onclick="openCustomize('${esc(p.id)}')" aria-label="Lihat pilihan ${esc(p.name)}" ${p.available ? "" : "disabled"}>${esc(p.name)}</button>
+          </h3>
           <p class="desc">${esc(p.desc)}</p>
           <div class="meta-labels">${esc(p.category)} · ${(p.labels || []).join(" · ")}</div>
         </div>
@@ -2208,17 +2385,17 @@
           <div class="card-actions">
             ${p.available
               ? `
-              <button class="btn-opt" onclick="openCustomize('${esc(p.id)}')" title="Kustomisasi">⚙</button>
+              <button class="btn-opt" type="button" onclick="openCustomize('${esc(p.id)}')" title="Kustomisasi" aria-label="Kustomisasi ${esc(p.name)}">⚙</button>
               ${inCartQty > 0
                 ? `
                 <div class="card-stepper">
-                  <button onclick="decrementProduct('${esc(p.id)}')">−</button>
-                  <span>${inCartQty}</span>
-                  <button onclick="quickAddProduct('${esc(p.id)}')">+</button>
+                  <button type="button" aria-label="Kurangi ${esc(p.name)}" onclick="decrementProduct('${esc(p.id)}')">−</button>
+                  <span aria-label="Jumlah dalam keranjang ${inCartQty}">${inCartQty}</span>
+                  <button type="button" aria-label="Tambah ${esc(p.name)}" onclick="quickAddProduct('${esc(p.id)}')">+</button>
                 </div>
               `
                 : `
-                <button class="btn-add" onclick="quickAddProduct('${esc(p.id)}')">
+                <button class="btn-add" type="button" onclick="quickAddProduct('${esc(p.id)}')" aria-label="Tambah ${esc(p.name)} ke pesanan">
                   <span>+ Pesan</span>
                 </button>
               `
@@ -2241,11 +2418,11 @@
 
       const defaultOpts = (p.groups || []).map((g) => g.options[0].label);
       const key = p.id + "|" + defaultOpts.join("|");
-      const found = cart.find((x) => x.key === key);
+      const found = cart.find((x) => x.id === p.id && (x.options || []).join("|") === defaultOpts.join("|") && !x.note);
       if (found) {
         found.qty++;
       } else {
-        cart.unshift({ key, id: p.id, name: p.name, price: p.price, qty: 1, options: defaultOpts, note: "" });
+        cart.unshift({ key: key + "|", id: p.id, name: p.name, price: p.price, qty: 1, options: defaultOpts, note: "" });
       }
       saveAll();
       updateCartUI();
@@ -2291,11 +2468,14 @@
       }
 
       // Drawer totals
-      document.getElementById("cartDrawerSubtitle").textContent = `${count} menu siap diracik`;
+      document.getElementById("cartDrawerSubtitle").textContent = `${count} menu di pesanan`;
       document.getElementById("cartSubtotal").textContent = fmt(subtotal);
       document.getElementById("cartGrandTotal").textContent = fmt(grandTotal);
       document.getElementById("btnCheckoutTotal").textContent = fmt(grandTotal);
       document.getElementById("deliveryRow").style.display = service === "Antar" ? "flex" : "none";
+      document.getElementById("btnCheckoutWA").disabled = count === 0;
+      document.getElementById("btnCopyOrder").disabled = count === 0;
+      document.getElementById("btnClearCart").disabled = count === 0;
 
       // Items list in drawer
       const listEl = document.getElementById("cartItemsList");
@@ -2303,6 +2483,7 @@
         listEl.innerHTML = `<div style="text-align:center;padding:30px 10px;color:var(--muted)">
       <b>Keranjang Masih Kosong</b>
       <p style="font-size:12px;margin-top:4px">Pilih teh segar favoritmu untuk mulai memesan.</p>
+      <button class="btn-sec-action" type="button" onclick="closeCart(); document.getElementById('productGrid').scrollIntoView({behavior:'smooth',block:'start'})" style="margin:12px auto 0">Jelajahi Menu</button>
     </div>`;
       } else {
         listEl.innerHTML = cart
@@ -2312,12 +2493,15 @@
         <div>
           <div class="cart-line-title">${esc(item.name)}</div>
           <div class="cart-line-opts">${esc(item.options.join(" · "))}</div>
-          ${item.note ? `<div class="cart-line-note">"${esc(item.note)}"</div>` : ""}
-          <div class="cart-stepper-row">
-            <button class="btn-sm-step" onclick="changeQty(${idx}, -1)">−</button>
-            <span style="font-weight:700;font-size:12px;width:20px;text-align:center">${item.qty}</span>
-            <button class="btn-sm-step" onclick="changeQty(${idx}, 1)">+</button>
-            <button class="btn-remove" onclick="removeCartItem(${idx})">Hapus</button>
+          ${item.note ? `<div class="cart-line-note">Catatan: "${esc(item.note)}"</div>` : ""}
+          <div class="cart-line-actions">
+            <div class="cart-stepper-row">
+              <button class="btn-sm-step" aria-label="Kurangi ${esc(item.name)}" onclick="changeQty(${idx}, -1)">−</button>
+              <span style="font-weight:700;font-size:12px;width:20px;text-align:center" aria-label="Jumlah ${item.qty}">${item.qty}</span>
+              <button class="btn-sm-step" aria-label="Tambah ${esc(item.name)}" onclick="changeQty(${idx}, 1)">+</button>
+            </div>
+            <button class="btn-edit-line" type="button" onclick="editCartItem(${idx})">Ubah pilihan</button>
+            <button class="btn-remove" type="button" onclick="removeCartItem(${idx})">Hapus</button>
           </div>
         </div>
         <div style="font-weight:700;font-size:13px;font-variant-numeric:tabular-nums">${fmt(item.price * item.qty)}</div>
@@ -2326,6 +2510,12 @@
           )
           .join("");
       }
+    }
+
+    function editCartItem(index) {
+      const item = cart[index];
+      if (!item) return;
+      openCustomize(item.id, index);
     }
 
     function changeQty(index, delta) {
@@ -2337,28 +2527,55 @@
     }
 
     function removeCartItem(index) {
-      cart.splice(index, 1);
+      const item = cart[index];
+      if (!item) return;
+      removingCartIndex = index;
+      document.getElementById("removeCartItemText").textContent = `Hapus “${item.name}” dari keranjang?`;
+      openLayer(document.getElementById("removeCartItemModal"), document.getElementById("btnCancelRemoveCartItem"));
+    }
+
+    function closeRemoveCartItem() {
+      closeLayer(document.getElementById("removeCartItemModal"));
+      removingCartIndex = null;
+    }
+
+    function confirmRemoveCartItem() {
+      if (removingCartIndex == null || !cart[removingCartIndex]) return;
+      const [item] = cart.splice(removingCartIndex, 1);
       saveAll();
       updateCartUI();
       renderProducts();
-      toast("Menu dihapus dari pesanan.");
+      closeRemoveCartItem();
+      toast(`${item.name} dihapus dari pesanan.`);
     }
 
+    document.getElementById("btnCloseRemoveCartItem").onclick = closeRemoveCartItem;
+    document.getElementById("btnCancelRemoveCartItem").onclick = closeRemoveCartItem;
+    document.getElementById("btnConfirmRemoveCartItem").onclick = confirmRemoveCartItem;
+    document.getElementById("removeCartItemModal").onclick = (event) => {
+      if (event.target.id === "removeCartItemModal") closeRemoveCartItem();
+    };
+
     // --- Customization Modal ---
-    function openCustomize(id) {
+    function openCustomize(id, cartIndex = null) {
       const p = products.find((x) => x.id === id);
       if (!p || !p.available) return;
 
       currentCustomItem = p;
-      currentCustomQty = 1;
+      editingCartIndex = cartIndex;
+      const editingItem = cartIndex == null ? null : cart[cartIndex];
+      currentCustomQty = editingItem ? editingItem.qty : 1;
       currentCustomOpts = {};
       (p.groups || []).forEach((g) => {
-        currentCustomOpts[g.name] = g.options[0].label;
+        const savedOption = (editingItem?.options || []).find((label) => g.options.some((option) => option.label === label));
+        currentCustomOpts[g.name] = savedOption || g.options[0].label;
       });
 
       document.getElementById("modalDrinkTitle").textContent = p.name;
       document.getElementById("modalDrinkDesc").textContent = p.desc;
-      document.getElementById("modalQtyVal").textContent = "1";
+      document.getElementById("modalQtyVal").textContent = currentCustomQty;
+      document.getElementById("customItemNote").value = editingItem?.note || "";
+      document.querySelector("#btnConfirmCustom span:first-child").textContent = editingItem ? "Simpan Perubahan" : "Tambah ke Pesanan";
 
       renderModalOptions();
       recalcModalPrice();
@@ -2377,16 +2594,18 @@
         <span class="group-req">Wajib</span>
       </div>
       <div class="group-options">
+        <div class="group-option-list" role="group" aria-label="${esc(g.name)}">
         ${g.options
               .map(
                 (opt) => `
-          <button class="btn-opt-card ${currentCustomOpts[g.name] === opt.label ? "selected" : ""}" onclick="pickCustomOpt('${esc(g.name)}','${esc(opt.label)}')">
+          <button type="button" class="btn-opt-card ${currentCustomOpts[g.name] === opt.label ? "selected" : ""}" aria-pressed="${currentCustomOpts[g.name] === opt.label}" onclick="pickCustomOpt('${esc(g.name)}','${esc(opt.label)}')">
             <span>${esc(opt.label)}</span>
             ${opt.price > 0 ? `<small>+${fmt(opt.price)}</small>` : ""}
           </button>
         `,
               )
               .join("")}
+        </div>
       </div>
     </div>
   `,
@@ -2429,6 +2648,7 @@
       if (!currentCustomItem) return;
       let unit = currentCustomItem.price;
       const optLabels = [];
+      const itemNote = document.getElementById("customItemNote").value.trim();
       (currentCustomItem.groups || []).forEach((g) => {
         const sel = currentCustomOpts[g.name];
         optLabels.push(sel);
@@ -2436,32 +2656,52 @@
         if (found) unit += found.price;
       });
 
-      const key = currentCustomItem.id + "|" + optLabels.join("|");
-      const found = cart.find((x) => x.key === key);
-      if (found) {
-        found.qty += currentCustomQty;
-      } else {
-        cart.unshift({
+      const key = currentCustomItem.id + "|" + optLabels.join("|") + "|" + itemNote;
+      if (editingCartIndex != null && cart[editingCartIndex]) {
+        cart[editingCartIndex] = {
+          ...cart[editingCartIndex],
           key,
           id: currentCustomItem.id,
           name: currentCustomItem.name,
           price: unit,
           qty: currentCustomQty,
           options: optLabels,
-          note: "",
-        });
+          note: itemNote,
+        };
+      } else {
+        const found = cart.find((x) =>
+          x.id === currentCustomItem.id &&
+          (x.options || []).join("|") === optLabels.join("|") &&
+          (x.note || "") === itemNote,
+        );
+        if (found) {
+          found.qty += currentCustomQty;
+        } else {
+          cart.unshift({
+            key,
+            id: currentCustomItem.id,
+            name: currentCustomItem.name,
+            price: unit,
+            qty: currentCustomQty,
+            options: optLabels,
+            note: itemNote,
+          });
+        }
       }
 
+      const itemName = currentCustomItem.name;
+      const wasEditing = editingCartIndex != null;
       saveAll();
       updateCartUI();
       renderProducts();
       closeCustomize();
-      toast(`${currentCustomItem.name} ditambahkan ke pesanan.`);
+      toast(wasEditing ? `${itemName} berhasil diperbarui.` : `${itemName} ditambahkan ke pesanan.`);
     };
 
     function closeCustomize() {
       const m = document.getElementById("customModal");
       closeLayer(m);
+      editingCartIndex = null;
     }
 
     document.getElementById("btnCloseModal").onclick = closeCustomize;
@@ -2489,10 +2729,38 @@
       profile.srv = srv;
       document.getElementById("srvPickup").classList.toggle("active", srv === "Ambil Sendiri");
       document.getElementById("srvDelivery").classList.toggle("active", srv === "Antar");
+      document.getElementById("srvPickup").setAttribute("aria-pressed", String(srv === "Ambil Sendiri"));
+      document.getElementById("srvDelivery").setAttribute("aria-pressed", String(srv === "Antar"));
       document.getElementById("fieldAddress").style.display = srv === "Antar" ? "block" : "none";
       saveAll();
       updateCartUI();
     }
+
+    function normalizeIndonesianPhone(value) {
+      let digits = value.replace(/\D/g, "");
+      if (digits.startsWith("62")) digits = "0" + digits.slice(2);
+      else if (digits.startsWith("8")) digits = "0" + digits;
+      return /^08\d{8,11}$/.test(digits) ? digits : null;
+    }
+
+    function showCheckoutFeedback(message) {
+      document.getElementById("checkoutFeedback").textContent = message;
+    }
+
+    function clearPhoneError() {
+      document.getElementById("fieldPhone").classList.remove("has-error");
+      document.getElementById("phoneError").textContent = "";
+      document.getElementById("inputPhone").removeAttribute("aria-invalid");
+    }
+
+    document.getElementById("inputPhone").addEventListener("input", () => {
+      clearPhoneError();
+      showCheckoutFeedback("");
+    });
+
+    ["inputName", "inputAddress"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", () => showCheckoutFeedback(""));
+    });
 
     function populateProfile() {
       if (profile.name) document.getElementById("inputName").value = profile.name;
@@ -2512,18 +2780,33 @@
       const addr = document.getElementById("inputAddress").value.trim();
       const note = document.getElementById("inputNote").value.trim();
 
-      if (!name || !phone) {
-        toast("Mohon isi nama dan nomor WhatsApp Anda.");
-        return;
-      }
-      if (service === "Antar" && !addr) {
-        toast("Mohon isi alamat lengkap pengantaran.");
+      if (!name) {
+        showCheckoutFeedback("Isi nama pemesan terlebih dahulu.");
+        document.getElementById("inputName").focus();
         return;
       }
 
+      const normalizedPhone = normalizeIndonesianPhone(phone);
+      if (!normalizedPhone) {
+        document.getElementById("fieldPhone").classList.add("has-error");
+        document.getElementById("phoneError").textContent = "Masukkan nomor WhatsApp Indonesia yang valid, contoh 0812 3456 7890.";
+        document.getElementById("inputPhone").setAttribute("aria-invalid", "true");
+        showCheckoutFeedback("");
+        document.getElementById("inputPhone").focus();
+        return;
+      }
+
+      if (service === "Antar" && !addr) {
+        showCheckoutFeedback("Isi alamat lengkap agar pesanan antar memiliki tujuan yang jelas.");
+        document.getElementById("inputAddress").focus();
+        return;
+      }
+      clearPhoneError();
+      showCheckoutFeedback("");
+
       // Save profile for future 1-click orders
       profile.name = name;
-      profile.phone = phone;
+      profile.phone = normalizedPhone;
       profile.address = addr;
       profile.srv = service;
       saveAll();
@@ -2534,59 +2817,95 @@
       const total = subtotal + delivery;
 
       // Format WhatsApp Message
-      const itemsText = cart.map((it, i) => `${i + 1}. *${it.name}* (x${it.qty}) - ${fmt(it.price * it.qty)}\n   Varian: ${it.options.join(", ")}`).join("\n\n");
+      const itemsText = cart.map((it, i) => `${i + 1}. *${it.name}* (x${it.qty}) - ${fmt(it.price * it.qty)}\n   Varian: ${it.options.join(", ")}${it.note ? `\n   Catatan: ${it.note}` : ""}`).join("\n\n");
       const message = `*PESANAN BARU - RACIK TEA*
 Kode: *#${code}*
 Waktu: ${new Date().toLocaleString("id-ID")}
 -------------------------------------
 *Data Pemesan:*
 Nama: *${name}*
-No. HP: ${phone}
+No. HP: ${normalizedPhone}
 Layanan: *${service}*
 ${service === "Antar" ? `Alamat Antar: ${addr}\n` : ""}${note ? `Catatan: "${note}"\n` : ""}-------------------------------------
 *Rincian Menu:*
 ${itemsText}
 
 -------------------------------------
-*Total Pembayaran: ${fmt(total)}*
+*Subtotal: ${fmt(subtotal)}*
+${service === "Antar" ? `Ongkir demo: ${fmt(delivery)}\n` : ""}*Total Pembayaran: ${fmt(total)}*
 
-Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
+Draft dibuat dari prototype. Mohon konfirmasi ketersediaan dan total pesanan ini. Terima kasih! 🙏`;
 
-      // Record in prototype orders
+      // Save a local prototype draft, not a confirmed order.
       orders.unshift({
         code,
         name,
-        phone,
+        phone: normalizedPhone,
         service,
         items: JSON.parse(JSON.stringify(cart)),
+        subtotal,
+        delivery,
         total,
-        status: "Baru Masuk",
+        address: addr,
+        note,
+        status: "Draft WhatsApp (lokal)",
         time: new Date().toLocaleTimeString("id-ID"),
       });
 
-      cart = [];
       saveAll();
-      updateCartUI();
-      renderProducts();
+      if (document.getElementById("viewAdmin").style.display !== "none") renderAdmin();
       closeCart();
 
       // Redirect to WhatsApp
       const targetPhone = "6281234567890";
       const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank", "noopener,noreferrer");
-      toast(`Pesanan #${code} berhasil dicatat! Mengarahkan ke WhatsApp...`);
+      toast(`Draft #${code} disiapkan. Tekan Kirim di WhatsApp; keranjang tetap tersimpan.`);
     };
 
     // Copy format
-    document.getElementById("btnCopyOrder").onclick = () => {
+    document.getElementById("btnCopyOrder").onclick = async () => {
       if (!cart.length) return;
       const name = document.getElementById("inputName").value.trim() || "Pelanggan";
-      const items = cart.map((i) => `${i.qty}x ${i.name} (${i.options.join(", ")})`).join("\n");
-      const total = cart.reduce((s, x) => s + x.price * x.qty, 0) + (service === "Antar" ? 8000 : 0);
-      const text = `PESANAN RACIK TEA\nPemesan: ${name}\nLayanan: ${service}\n\n${items}\nTotal: ${fmt(total)}`;
-      navigator.clipboard.writeText(text);
-      toast("Rincian pesanan disalin ke clipboard!");
+      const phone = document.getElementById("inputPhone").value.trim();
+      const addr = document.getElementById("inputAddress").value.trim();
+      const note = document.getElementById("inputNote").value.trim();
+      const subtotal = cart.reduce((s, x) => s + x.price * x.qty, 0);
+      const delivery = service === "Antar" ? 8000 : 0;
+      const items = cart.map((item, i) =>
+        `${i + 1}. ${item.qty}x ${item.name} (${item.options.join(", ")}) — ${fmt(item.price * item.qty)}${item.note ? `\n   Catatan: ${item.note}` : ""}`,
+      ).join("\n");
+      const text = `PESANAN RACIK TEA — DRAFT PROTOTYPE\nPemesan: ${name}\n${phone ? `WhatsApp: ${phone}\n` : ""}Layanan: ${service}${service === "Antar" && addr ? `\nAlamat: ${addr}` : ""}\n\n${items}\n\nSubtotal: ${fmt(subtotal)}\n${service === "Antar" ? `Ongkir demo: ${fmt(delivery)}\n` : ""}Total: ${fmt(subtotal + delivery)}${note ? `\nCatatan umum: ${note}` : ""}`;
+      try {
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            if (!copyTextFallback(text)) throw new Error("Clipboard API and fallback both failed.");
+          }
+        } else if (!copyTextFallback(text)) {
+          throw new Error("Clipboard copy was rejected.");
+        }
+        toast("Draft pesanan disalin.");
+      } catch (error) {
+        showCheckoutFeedback("Tidak dapat menyalin otomatis. Rincian pesanan tetap terlihat di keranjang untuk disalin manual.");
+      }
     };
+
+    function copyTextFallback(text) {
+      const copyField = document.createElement("textarea");
+      copyField.value = text;
+      copyField.setAttribute("readonly", "");
+      copyField.style.position = "fixed";
+      copyField.style.opacity = "0";
+      document.body.append(copyField);
+      try {
+        copyField.select();
+        return document.execCommand("copy");
+      } finally {
+        copyField.remove();
+      }
+    }
 
     document.getElementById("btnClearCart").onclick = () => {
       openLayer(document.getElementById("clearCartModal"), document.getElementById("btnCancelClearCart"));
@@ -2873,7 +3192,7 @@ Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
       // Orders table
       const orderBody = document.getElementById("adminOrdersBody");
       if (!orders.length) {
-        orderBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Belum ada pesanan masuk.</td></tr>`;
+        orderBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Belum ada draft pesanan di browser ini.</td></tr>`;
       } else {
         orderBody.innerHTML = orders
           .map(
@@ -2882,9 +3201,9 @@ Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
         <td><b>#${esc(o.code)}</b></td>
         <td>${esc(o.name)}<br><small style="color:var(--muted)">${esc(o.phone)}</small></td>
         <td>${esc(o.service)}</td>
-        <td>${(o.items || []).map((i) => `${i.qty}x ${esc(i.name)}`).join(", ")}</td>
+        <td>${(o.items || []).map((i) => `<div>${i.qty}x ${esc(i.name)}${i.options?.length ? `<small style="display:block;color:var(--muted)">${esc(i.options.join(" · "))}</small>` : ""}${i.note ? `<small style="display:block;color:var(--muted)">Catatan: ${esc(i.note)}</small>` : ""}</div>`).join("")}${o.address ? `<small style="display:block;color:var(--muted);margin-top:4px">Alamat: ${esc(o.address)}</small>` : ""}${o.note ? `<small style="display:block;color:var(--muted);margin-top:4px">Catatan umum: ${esc(o.note)}</small>` : ""}</td>
         <td style="font-weight:700">${fmt(o.total)}</td>
-        <td><span class="badge-status badge-avail">${esc(o.status)}</span></td>
+        <td><span class="badge-status ${o.status && o.status.startsWith("Draft") ? "badge-demo" : "badge-avail"}">${esc(o.status)}</span></td>
       </tr>
     `,
           )
