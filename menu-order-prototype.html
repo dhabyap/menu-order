@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+    content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Racik Tea — Menu & Pesanan Cepat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -51,6 +51,11 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    body.has-overlay {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
     button,
     input,
     textarea,
@@ -61,6 +66,11 @@
     button {
       cursor: pointer;
       border: 0;
+    }
+
+    :focus-visible {
+      outline: 3px solid rgba(46, 67, 52, 0.48);
+      outline-offset: 3px;
     }
 
     .shell {
@@ -328,7 +338,8 @@
       transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
     }
 
-    .product:hover {
+    .product:hover,
+    .product:focus-within {
       transform: translateY(-2px);
       border-color: #b9c2b4;
       box-shadow: var(--shadow);
@@ -677,12 +688,13 @@
     .drawer-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(23, 32, 25, 0.65);
-      backdrop-filter: blur(4px);
+      background: rgba(17, 25, 19, 0.58);
+      -webkit-backdrop-filter: blur(8px) saturate(0.82);
+      backdrop-filter: blur(8px) saturate(0.82);
       z-index: 40;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s;
+      transition: opacity 0.24s ease;
     }
 
     .drawer-backdrop.active {
@@ -703,6 +715,7 @@
       flex-direction: column;
       transform: translateX(100%);
       transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      overscroll-behavior: contain;
     }
 
     .drawer.active {
@@ -737,6 +750,8 @@
       padding: 16px 20px;
       flex: 1;
       overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
     }
 
     .drawer-foot {
@@ -1005,9 +1020,12 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
+      background: rgba(17, 25, 19, 0.58);
+      -webkit-backdrop-filter: blur(9px) saturate(0.82);
+      backdrop-filter: blur(9px) saturate(0.82);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.22s ease;
     }
 
     .modal-wrap.active {
@@ -1021,12 +1039,12 @@
       border-radius: 22px;
       border: 1px solid var(--line);
       box-shadow: var(--shadow-float);
-      max-height: 90vh;
+      max-height: min(90vh, 760px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       transform: scale(0.95);
-      transition: transform 0.2s;
+      transition: transform 0.22s cubic-bezier(0.2, 0.75, 0.25, 1);
     }
 
     .modal-wrap.active .modal-card {
@@ -1057,6 +1075,8 @@
       padding: 16px 20px;
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
+      overscroll-behavior: contain;
     }
 
     .modal-group {
@@ -1100,6 +1120,17 @@
       background: var(--green-light);
       color: var(--green);
       font-weight: 700;
+    }
+
+    .btn-opt-card:hover {
+      border-color: #a8b6a5;
+    }
+
+    #formMenuEditor {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
     }
 
     .modal-foot {
@@ -1277,12 +1308,12 @@
 
       .modal-wrap {
         align-items: flex-end;
-        padding: 0;
+        padding: 10px 0 0;
       }
 
       .modal-card {
         border-radius: 24px 24px 0 0;
-        max-height: 90dvh;
+        max-height: min(calc(94dvh - env(safe-area-inset-top, 0px)), 820px);
         transform: translateY(100%);
       }
 
@@ -1292,6 +1323,92 @@
 
       .group-options {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .shell {
+        padding: 0 14px;
+      }
+
+      .top {
+        height: 62px;
+        gap: 8px;
+      }
+
+      .brand {
+        gap: 7px;
+        font-size: 18px;
+      }
+
+      .mark {
+        width: 34px;
+        height: 34px;
+      }
+
+      .top-actions {
+        gap: 6px;
+      }
+
+      .badge-open {
+        display: none;
+      }
+
+      .btn-cart-top,
+      .btn-admin {
+        padding: 8px 10px;
+        font-size: 11px;
+      }
+
+      .catalog-tools {
+        top: 62px;
+        gap: 8px;
+      }
+
+      .search-box {
+        flex-basis: 100%;
+        max-width: none;
+      }
+
+      .category-nav {
+        width: 100%;
+      }
+
+      .products {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .modal-head {
+        padding: 18px 18px 12px;
+      }
+
+      .modal-scroll {
+        padding: 14px 18px;
+      }
+
+      .modal-foot {
+        padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .drawer-body {
+        padding: 14px 16px;
+      }
+
+      .drawer-foot {
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
@@ -1438,10 +1555,10 @@
 
   <!-- Cart Drawer / Bottom Sheet -->
   <div class="drawer-backdrop" id="cartBackdrop"></div>
-  <aside class="drawer" id="cartDrawer" aria-hidden="true">
+  <aside class="drawer" id="cartDrawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="cartDrawerTitle" inert>
     <div class="drawer-head">
       <div>
-        <h2>Pesanan Anda</h2>
+        <h2 id="cartDrawerTitle">Pesanan Anda</h2>
         <span style="font-size: 11px; color: var(--muted)" id="cartDrawerSubtitle">0 menu</span>
       </div>
       <button class="btn-close" id="btnCloseCart" aria-label="Tutup keranjang">×</button>
@@ -1514,14 +1631,14 @@
   </aside>
 
   <!-- Customize Drink Modal -->
-  <div class="modal-wrap" id="customModal" aria-hidden="true">
-    <div class="modal-card">
+  <div class="modal-wrap" id="customModal" aria-hidden="true" inert>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalDrinkTitle" aria-describedby="modalDrinkDesc">
       <div class="modal-head">
         <div>
           <h3 id="modalDrinkTitle">Nama Minuman</h3>
           <p id="modalDrinkDesc">Deskripsi seduhan teh</p>
         </div>
-        <button class="btn-close" id="btnCloseModal">×</button>
+        <button class="btn-close" id="btnCloseModal" type="button" aria-label="Tutup penyesuaian menu">×</button>
       </div>
       <div class="modal-scroll" id="modalOptionsBody"></div>
       <div class="modal-foot">
@@ -1539,8 +1656,8 @@
   </div>
 
   <!-- Admin: Tambah / Edit Menu Modal -->
-  <div class="modal-wrap" id="menuEditorModal" aria-hidden="true">
-    <div class="modal-card">
+  <div class="modal-wrap" id="menuEditorModal" aria-hidden="true" inert>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="menuEditorTitle" aria-describedby="menuEditorSubtitle">
       <div class="modal-head">
         <div>
           <h3 id="menuEditorTitle">Tambah Menu Baru</h3>
@@ -1616,11 +1733,11 @@
   </div>
 
   <!-- Admin: Hapus Menu Modal -->
-  <div class="modal-wrap" id="deleteMenuModal" aria-hidden="true">
-    <div class="modal-card" style="width: min(400px, 100%)">
+  <div class="modal-wrap" id="deleteMenuModal" aria-hidden="true" inert>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="deleteMenuTitle" aria-describedby="deleteMenuText" style="width: min(400px, 100%)">
       <div class="modal-head">
         <div>
-          <h3>Hapus Menu</h3>
+          <h3 id="deleteMenuTitle">Hapus Menu</h3>
           <p id="deleteMenuText">Menu ini akan dihapus dari katalog dan tidak bisa dikembalikan.</p>
         </div>
         <button class="btn-close" id="btnCloseDeleteMenu" type="button" aria-label="Tutup konfirmasi hapus">×</button>
@@ -1628,6 +1745,22 @@
       <div class="modal-foot">
         <button class="btn-sec-action" id="btnCancelDeleteMenu" type="button">Batal</button>
         <button class="btn-danger-action" id="btnConfirmDeleteMenu" type="button">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="clearCartModal" aria-hidden="true" inert>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="clearCartTitle" aria-describedby="clearCartText" style="width: min(400px, 100%)">
+      <div class="modal-head">
+        <div>
+          <h3 id="clearCartTitle">Kosongkan Keranjang?</h3>
+          <p id="clearCartText">Semua menu dan jumlah pesanan di keranjang akan dihapus.</p>
+        </div>
+        <button class="btn-close" id="btnCloseClearCart" type="button" aria-label="Tutup konfirmasi kosongkan keranjang">×</button>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-sec-action" id="btnCancelClearCart" type="button">Pertahankan Pesanan</button>
+        <button class="btn-danger-action" id="btnConfirmClearCart" type="button">Kosongkan</button>
       </div>
     </div>
   </div>
@@ -1894,6 +2027,113 @@
     let currentCustomItem = null;
     let currentCustomOpts = {};
     let currentCustomQty = 1;
+    const activeLayers = [];
+    const layerReturnFocus = new WeakMap();
+
+    function openLayer(layer, focusTarget) {
+      if (activeLayers.includes(layer)) return;
+
+      const previousLayer = activeLayers[activeLayers.length - 1];
+      if (previousLayer) previousLayer.inert = true;
+      else document.querySelector(".shell").inert = true;
+
+      layerReturnFocus.set(layer, document.activeElement);
+      layer.inert = false;
+      layer.classList.add("active");
+      layer.setAttribute("aria-hidden", "false");
+      activeLayers.push(layer);
+      document.body.classList.add("has-overlay");
+
+      if (layer.id === "cartDrawer") {
+        document.getElementById("cartBackdrop").classList.add("active");
+      }
+
+      requestAnimationFrame(() => {
+        const target = focusTarget || layer.querySelector(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (target && !target.disabled) target.focus({ preventScroll: true });
+      });
+    }
+
+    function closeLayer(layer) {
+      const layerIndex = activeLayers.indexOf(layer);
+      layer.classList.remove("active");
+      layer.setAttribute("aria-hidden", "true");
+      layer.inert = true;
+      if (layer.id === "cartDrawer") {
+        document.getElementById("cartBackdrop").classList.remove("active");
+      }
+      if (layerIndex < 0) return;
+
+      activeLayers.splice(layerIndex, 1);
+      const previousLayer = activeLayers[activeLayers.length - 1];
+      const returnFocus = layerReturnFocus.get(layer);
+      if (previousLayer) {
+        previousLayer.inert = false;
+      } else {
+        document.querySelector(".shell").inert = false;
+        document.body.classList.remove("has-overlay");
+      }
+
+      requestAnimationFrame(() => {
+        if (returnFocus && returnFocus.isConnected && !returnFocus.disabled) {
+          returnFocus.focus({ preventScroll: true });
+        } else if (previousLayer) {
+          previousLayer.querySelector(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          )?.focus({ preventScroll: true });
+        } else {
+          const adminFallback = document.getElementById("btnAddMenu");
+          const focusFallback = adminFallback.getClientRects().length ? adminFallback : document.getElementById("topCartBtn");
+          focusFallback?.focus({ preventScroll: true });
+        }
+      });
+    }
+
+    function closeActiveLayer() {
+      const layer = activeLayers[activeLayers.length - 1];
+      if (!layer) return;
+      const closeById = {
+        cartDrawer: closeCart,
+        customModal: closeCustomize,
+        menuEditorModal: closeMenuEditor,
+        deleteMenuModal: closeDeleteMenu,
+        clearCartModal: closeClearCart,
+      };
+      closeById[layer.id]?.();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      const layer = activeLayers[activeLayers.length - 1];
+      if (!layer) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeActiveLayer();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const focusable = [...layer.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )].filter((element) => element.getClientRects().length > 0);
+      if (!focusable.length) {
+        event.preventDefault();
+        layer.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !layer.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !layer.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
 
     const saveAll = () => {
       localStorage.setItem("racik_products_v2", JSON.stringify(products));
@@ -2123,9 +2363,7 @@
       renderModalOptions();
       recalcModalPrice();
 
-      const m = document.getElementById("customModal");
-      m.classList.add("active");
-      m.setAttribute("aria-hidden", "false");
+      openLayer(document.getElementById("customModal"), document.getElementById("btnCloseModal"));
     }
 
     function renderModalOptions() {
@@ -2223,8 +2461,7 @@
 
     function closeCustomize() {
       const m = document.getElementById("customModal");
-      m.classList.remove("active");
-      m.setAttribute("aria-hidden", "true");
+      closeLayer(m);
     }
 
     document.getElementById("btnCloseModal").onclick = closeCustomize;
@@ -2234,12 +2471,10 @@
 
     // --- Drawer Toggles ---
     function openCart() {
-      document.getElementById("cartDrawer").classList.add("active");
-      document.getElementById("cartBackdrop").classList.add("active");
+      openLayer(document.getElementById("cartDrawer"), document.getElementById("btnCloseCart"));
     }
     function closeCart() {
-      document.getElementById("cartDrawer").classList.remove("active");
-      document.getElementById("cartBackdrop").classList.remove("active");
+      closeLayer(document.getElementById("cartDrawer"));
     }
     document.getElementById("topCartBtn").onclick = openCart;
     document.getElementById("floatingCart").onclick = openCart;
@@ -2354,13 +2589,23 @@ Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
     };
 
     document.getElementById("btnClearCart").onclick = () => {
-      if (confirm("Kosongkan semua pesanan di keranjang?")) {
-        cart = [];
-        saveAll();
-        updateCartUI();
-        renderProducts();
-        toast("Keranjang dikosongkan.");
-      }
+      openLayer(document.getElementById("clearCartModal"), document.getElementById("btnCancelClearCart"));
+    };
+    function closeClearCart() {
+      closeLayer(document.getElementById("clearCartModal"));
+    }
+    document.getElementById("btnCloseClearCart").onclick = closeClearCart;
+    document.getElementById("btnCancelClearCart").onclick = closeClearCart;
+    document.getElementById("clearCartModal").onclick = (event) => {
+      if (event.target.id === "clearCartModal") closeClearCart();
+    };
+    document.getElementById("btnConfirmClearCart").onclick = () => {
+      cart = [];
+      saveAll();
+      updateCartUI();
+      renderProducts();
+      closeClearCart();
+      toast("Keranjang dikosongkan.");
     };
 
     // --- Admin Dashboard View ---
@@ -2478,15 +2723,12 @@ Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
         setEditorStock(true);
       }
 
-      modal.classList.add("active");
-      modal.setAttribute("aria-hidden", "false");
-      document.getElementById("menuName").focus();
+      openLayer(modal, document.getElementById("menuName"));
     }
 
     function closeMenuEditor() {
       const modal = document.getElementById("menuEditorModal");
-      modal.classList.remove("active");
-      modal.setAttribute("aria-hidden", "true");
+      closeLayer(modal);
       editingMenuIndex = null;
     }
 
@@ -2496,14 +2738,12 @@ Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
       document.getElementById("deleteMenuText").textContent =
         `Hapus “${p.name}” dari katalog? Menu yang sudah ada di keranjang juga akan dibersihkan.`;
       const modal = document.getElementById("deleteMenuModal");
-      modal.classList.add("active");
-      modal.setAttribute("aria-hidden", "false");
+      openLayer(modal, document.getElementById("btnCancelDeleteMenu"));
     }
 
     function closeDeleteMenu() {
       const modal = document.getElementById("deleteMenuModal");
-      modal.classList.remove("active");
-      modal.setAttribute("aria-hidden", "true");
+      closeLayer(modal);
       deletingMenuIndex = null;
     }
 
@@ -2537,12 +2777,6 @@ Mohon konfirmasi ketersediaan dan proses pesanan saya. Terima kasih! 🙏`;
     document.getElementById("deleteMenuModal").onclick = (e) => {
       if (e.target.id === "deleteMenuModal") closeDeleteMenu();
     };
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      if (document.getElementById("deleteMenuModal").classList.contains("active")) closeDeleteMenu();
-      else closeMenuEditor();
-    });
 
     document.getElementById("formMenuEditor").onsubmit = (e) => {
       e.preventDefault();
