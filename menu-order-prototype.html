@@ -2181,6 +2181,7 @@
 
     const fmt = (n) => "Rp" + Number(n || 0).toLocaleString("id-ID");
     let products = JSON.parse(localStorage.getItem("racik_products_v2") || "null") || DEFAULT_PRODUCTS;
+    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { if (rows.length) { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc, price:Number(p.price), available:Boolean(p.available), tone:p.tone, icon:p.icon, labels:p.labels, groups:p.groups })); renderMenu(); } }).catch(() => {});
     let cart = JSON.parse(localStorage.getItem("racik_cart_v2") || "[]");
     let orders = JSON.parse(localStorage.getItem("racik_orders_v2") || "[]");
     let profile = JSON.parse(localStorage.getItem("racik_prof_v2") || '{"name":"","phone":"","address":"","srv":"Ambil Sendiri"}');
@@ -2770,7 +2771,7 @@
     }
 
     // --- Checkout to WhatsApp ---
-    document.getElementById("btnCheckoutWA").onclick = () => {
+    document.getElementById("btnCheckoutWA").onclick = async () => {
       if (!cart.length) {
         toast("Keranjang masih kosong!");
         return;
@@ -2811,10 +2812,16 @@
       profile.srv = service;
       saveAll();
 
-      const code = "RCK-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-      const subtotal = cart.reduce((s, x) => s + x.price * x.qty, 0);
-      const delivery = service === "Antar" ? 8000 : 0;
-      const total = subtotal + delivery;
+      let savedOrder;
+      try {
+        const response = await fetch("/api/orders", { method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body:JSON.stringify({name, phone:normalizedPhone, address:addr, service, note, items:cart.map(item => ({product_id:item.id, quantity:item.qty, options:Object.fromEntries((products.find(product => product.id === item.id)?.groups || []).map((group,index) => [group.name,item.options[index]]))}))}) });
+        savedOrder = await response.json();
+        if (!response.ok) throw new Error(savedOrder.message || "Pesanan gagal disimpan.");
+      } catch (error) { showCheckoutFeedback(error.message || "Pesanan gagal disimpan. Coba lagi."); return; }
+      const code = savedOrder.code;
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const delivery = savedOrder.total - subtotal;
+      const total = savedOrder.total;
 
       // Format WhatsApp Message
       const itemsText = cart.map((it, i) => `${i + 1}. *${it.name}* (x${it.qty}) - ${fmt(it.price * it.qty)}\n   Varian: ${it.options.join(", ")}${it.note ? `\n   Catatan: ${it.note}` : ""}`).join("\n\n");
@@ -2857,7 +2864,8 @@ Draft dibuat dari prototype. Mohon konfirmasi ketersediaan dan total pesanan ini
       closeCart();
 
       // Redirect to WhatsApp
-      const targetPhone = "6281234567890";
+      const targetPhone = savedOrder.whatsapp;
+      if (!targetPhone) { showCheckoutFeedback("Nomor WhatsApp belum diatur oleh pengelola."); return; }
       const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank", "noopener,noreferrer");
       toast(`Draft #${code} disiapkan. Tekan Kirim di WhatsApp; keranjang tetap tersimpan.`);
