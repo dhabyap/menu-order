@@ -80,6 +80,7 @@
         tbody tr:hover td { background: #fffefa; }
         .menu-cell { display: flex; align-items: center; gap: 10px; min-width: 200px; }
         .menu-art { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 11px; background: var(--green-light); color: var(--green); font-size: 17px; }
+        .menu-art img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
         .menu-cell strong { display: block; font-size: 12px; }
         .menu-cell small { display: block; max-width: 230px; overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
         .category-pill, .status-pill { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 99px; background: var(--surface2); color: #555d50; font-size: 10px; font-weight: 700; white-space: nowrap; }
@@ -127,6 +128,14 @@
         .price-field input { padding-left: 37px; }
         .price-preview { min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 11px; border: 1px solid #d5dfd4; border-radius: 9px; background: var(--green-light); color: var(--green); font-size: 10px; font-weight: 700; }
         .price-preview strong { font: 700 15px "Fraunces", Georgia, serif; }
+        .image-upload { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: 13px; }
+        .image-preview { width: 92px; height: 92px; display: grid; place-items: center; overflow: hidden; border: 1px dashed #cbd4c6; border-radius: 12px; background: var(--green-light); color: var(--green); font-size: 25px; }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .image-upload input[type="file"] { min-height: auto; padding: 8px; background: var(--surface); }
+        .remove-image { display: inline-flex; align-items: center; gap: 7px; margin-top: 8px; color: var(--rose); font-size: 10px; font-weight: 700; }
+        .remove-image input { width: 15px; min-height: 15px; accent-color: var(--rose); }
+        .edit-image-preview { width: 52px; height: 52px; overflow: hidden; border-radius: 10px; background: var(--green-light); }
+        .edit-image-preview img { width: 100%; height: 100%; object-fit: cover; }
         .option-groups { display: grid; gap: 10px; }
         .option-empty { padding: 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 11px; text-align: center; }
         .option-group { min-width: 0; margin: 0; padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface2); }
@@ -247,7 +256,7 @@
                     <tbody>
                     @forelse($products as $product)
                         <tr>
-                            <td><div class="menu-cell"><span class="menu-art">{{ $product->icon ?: '✿' }}</span><span><strong>{{ $product->name }}</strong><small>{{ $product->description ?: 'Belum ada deskripsi' }}</small></span></div></td>
+                            <td><div class="menu-cell"><span class="menu-art">@if($product->image_path)<img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) }}" alt="">@else{{ $product->icon ?: '✿' }}@endif</span><span><strong>{{ $product->name }}</strong><small>{{ $product->description ?: 'Belum ada deskripsi' }}</small></span></div></td>
                             <td><span class="category-pill">{{ $product->category ?: 'Tanpa kategori' }}</span></td>
                             <td><strong>Rp{{ number_format($product->price, 0, ',', '.') }}</strong></td>
                             <td><span class="status-pill {{ $product->available ? 'available' : 'unavailable' }}">{{ $product->available ? 'Tersedia' : 'Habis' }}</span></td>
@@ -271,7 +280,7 @@
                                     <summary><span class="edit-open-{{ $product->id }}"></span></summary>
                                     <div class="edit-form">
                                         <h3>Edit {{ $product->name }}</h3>
-                                        <form method="post" action="{{ route('admin.products.update', $product->id) }}">
+                                        <form method="post" action="{{ route('admin.products.update', $product->id) }}" enctype="multipart/form-data">
                                             @csrf @method('PUT')
                                             <div class="form-grid">
                                                 <div class="field"><label>Nama menu</label><input name="name" required maxlength="120" value="{{ $product->name }}"></div>
@@ -279,6 +288,7 @@
                                                 <div class="field"><label>Harga dasar (Rp)</label><input name="price" type="number" min="0" max="10000000" required value="{{ $product->price }}"></div>
                                                 <div class="field"><label>Label</label><input name="labels" maxlength="200" value="{{ implode(', ', json_decode($product->labels ?: '[]', true) ?: []) }}"></div>
                                                 <div class="field full"><label>Deskripsi</label><input name="description" maxlength="1000" value="{{ $product->description }}"></div>
+                                                <div class="field full"><label>Foto menu (opsional)</label><div class="image-upload"><span class="edit-image-preview">@if($product->image_path)<img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) }}" alt="Foto {{ $product->name }}">@else<span>✿</span>@endif</span><span><input type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-label="Ganti foto {{ $product->name }}"><span class="field-hint">JPEG, PNG, atau WebP · maks. 5 MB. Pilih gambar baru untuk mengganti.</span>@if($product->image_path)<label class="remove-image"><input type="checkbox" name="remove_image" value="1"> Hapus foto saat menyimpan</label>@endif</span></div></div>
                                                 <div class="field full"><label>Opsi racikan (JSON)</label><textarea name="options_json">{{ json_encode(json_decode($product->options ?: '[]', true) ?: [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</textarea><span class="field-hint">Array JSON berisi nama kelompok beserta opsi dan harga tambahannya.</span></div>
                                             </div>
                                             <div class="form-actions"><button class="button button-soft" type="button" onclick="this.closest('details').open=false">Batal</button><button class="button button-primary" type="submit">Simpan Perubahan</button></div>
@@ -349,7 +359,7 @@
             <div><div class="dialog-kicker">Katalog kedai</div><h2 id="add-menu-title">Tambah Menu Baru</h2><p>Isi detail menu dan atur opsi racikan jika tersedia.</p></div>
             <button class="dialog-close" id="close-add-menu" type="button" aria-label="Tutup formulir">×</button>
         </div>
-        <form class="dialog-form" id="add-product-form" method="post" action="{{ route('admin.products.create') }}">
+        <form class="dialog-form" id="add-product-form" method="post" action="{{ route('admin.products.create') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="options_json" id="options-json" value="[]">
             <div class="dialog-body">
@@ -362,6 +372,7 @@
                         <div class="field"><label>Pratinjau harga</label><div class="price-preview"><span>Harga mulai dari</span><strong id="price-preview">Rp0</strong></div></div>
                         <div class="field full"><label for="new-description">Deskripsi <span style="font-weight:500;color:var(--muted)">(opsional)</span></label><textarea id="new-description" name="description" maxlength="1000" placeholder="Ceritakan rasa atau bahan utama menu ini"></textarea></div>
                         <div class="field full"><label for="new-labels">Label <span style="font-weight:500;color:var(--muted)">(opsional)</span></label><input id="new-labels" name="labels" maxlength="200" placeholder="Contoh: Favorit, Segar"><span class="field-hint">Pisahkan beberapa label dengan koma.</span></div>
+                        <div class="field full"><label for="new-image">Foto menu <span style="font-weight:500;color:var(--muted)">(opsional)</span></label><div class="image-upload"><span class="image-preview" id="new-image-preview" aria-label="Pratinjau foto menu">✿</span><span><input id="new-image" name="image" type="file" accept="image/jpeg,image/png,image/webp"><span class="field-hint">Pilih foto produk yang jelas. Format JPEG, PNG, atau WebP, maksimal 5 MB.</span></span></div></div>
                     </div>
                 </section>
                 <section class="form-section" aria-labelledby="options-title">
@@ -416,6 +427,31 @@
 
     priceInput.addEventListener('input', () => {
         pricePreview.textContent = formatRupiah(priceInput.value);
+    });
+
+    const bindImagePreview = (input, preview) => {
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                input.setCustomValidity('Pilih gambar JPEG, PNG, atau WebP.');
+                input.reportValidity();
+                input.value = '';
+                return;
+            }
+            input.setCustomValidity('');
+            const image = document.createElement('img');
+            image.alt = 'Pratinjau foto menu';
+            image.src = URL.createObjectURL(file);
+            image.onload = () => URL.revokeObjectURL(image.src);
+            preview.replaceChildren(image);
+        });
+    };
+    bindImagePreview(document.getElementById('new-image'), document.getElementById('new-image-preview'));
+
+    document.querySelectorAll('.edit-form input[type="file"]').forEach((input) => {
+        const preview = input.closest('.image-upload').querySelector('.edit-image-preview');
+        bindImagePreview(input, preview);
     });
 
     const makeField = (labelText, input, className = 'field') => {

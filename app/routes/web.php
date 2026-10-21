@@ -82,6 +82,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
             'description' => ['nullable', 'string', 'max:1000'],
             'options_json' => ['nullable', 'json', 'max:10000'],
             'labels' => ['nullable', 'string', 'max:200'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
         if (!$validateProductOptions($data)) {
             return back()->withErrors(['options_json' => 'Format opsi racikan tidak valid.'])->withInput();
@@ -92,12 +93,14 @@ Route::middleware('auth')->prefix('admin')->group(function () {
             ['name' => $data['category'], 'active' => true, 'updated_at' => now(), 'created_at' => now()]
         );
         $categoryId = \Illuminate\Support\Facades\DB::table('categories')->where('slug', $slug)->value('id');
+        $imagePath = $request->file('image')?->store('products', 'public');
         \Illuminate\Support\Facades\DB::table('products')->insert([
             'category_id' => $categoryId,
             'prototype_id' => (string) \Illuminate\Support\Str::uuid(),
             'name' => $data['name'],
             'description' => $data['description'] ?? '',
             'price' => $data['price'],
+            'image_path' => $imagePath,
             'labels' => json_encode(array_values(array_filter(array_map('trim', explode(',', $data['labels'] ?? ''))))),
             'options' => ($data['options_json'] ?? '[]') ?: '[]',
             'available' => true,
@@ -115,6 +118,8 @@ Route::middleware('auth')->prefix('admin')->group(function () {
             'description' => ['nullable', 'string', 'max:1000'],
             'options_json' => ['nullable', 'json', 'max:10000'],
             'labels' => ['nullable', 'string', 'max:200'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_image' => ['nullable', 'boolean'],
         ]);
         if (!$validateProductOptions($data)) {
             return back()->withErrors(['options_json' => 'Format opsi racikan tidak valid.'])->withInput();
@@ -124,17 +129,38 @@ Route::middleware('auth')->prefix('admin')->group(function () {
             ['slug' => $slug],
             ['name' => $data['category'], 'active' => true, 'updated_at' => now(), 'created_at' => now()]
         );
+        $product = \Illuminate\Support\Facades\DB::table('products')->where('id', $id)->first();
+        abort_unless($product, 404);
+        $imagePath = $product->image_path;
+        if ($request->boolean('remove_image')) {
+            $imagePath = null;
+        }
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+        }
         \Illuminate\Support\Facades\DB::table('products')->where('id', $id)->update([
             'category_id' => \Illuminate\Support\Facades\DB::table('categories')->where('slug', $slug)->value('id'),
             'name' => $data['name'],
             'description' => $data['description'] ?? '',
             'price' => $data['price'],
+            'image_path' => $imagePath,
             'labels' => json_encode(array_values(array_filter(array_map('trim', explode(',', $data['labels'] ?? ''))))),
             'options' => ($data['options_json'] ?? '[]') ?: '[]',
             'updated_at' => now(),
         ]);
+        if ($product->image_path && $product->image_path !== $imagePath) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_path);
+        }
         return back()->with('success', 'Perubahan menu berhasil disimpan.');
     })->name('admin.products.update');
     Route::patch('/products/{id}', function ($id) { \Illuminate\Support\Facades\DB::table('products')->where('id',$id)->update(['available'=>!\Illuminate\Support\Facades\DB::table('products')->where('id',$id)->value('available'),'updated_at'=>now()]); return back(); })->name('admin.products.toggle');
-    Route::delete('/products/{id}', function ($id) { \Illuminate\Support\Facades\DB::table('products')->where('id',$id)->delete(); return back(); })->name('admin.products.delete');
+    Route::delete('/products/{id}', function ($id) {
+        $product = \Illuminate\Support\Facades\DB::table('products')->where('id', $id)->first();
+        abort_unless($product, 404);
+        \Illuminate\Support\Facades\DB::table('products')->where('id', $id)->delete();
+        if ($product->image_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_path);
+        }
+        return back();
+    })->name('admin.products.delete');
 });

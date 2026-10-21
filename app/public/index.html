@@ -366,6 +366,23 @@
       color: #293d2e;
     }
 
+    .prod-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .prod-art.has-photo {
+      background: #e9efe8;
+    }
+
+    .prod-art.has-photo .steam-group,
+    .prod-art.has-photo .cup {
+      display: none;
+    }
+
     .prod-art.plum {
       background: linear-gradient(135deg, #eee0e9, #c5a9bd);
       color: #5c3451;
@@ -1923,7 +1940,7 @@
       }));
       badges.hidden = config.marketing_badges.length === 0;
     }).catch(() => {});
-    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", labels:p.labels || [], groups:p.groups || [] })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
+    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [] })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
     localStorage.removeItem("racik_cart_v2");
     let cart = JSON.parse(localStorage.getItem("racik_cart_v3") || "[]");
     localStorage.removeItem("racik_orders_v2");
@@ -2104,7 +2121,8 @@
         .map((p) => {
           const inCartQty = cart.filter((c) => c.id === p.id).reduce((s, x) => s + x.qty, 0);
           return `<article class="product">
-      <div class="prod-art ${p.tone || "green"}" role="img" aria-label="${esc(p.name)}">
+      <div class="prod-art ${p.tone || "green"} ${p.imageUrl ? "has-photo" : ""}" role="img" aria-label="${esc(p.name)}">
+        ${p.imageUrl ? `<img class="prod-photo" src="${esc(p.imageUrl)}" alt="${esc(p.name)}" loading="lazy">` : ""}
         <span class="tag">${esc((p.labels || [])[0] || p.category)}</span>
         <div class="steam-group">
           <div class="steam"></div><div class="steam"></div><div class="steam"></div>

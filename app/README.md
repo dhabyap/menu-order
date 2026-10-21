@@ -12,6 +12,8 @@ Open http://127.0.0.1:8000.
 
 The app uses a local MySQL database named `raciktea` by default. Set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in `.env` for your MySQL server, then initialize the schema with `php artisan migrate`. The catalog starts empty and is populated through the authenticated dashboard.
 
+Product photos can be uploaded as JPEG, PNG, or WebP files up to 5 MB. Run `php artisan storage:link` once after deployment so uploaded photos are served from the public storage disk.
+
 ## Administrator account
 
 An administrator account is provisioned locally. To create or reset an administrator interactively later, enter a password at the hidden prompt (minimum 12 characters):

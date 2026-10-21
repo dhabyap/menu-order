@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class AdminCatalogTest extends TestCase
@@ -113,5 +115,37 @@ class AdminCatalogTest extends TestCase
         ])->assertCreated()->assertJson(['total' => 35000]);
 
         $this->assertDatabaseHas('orders', ['subtotal' => 30000, 'service_fee' => 5000, 'total' => 35000]);
+    }
+
+    public function test_admin_can_upload_and_remove_a_product_image(): void
+    {
+        Storage::fake('public');
+        $this->actingAs(User::factory()->create());
+
+        $this->post('/admin/products', [
+            'name' => 'Teh Foto',
+            'category' => 'Teh',
+            'price' => 12000,
+            'options_json' => '[]',
+            'image' => UploadedFile::fake()->image('teh.jpg'),
+        ])->assertRedirect();
+
+        $product = DB::table('products')->where('name', 'Teh Foto')->first();
+        $this->assertNotNull($product->image_path);
+        Storage::disk('public')->assertExists($product->image_path);
+        $this->getJson('/api/products')
+            ->assertOk()
+            ->assertJsonFragment(['image_url' => Storage::disk('public')->url($product->image_path)]);
+
+        $this->put('/admin/products/'.$product->id, [
+            'name' => 'Teh Foto',
+            'category' => 'Teh',
+            'price' => 12000,
+            'options_json' => '[]',
+            'remove_image' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'image_path' => null]);
+        Storage::disk('public')->assertMissing($product->image_path);
     }
 }
