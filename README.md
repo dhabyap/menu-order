@@ -21,11 +21,16 @@ Database MySQL disesuaikan lewat `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNA
 
 ### Akun pengelola
 
-Buat akun admin sekali, jangan commit kredensial ke repository:
+Kredensial dashboard dibaca dari `.env` (jangan di-commit ke repository):
 
-```powershell
-php artisan admin:create admin@raciktea.local "Administrator Racik Tea"
+```dotenv
+ADMIN_EMAIL=admin@raciktea.local
+ADMIN_PASSWORD=ganti-dengan-password-kuat
 ```
+
+`ADMIN_PASSWORD` boleh teks biasa atau hash bcrypt/argon. Setelah mengubah `.env`, jalankan `php artisan config:clear` bila konfigurasi pernah di-cache.
+
+Baris `users` hanya serves sebagai jangkar sesi: baris otomatis dibuat ulang saat login berhasil dan password-nya tidak pernah dibandingkan.
 
 ### Pengaturan toko
 

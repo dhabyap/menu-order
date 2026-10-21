@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AdminAuthService;
 use Illuminate\Http\Request;
 
 /**
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
  */
 class AuthController extends Controller
 {
+    public function __construct(private AdminAuthService $adminAuth) {}
+
     /**
      * Show the admin login form.
      */
@@ -28,7 +31,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (auth()->attempt($credentials, $request->boolean('remember'))) {
+        if ($this->adminAuth->attempt($credentials['email'], $credentials['password'], $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended('/admin');

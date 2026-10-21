@@ -16,12 +16,15 @@ Product photos can be uploaded as JPEG, PNG, or WebP files up to 5 MB. Run `php 
 
 ## Administrator account
 
-An administrator account is provisioned locally. To create or reset an administrator interactively later, enter a password at the hidden prompt (minimum 12 characters):
+The dashboard login reads its credentials from the environment, not from the database. Set them in `.env` (never commit this file):
 
-```powershell
-php artisan admin:create admin@example.com "Store Admin"
+```dotenv
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me-to-a-strong-password
 ```
 
-After setup, open http://127.0.0.1:8000/admin/login. The dashboard and all management actions require authentication. Do not use demo credentials or commit passwords.
+`ADMIN_PASSWORD` accepts plain text or a bcrypt/argon hash. The matching `users` row is created automatically on the first successful login and only acts as a session anchor.
+
+Open http://127.0.0.1:8000/admin/login. The dashboard and all management actions require authentication. Do not use demo credentials or commit passwords.
 
 The dashboard lets the administrator change the WhatsApp number and delivery fee, and create, edit, remove, or mark menu items unavailable. Menu options and their additional prices are entered as JSON; the server validates option selections and calculates the order total using database prices. Add actual shop details before accepting live orders.
