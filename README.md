@@ -1,52 +1,89 @@
-# Racik Tea — Prototype Pemesanan Digital
+# Racik Tea — Pemesanan Digital
 
-Prototype web pemesanan minuman Racik Tea. Pelanggan dapat menjelajahi menu, menyesuaikan minuman, mengatur pesanan, lalu menyiapkan checkout melalui WhatsApp. Dashboard pengelola menyediakan contoh pengelolaan menu dan ringkasan pesanan.
+Aplikasi web pemesanan minuman Racik Tea berbasis Laravel 10 dan MySQL. Pelanggan menjelajahi menu, menyesuaikan racikan, lalu checkout melalui WhatsApp. Dashboard pengelola melindungi kelola menu, pengaturan toko, dan riwayat pesanan di balik login.
 
-## Demo
+## Menjalankan aplikasi
 
-- **GitHub Pages:** https://dhabyap.github.io/menu-order/menu-order-prototype.html
-- **Jalankan lokal:** buka `menu-order-prototype.html` di browser.
+Semua perintah dijalankan dari folder `app/`:
 
-## Berkas
+```powershell
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan storage:link
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-- [`menu-order-prototype.html`](./menu-order-prototype.html) — aplikasi prototype dalam satu file HTML.
-- [`PRD_V2.md`](./PRD_V2.md) — dokumen kebutuhan produk.
+Buka `http://127.0.0.1:8000` untuk katalog pelanggan dan `http://127.0.0.1:8000/admin/login` untuk dashboard pengelola.
+
+Database MySQL disesuaikan lewat `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` di `.env`. Katalog mulai kosong dan diisi melalui dashboard.
+
+### Akun pengelola
+
+Buat akun admin sekali, jangan commit kredensial ke repository:
+
+```powershell
+php artisan admin:create admin@raciktea.local "Administrator Racik Tea"
+```
+
+### Pengaturan toko
+
+Nilai opsional di `.env` (dibaca lewat `config/store.php`):
+
+- `STORE_WHATSAPP` — nomor WhatsApp tujuan checkout.
+- `STORE_DELIVERY_FEE` — biaya antar default dalam rupiah.
+
+Keduanya juga bisa diubah dari dashboard (Pengaturan Toko) dan tersimpan di database.
+
+## Struktur
+
+Kode aplikasi Laravel ada di `app/app/` (namespace `App\`):
+
+- `app/Http/Controllers/Api/` — endpoint JSON: konfigurasi toko, katalog produk, checkout.
+- `app/Http/Controllers/Admin/` — aksi dashboard, produk, pengaturan toko, autentikasi.
+- `app/Http/Requests/` — validasi HTTP checkout (`StoreOrderRequest`) dan produk (`StoreProductRequest`).
+- `app/Services/` — logika bisnis: `OrderService`, `ProductImageService`, `ProductOptionsValidator`.
+- `resources/views/admin/partials/` — potongan Blade dashboard (header, statistik, tabel menu, pengaturan, pesanan, dialog).
+- `public/assets/admin/` — CSS/JS dashboard pengelola.
+- `public/assets/catalog/` — CSS/JS katalog pelanggan (`public/index.html`).
+- `tests/Feature/` — tes kontrak API, katalog admin, autentikasi, dan upload gambar.
+
+Route (`routes/api.php`, `routes/web.php`) hanya memetakan URL ke controller. Halaman katalog pelanggan adalah `public/index.html` statis tanpa proses build.
 
 ## Fitur
 
 ### Pemesanan pelanggan
 
 - Katalog menu dengan pencarian dan filter kategori.
-- Penyesuaian pilihan minuman, seperti ukuran, tingkat kemanisan, dan penyajian.
-- Keranjang dengan pengaturan jumlah, catatan, serta pilihan ambil di kedai atau antar.
-- Formulir data pemesan yang tersimpan otomatis di browser.
-- Rincian pesanan dapat disalin atau disiapkan untuk dikirim melalui WhatsApp.
-- Tampilan responsif untuk perangkat desktop dan mobile.
-- Modal dan drawer dengan latar belakang blur, dukungan keyboard, dan penguncian scroll saat terbuka.
+- Penyesuaian racikan: ukuran, tingkat kemanisan, topping, dan harga tambahan.
+- Keranjang dengan jumlah, catatan per menu, serta pilihan ambil di kedai atau antar.
+- Data pemesan tersimpan di browser; pesanan disimpan ke database sebelum WhatsApp terbuka.
+- Tampilan responsif desktop dan mobile.
 
 ### Dashboard pengelola
 
-- Ringkasan jumlah pesanan, menu tersedia/habis, dan estimasi omzet.
-- Tambah, edit, hapus, serta ubah ketersediaan menu.
-- Tabel menu dan riwayat pesanan untuk demonstrasi.
+- Login wajib; halaman setup publik tidak tersedia.
+- Ringkasan pesanan, menu tersedia/habis, dan nilai pesanan.
+- Tambah, edit, nonaktifkan, dan hapus menu, termasuk opsi racikan dan foto produk.
+- Upload foto JPEG/PNG/WebP maksimal 5 MB ke storage publik.
+- Pengaturan toko (nama toko, slogan, judul dan deskripsi halaman depan, nomor WhatsApp, ongkos antar, informasi singkat) dan riwayat pesanan.
 
-## Teknologi dan penyimpanan
+## Pengujian
 
-- HTML, CSS, dan JavaScript murni; tidak memerlukan proses build atau instalasi dependensi.
-- Data menu, keranjang, profil pelanggan, dan pesanan disimpan di `localStorage` browser.
-- Tidak ada backend atau sinkronisasi data antarperangkat. Menghapus data browser akan menghapus data prototype yang tersimpan.
+```powershell
+cd app
+php artisan test
+vendor\bin\pint --test
+```
 
-## Batasan prototype
+Tes memakai SQLite in-memory sehingga aman dijalankan tanpa MySQL. Pint dijalankan terhadap file yang disentuh; perbaiki format sebelum commit.
 
-- Dashboard pengelola hanya contoh antarmuka lokal dan belum dilindungi autentikasi.
-- Checkout mencatat pesanan di browser dan membuka WhatsApp dengan rincian pesanan; belum ada pemrosesan pembayaran atau konfirmasi pesanan dari server.
-- Nomor WhatsApp tujuan pada kode masih berupa nomor contoh dan perlu disesuaikan sebelum digunakan.
-- Harga ongkos antar dan data pesanan hanya untuk demonstrasi.
+## Dokumen lain
 
-## Pengembangan
-
-Edit `menu-order-prototype.html`, lalu buka kembali file tersebut di browser untuk melihat perubahan.
+- [`PRD.md`](./PRD.md) — dokumen kebutuhan produk.
+- [`menu-order-prototype.html`](./menu-order-prototype.html) — prototype awal satu file, dipertahankan sebagai arsip referensi; bukan frontend aktif.
 
 ## Lisensi
 
-Prototype ini ditujukan untuk penggunaan internal dan evaluasi produk.
+Proyek ini ditujukan untuk penggunaan internal dan evaluasi produk.
