@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StoreSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,10 @@ Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.log
 Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::post('/settings', [StoreSettingsController::class, 'update'])->name('admin.settings.update');
+
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders/table', [OrderController::class, 'table'])->name('admin.orders.table');
+    Route::patch('/orders/{id}/status', [OrderController::class, 'update'])->whereNumber('id')->name('admin.orders.update');
 
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.create');
     Route::put('/products/{id}', [ProductController::class, 'update'])->whereNumber('id')->name('admin.products.update');

@@ -182,3 +182,77 @@ addMenuForm.addEventListener('submit', (event) => {
 
     optionsJson.value = JSON.stringify(groups);
 });
+
+// Order processing: change status, live counter, and auto-refresh.
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+const ordersBody = document.getElementById('orders-body');
+const ordersLive = document.getElementById('orders-live');
+const ordersRefresh = document.getElementById('orders-refresh');
+const totalOrdersStat = document.querySelector('.stats .stat-card strong');
+const revenueStat = document.querySelector('.stats .stat-card:nth-child(4) strong');
+let latestOrderId = 0;
+
+const statusClass = (status) => `order-status-select status-${status}`;
+
+const updateOrdersIndicator = (count) => {
+    if (!ordersLive) return;
+    ordersLive.textContent = `${count} pesanan · diperbarui ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+};
+
+const reloadOrders = async () => {
+    if (!ordersBody) return;
+    const response = await fetch('/admin/orders/table', { headers: { Accept: 'text/html' } });
+    if (!response.ok) return;
+    ordersBody.innerHTML = await response.text();
+};
+
+const refreshOrderSummary = async (forceTable = false) => {
+    if (!ordersBody) return;
+    const response = await fetch('/admin/orders', { headers: { Accept: 'application/json' } });
+    if (!response.ok) return;
+    const data = await response.json();
+
+    if (totalOrdersStat) totalOrdersStat.textContent = data.count;
+    if (revenueStat) revenueStat.textContent = formatRupiah(data.revenue);
+    updateOrdersIndicator(data.count);
+
+    if (forceTable || (latestOrderId && data.latest_id > latestOrderId)) {
+        await reloadOrders();
+        if (!forceTable && ordersLive) ordersLive.textContent = `Pesanan baru masuk (${data.count})`;
+    }
+    latestOrderId = Math.max(latestOrderId, data.latest_id ?? 0);
+};
+
+if (ordersBody) {
+    refreshOrderSummary();
+    window.setInterval(() => refreshOrderSummary(), 20000);
+
+    ordersRefresh?.addEventListener('click', () => refreshOrderSummary(true));
+
+    ordersBody.addEventListener('change', async (event) => {
+        const select = event.target.closest('select[data-order-status]');
+        if (!select) return;
+        const id = select.dataset.id;
+        const previous = select.dataset.previous ?? select.value;
+        select.disabled = true;
+        select.dataset.previous = select.value;
+
+        const response = await fetch(`/admin/orders/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({ status: select.value }),
+        });
+
+        select.disabled = false;
+        if (!response.ok) {
+            select.value = previous;
+            select.dataset.previous = previous;
+            return;
+        }
+        select.className = statusClass(select.value);
+    });
+}

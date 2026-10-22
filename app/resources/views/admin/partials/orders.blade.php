@@ -1,22 +1,19 @@
         <section class="panel" aria-labelledby="orders-title">
-            <div class="panel-heading"><div><h2 id="orders-title">Riwayat Pesanan</h2><p>Pesanan yang masuk tersimpan di database toko.</p></div></div>
+            <div class="panel-heading">
+                <div>
+                    <h2 id="orders-title">Riwayat Pesanan</h2>
+                    <p>Pesanan yang masuk tersimpan di database toko. Ubah status untuk memproses pesanan.</p>
+                </div>
+                <div class="orders-heading-actions">
+                    <span class="orders-live" id="orders-live" aria-live="polite">Memuat…</span>
+                    <button class="button button-soft button-small" type="button" id="orders-refresh">⟳ Muat ulang</button>
+                </div>
+            </div>
             <div class="table-scroll">
                 <table class="orders-table">
                     <thead><tr><th>Kode</th><th>Pemesan</th><th>Layanan</th><th>Rincian Menu</th><th>Total</th><th>Status</th></tr></thead>
-                    <tbody>
-                    @forelse($orders as $order)
-                        @php($orderItems = is_string($order->items) ? json_decode($order->items, true) : $order->items)
-                        <tr>
-                            <td><span class="order-code">{{ $order->code }}</span><br><span class="order-time">{{ $order->created_at }}</span></td>
-                            <td class="order-customer"><strong>{{ $order->customer_name }}</strong><small>{{ $order->phone }}</small></td>
-                            <td>{{ ucfirst($order->service) }}</td>
-                            <td class="order-items">{{ collect($orderItems ?: [])->map(fn ($item) => ($item['quantity'] ?? 1).'× '.($item['name'] ?? 'Menu'))->implode(', ') ?: '—' }}</td>
-                            <td class="order-total">Rp{{ number_format($order->total, 0, ',', '.') }}</td>
-                            <td><span class="order-status {{ $order->status === 'cancelled' ? 'cancelled' : '' }}">{{ ucfirst($order->status) }}</span></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6"><div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan pelanggan akan muncul di sini.</div></td></tr>
-                    @endforelse
+                    <tbody id="orders-body">
+                    @include('admin.partials.orders-rows', ['orders' => $orders])
                     </tbody>
                 </table>
             </div>
