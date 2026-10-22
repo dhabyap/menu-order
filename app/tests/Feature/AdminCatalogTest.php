@@ -133,6 +133,13 @@ class AdminCatalogTest extends TestCase
         $product = DB::table('products')->where('name', 'Teh Foto')->first();
         $this->assertNotNull($product->image_path);
         Storage::disk('public')->assertExists($product->image_path);
+
+        // Stored image should be WebP and under 500 KB
+        $stored = Storage::disk('public')->get($product->image_path);
+        $this->assertNotEmpty($stored);
+        $this->assertLessThan(512000, strlen($stored));
+        $this->assertSame('webp', pathinfo($product->image_path, PATHINFO_EXTENSION));
+
         $this->getJson('/api/products')
             ->assertOk()
             ->assertJsonFragment(['image_url' => Storage::disk('public')->url($product->image_path)]);

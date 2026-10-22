@@ -25,7 +25,27 @@ class StoreProductRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'options_json' => ['nullable', 'json', 'max:10000'],
             'labels' => ['nullable', 'string', 'max:200'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+                function (string $attribute, UploadedFile $value, callable $fail): void {
+                    if (! $value) {
+                        return;
+                    }
+
+                    $size = @getimagesize($value->getRealPath());
+                    if (! $size) {
+                        $fail('Gambar tidak valid. Pastikan file gambar yang dipilih benar.');
+                        return;
+                    }
+
+                    if ($size[0] > 4000 || $size[1] > 4000) {
+                        $fail('Dimensi gambar terlalu besar. Maksimal 4000 × 4000 piksel.');
+                    }
+                },
+            ],
             'remove_image' => ['nullable', 'boolean'],
         ];
     }
