@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\ProductOptionsValidator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Validator;
 
 /**
