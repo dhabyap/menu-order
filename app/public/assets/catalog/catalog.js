@@ -712,6 +712,21 @@
       `).join("");
     }
 
+    historyList.addEventListener("click", (event) => {
+      const toggle = event.target.closest(".history-detail-toggle");
+      if (!toggle) return;
+      const detailEl = document.getElementById(toggle.getAttribute("aria-controls"));
+      if (!detailEl) return;
+      const open = detailEl.hidden;
+      detailEl.hidden = !open;
+      toggle.textContent = open ? "Tutup detail" : "Lihat detail";
+      toggle.setAttribute("aria-expanded", String(open));
+    });
+
+    function orderDetailId(code) {
+      return `detail-${String(code || "").replace(/[^A-Za-z0-9_-]/g, "-")}`;
+    }
+
     function renderOrderCard(order) {
       const itemsHtml = (order.items || []).map((item) => {
         const options = Object.entries(item.options || {})
@@ -726,6 +741,25 @@
       `;
       }).join("");
 
+      const detailId = orderDetailId(order.code);
+      const detailItemsHtml = (order.items || []).map((item) => {
+        const options = Object.entries(item.options || {})
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(" · ");
+        return `
+        <div class="history-detail-row">
+          <span class="history-detail-name">x${esc(item.quantity)} ${esc(item.name)}${options ? ` — ${esc(options)}` : ""}</span>
+          <span class="history-detail-price">${fmt(item.subtotal || (item.unit_price || 0) * (item.quantity || 0))}</span>
+        </div>
+        <div class="history-detail-row history-detail-unit">
+          <span>Harga satuan</span>
+          <span>${fmt(item.unit_price)}</span>
+        </div>
+      `;
+      }).join("");
+
+      const showFee = order.service === "Antar" && Number(order.service_fee) > 0;
+
       return `
         <div class="history-card">
           <div class="history-card-head">
@@ -739,6 +773,18 @@
             </div>
             <ul class="history-items">${itemsHtml}</ul>
             <div class="history-total">Total: ${fmt(order.total)}</div>
+            <button type="button" class="history-detail-toggle" data-order-detail-toggle
+                    data-code="${esc(order.code)}" aria-expanded="false" aria-controls="${esc(detailId)}">Lihat detail</button>
+            <div class="history-card-detail" id="${esc(detailId)}" hidden>
+              ${detailItemsHtml || `<div class="history-detail-row"><span>Rincian item tidak tersedia.</span></div>`}
+              <div class="history-detail-row"><span>Subtotal</span><span>${fmt(order.subtotal)}</span></div>
+              ${showFee ? `<div class="history-detail-row"><span>Ongkir antar</span><span>${fmt(order.service_fee)}</span></div>` : ""}
+              <div class="history-detail-row history-detail-total"><span>Total</span><span>${fmt(order.total)}</span></div>
+              <div class="history-detail-meta">
+                <span>Dipesan ${esc(formatTime(order.created_at))}</span>
+                <span>Diperbarui ${esc(formatTime(order.updated_at))}</span>
+              </div>
+            </div>
           </div>
         </div>
       `;

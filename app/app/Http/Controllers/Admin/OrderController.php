@@ -38,6 +38,36 @@ class OrderController extends Controller
     }
 
     /**
+     * Full detail of one order for the dashboard dialog.
+     */
+    public function show(int $id)
+    {
+        $order = DB::table('orders')->find($id);
+
+        abort_unless($order, 404);
+
+        $items = is_string($order->items) ? json_decode($order->items, true) : $order->items;
+
+        return response()->json([
+            'id' => (int) $order->id,
+            'code' => $order->code,
+            'customer_name' => $order->customer_name,
+            'phone' => $order->phone,
+            'address' => $order->address,
+            'service' => $order->service,
+            'note' => $order->note,
+            'subtotal' => (int) $order->subtotal,
+            'service_fee' => (int) $order->service_fee,
+            'total' => (int) $order->total,
+            'status' => $order->status,
+            'status_label' => OrderStatus::label($order->status),
+            'items' => is_array($items) ? $items : [],
+            'created_at' => $order->created_at,
+            'updated_at' => $order->updated_at,
+        ]);
+    }
+
+    /**
      * Move an order to a new processing status.
      */
     public function update(Request $request, int $id)

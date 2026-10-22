@@ -134,4 +134,28 @@ class OrderLookupTest extends TestCase
             ->assertJsonCount(1, 'orders')
             ->assertJsonPath('orders.0.code', 'RT-261022-A1IZW');
     }
+
+    public function test_lookup_returns_price_breakdown_fields(): void
+    {
+        $this->seedOrder();
+
+        $response = $this->postJson('/api/orders/lookup', ['phone' => '081234567890']);
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'orders')
+            ->assertJsonPath('orders.0.subtotal', 7000)
+            ->assertJsonPath('orders.0.service_fee', 0)
+            ->assertJsonPath('orders.0.items.0.unit_price', 7000)
+            ->assertJsonPath('orders.0.items.0.subtotal', 14000);
+    }
+
+    public function test_lookup_includes_updated_at(): void
+    {
+        $this->seedOrder();
+
+        $response = $this->postJson('/api/orders/lookup', ['phone' => '081234567890']);
+
+        $response->assertOk()
+            ->assertJsonStructure(['orders' => [['updated_at']]]);
+    }
 }

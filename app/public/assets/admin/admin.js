@@ -256,3 +256,103 @@ if (ordersBody) {
         select.className = statusClass(select.value);
     });
 }
+
+// Order detail dialog.
+const orderDetailDialog = document.getElementById('order-detail-dialog');
+const orderDetailError = document.getElementById('order-detail-error');
+
+const orderDetailField = (id) => document.getElementById(`order-detail-${id}`);
+
+const closeOrderDetail = () => {
+    if (orderDetailDialog?.open) orderDetailDialog.close();
+};
+
+const resetOrderDetail = () => {
+    orderDetailError.hidden = true;
+    orderDetailError.textContent = '';
+    ['code', 'customer', 'phone', 'address', 'service', 'note', 'created', 'updated', 'subtotal', 'fee', 'total']
+        .forEach((id) => { const el = orderDetailField(id); if (el) el.textContent = '—'; });
+    orderDetailField('items-body').replaceChildren();
+    orderDetailField('status').textContent = '—';
+    orderDetailField('status').className = '';
+    orderDetailField('fee-row').hidden = false;
+};
+
+const renderOrderDetail = (data) => {
+    orderDetailField('code').textContent = `#${data.code}`;
+    orderDetailField('customer').textContent = data.customer_name || '—';
+    orderDetailField('phone').textContent = data.phone || '—';
+    orderDetailField('address').textContent = data.address || '—';
+    orderDetailField('service').textContent = data.service || '—';
+    orderDetailField('note').textContent = data.note || '—';
+    orderDetailField('created').textContent = data.created_at || '—';
+    orderDetailField('updated').textContent = data.updated_at || '—';
+
+    const status = orderDetailField('status');
+    status.textContent = data.status_label || data.status;
+    status.className = `order-status status-${data.status}`;
+
+    const body = orderDetailField('items-body');
+    body.replaceChildren();
+    (Array.isArray(data.items) ? data.items : []).forEach((item) => {
+        const options = Object.entries(item.options || {})
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(' · ');
+        const name = options ? `${item.name} (${options})` : (item.name || '—');
+
+        const row = document.createElement('tr');
+        const nameCell = document.createElement('td');
+        nameCell.textContent = name;
+        const priceCell = document.createElement('td');
+        priceCell.textContent = formatRupiah(item.unit_price);
+        const qtyCell = document.createElement('td');
+        qtyCell.textContent = `× ${item.quantity ?? 1}`;
+        const subtotalCell = document.createElement('td');
+        subtotalCell.textContent = formatRupiah(item.subtotal);
+
+        row.append(nameCell, priceCell, qtyCell, subtotalCell);
+        body.append(row);
+    });
+
+    orderDetailField('subtotal').textContent = formatRupiah(data.subtotal);
+    orderDetailField('total').textContent = formatRupiah(data.total);
+
+    const hasFee = Number(data.service_fee) > 0;
+    orderDetailField('fee-row').hidden = !hasFee;
+    orderDetailField('fee-label').textContent = data.service === 'Antar' ? 'Ongkir antar' : 'Ongkir';
+    orderDetailField('fee').textContent = formatRupiah(data.service_fee);
+};
+
+if (ordersBody) {
+    ordersBody.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-order-detail]');
+        if (!button || !orderDetailDialog) return;
+
+        resetOrderDetail();
+        orderDetailDialog.showModal();
+        document.body.classList.add('dialog-open');
+
+        try {
+            const response = await fetch(`/admin/orders/${button.dataset.id}`, { headers: { Accept: 'application/json' } });
+            if (!response.ok) throw new Error('not found');
+            renderOrderDetail(await response.json());
+        } catch (error) {
+            orderDetailError.hidden = false;
+            orderDetailError.textContent = 'Gagal memuat detail pesanan.';
+        }
+    });
+}
+
+if (orderDetailDialog) {
+    document.getElementById('close-order-detail').addEventListener('click', closeOrderDetail);
+    orderDetailDialog.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeOrderDetail();
+        }
+    });
+    orderDetailDialog.addEventListener('close', () => document.body.classList.remove('dialog-open'));
+    orderDetailDialog.addEventListener('click', (event) => {
+        if (event.target === orderDetailDialog) closeOrderDetail();
+    });
+}

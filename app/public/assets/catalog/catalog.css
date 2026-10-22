@@ -1045,6 +1045,55 @@
       color: var(--green);
       font-variant-numeric: tabular-nums;
     }
+
+    .history-detail-toggle {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .history-card-detail {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line-light);
+    }
+
+    .history-detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      padding: 2px 0;
+      color: var(--ink);
+    }
+
+    .history-detail-row.history-detail-unit {
+      margin-bottom: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .history-detail-total {
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .history-detail-meta {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+      color: var(--muted);
+    }
     .cart-line {
       display: grid;
       grid-template-columns: 1fr auto;

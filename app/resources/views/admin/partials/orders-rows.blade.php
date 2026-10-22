@@ -14,7 +14,10 @@
                 @endforeach
             </select>
         </td>
+        <td class="order-actions">
+            <button class="button button-soft button-small" type="button" data-order-detail data-id="{{ $order->id }}">Detail</button>
+        </td>
     </tr>
 @empty
-    <tr><td colspan="6"><div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan pelanggan akan muncul di sini.</div></td></tr>
+    <tr><td colspan="7"><div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan pelanggan akan muncul di sini.</div></td></tr>
 @endforelse

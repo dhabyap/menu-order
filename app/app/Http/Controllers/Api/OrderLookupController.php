@@ -35,15 +35,18 @@ class OrderLookupController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(self::LIMIT)
-            ->get(['code', 'service', 'status', 'total', 'created_at', 'items']);
+            ->get(['code', 'service', 'status', 'subtotal', 'service_fee', 'total', 'created_at', 'updated_at', 'items']);
 
         $orders = $rows->map(fn ($row) => [
             'code' => $row->code,
             'service' => $row->service,
             'status' => $row->status,
             'status_label' => OrderStatus::label($row->status),
+            'subtotal' => (int) $row->subtotal,
+            'service_fee' => (int) $row->service_fee,
             'total' => (int) $row->total,
             'created_at' => $row->created_at,
+            'updated_at' => $row->updated_at,
             'items' => $this->items($row->items),
         ])->values()->all();
 
@@ -110,6 +113,8 @@ class OrderLookupController extends Controller
                 'name' => (string) ($item['name'] ?? ''),
                 'quantity' => (int) ($item['quantity'] ?? 0),
                 'options' => $options,
+                'unit_price' => (int) ($item['unit_price'] ?? 0),
+                'subtotal' => (int) ($item['subtotal'] ?? 0),
             ];
         }
 
