@@ -11,9 +11,9 @@
 </head>
 <body>
     <header class="page-top">
-        <a class="brand" href="/" aria-label="Racik Tea, kembali ke katalog">
-            <span class="mark">R</span>
-            <span>Racik Tea<small>Artisan &amp; Seduh Segar</small></span>
+        <a class="brand" href="/" aria-label="{{ $storeName }}, kembali ke katalog">
+            @if($logoUrl)<img class="mark brand-logo" src="{{ $logoUrl }}" alt="Logo {{ $storeName }}">@else<span class="mark">{{ mb_substr($storeName, 0, 1) }}</span>@endif
+            <span>{{ $storeName }}<small>{{ $storeTagline }}</small></span>
         </a>
         <a class="back-link" href="/"><span aria-hidden="true">← </span>Kembali ke katalog</a>
     </header>

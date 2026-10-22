@@ -7,7 +7,20 @@
       if (!config) return;
       deliveryFeeConfigured = Number(config.delivery_fee) || 0;
       document.getElementById("brandTitle").textContent = config.store_name;
-      document.getElementById("brandMark").textContent = [...config.store_name][0] || "R";
+      const brandMark = document.getElementById("brandMark");
+      if (config.logo_url) {
+        const logo = document.createElement("img");
+        logo.className = "brand-logo";
+        logo.src = config.logo_url;
+        logo.alt = `Logo ${config.store_name}`;
+        brandMark.replaceWith(logo);
+        const favicon = document.createElement("link");
+        favicon.rel = "icon";
+        favicon.href = config.logo_url;
+        document.head.append(favicon);
+      } else {
+        brandMark.textContent = [...config.store_name][0] || "R";
+      }
       document.getElementById("brandTagline").textContent = config.store_tagline || "";
       document.getElementById("heroEyebrow").textContent = config.store_name;
       document.getElementById("heroHeading").textContent = config.hero_heading;

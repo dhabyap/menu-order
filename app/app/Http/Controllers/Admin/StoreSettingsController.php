@@ -3,28 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreSettingsRequest;
+use App\Services\ProductImageService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
-/**
- * Manages the store settings shown in the customer catalog.
- */
 class StoreSettingsController extends Controller
 {
-    /**
-     * Store the editable store settings.
-     */
-    public function update(Request $request)
+    public function update(StoreSettingsRequest $request, ProductImageService $images)
     {
-        $data = $request->validate([
-            'whatsapp' => ['nullable', 'regex:/^62[1-9][0-9]{7,12}$/'],
-            'delivery_fee' => ['required', 'integer', 'min:0', 'max:10000000'],
-            'store_name' => ['required', 'string', 'max:120'],
-            'store_tagline' => ['nullable', 'string', 'max:120'],
-            'hero_heading' => ['required', 'string', 'max:160'],
-            'hero_description' => ['required', 'string', 'max:500'],
-            'marketing_badges' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $data = $request->validated();
+        $oldLogo = DB::table('store_settings')->where('key', 'logo_path')->value('value');
+        $newLogo = null;
+
+        if ($request->hasFile('logo')) {
+            $newLogo = $images->store($request->file('logo'));
+        }
 
         foreach ([
             'whatsapp' => $data['whatsapp'] ?? '',
@@ -35,10 +29,17 @@ class StoreSettingsController extends Controller
             'hero_description' => $data['hero_description'],
             'marketing_badges' => $data['marketing_badges'] ?? '',
         ] as $key => $value) {
-            DB::table('store_settings')->updateOrInsert(
-                ['key' => $key],
-                ['value' => $value, 'updated_at' => now(), 'created_at' => now()]
-            );
+            DB::table('store_settings')->updateOrInsert(['key' => $key], ['value' => $value, 'updated_at' => now(), 'created_at' => now()]);
+        }
+
+        if ($newLogo) {
+            DB::table('store_settings')->updateOrInsert(['key' => 'logo_path'], ['value' => $newLogo, 'updated_at' => now(), 'created_at' => now()]);
+        } elseif ($request->boolean('remove_logo')) {
+            DB::table('store_settings')->where('key', 'logo_path')->delete();
+        }
+
+        if (($newLogo || $request->boolean('remove_logo')) && $oldLogo) {
+            Storage::disk('public')->delete($oldLogo);
         }
 
         return back()->with('success', 'Pengaturan toko tersimpan.');

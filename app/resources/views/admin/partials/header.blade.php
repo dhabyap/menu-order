@@ -1,7 +1,7 @@
     <header class="top">
-        <a class="brand" href="/" aria-label="Racik Tea, kembali ke katalog">
-            <span class="mark">R</span>
-            <span class="brand-text">Racik Tea<small>Artisan &amp; Seduh Segar</small></span>
+        <a class="brand" href="/" aria-label="{{ $storeName }}, kembali ke katalog">
+            @if($logoUrl)<img class="mark brand-logo" src="{{ $logoUrl }}" alt="Logo {{ $storeName }}">@else<span class="mark">{{ mb_substr($storeName, 0, 1) }}</span>@endif
+            <span class="brand-text">{{ $storeName }}<small>{{ $storeTagline }}</small></span>
         </a>
         <div class="top-actions">
             <a class="top-link" href="/">← <span>Lihat katalog</span></a>

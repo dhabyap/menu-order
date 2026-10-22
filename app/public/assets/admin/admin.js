@@ -36,7 +36,7 @@ priceInput.addEventListener('input', () => {
     pricePreview.textContent = formatRupiah(priceInput.value);
 });
 
-const bindImagePreview = (input, preview) => {
+const bindImagePreview = (input, preview, alt = 'Pratinjau foto menu') => {
     input.addEventListener('change', () => {
         const file = input.files?.[0];
         if (!file) return;
@@ -48,13 +48,15 @@ const bindImagePreview = (input, preview) => {
         }
         input.setCustomValidity('');
         const image = document.createElement('img');
-        image.alt = 'Pratinjau foto menu';
+        image.alt = alt;
         image.src = URL.createObjectURL(file);
         image.onload = () => URL.revokeObjectURL(image.src);
         preview.replaceChildren(image);
     });
 };
 bindImagePreview(document.getElementById('new-image'), document.getElementById('new-image-preview'));
+const storeLogoInput = document.getElementById('store-logo');
+if (storeLogoInput) bindImagePreview(storeLogoInput, document.getElementById('store-logo-preview'), 'Pratinjau logo toko');
 
 document.querySelectorAll('.edit-form input[type="file"]').forEach((input) => {
     const preview = input.closest('.image-upload').querySelector('.edit-image-preview');

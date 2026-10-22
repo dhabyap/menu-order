@@ -22,6 +22,7 @@
         .page-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
         .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
         .mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--green); color: #fff; font: 700 19px "Fraunces", Georgia, serif; box-shadow: 0 3px 10px rgba(46, 67, 52, .2); }
+        .brand-logo { object-fit: contain; background: #fff; }
         .brand small { display: block; margin-top: -3px; color: var(--muted); font-size: 10px; font-weight: 500; letter-spacing: 0; }
         .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--green); text-decoration: none; font-size: 12px; font-weight: 800; }
         .back-link:hover { text-decoration: underline; text-underline-offset: 3px; }

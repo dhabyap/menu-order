@@ -74,6 +74,32 @@ class AdminCatalogTest extends TestCase
         $this->assertDatabaseMissing('products', ['id' => $product->id]);
     }
 
+    public function test_admin_can_upload_and_remove_store_logo(): void
+    {
+        Storage::fake('public');
+        $this->actingAs(User::factory()->create());
+        $settings = [
+            'whatsapp' => '',
+            'delivery_fee' => 0,
+            'store_name' => 'Kedai Contoh',
+            'store_tagline' => 'Teh segar',
+            'hero_heading' => 'Menu',
+            'hero_description' => 'Deskripsi',
+            'logo' => UploadedFile::fake()->image('logo.png'),
+        ];
+
+        $this->post('/admin/settings', $settings)->assertRedirect();
+        $path = DB::table('store_settings')->where('key', 'logo_path')->value('value');
+        $this->assertNotNull($path);
+        Storage::disk('public')->assertExists($path);
+        $this->getJson('/api/store-config')->assertJsonPath('logo_url', Storage::disk('public')->url($path));
+        $this->get('/admin')->assertSee('img class="mark brand-logo"', false);
+
+        $this->post('/admin/settings', array_merge($settings, ['logo' => null, 'remove_logo' => '1']))->assertRedirect();
+        $this->assertDatabaseMissing('store_settings', ['key' => 'logo_path']);
+        Storage::disk('public')->assertMissing($path);
+    }
+
     public function test_order_total_uses_menu_option_price_and_saved_delivery_fee(): void
     {
         $categoryId = DB::table('categories')->insertGetId([

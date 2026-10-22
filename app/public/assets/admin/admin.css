@@ -27,6 +27,7 @@ a { color: inherit; }
 .top { position: sticky; top: 0; z-index: 5; height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(247, 245, 240, .94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
 .mark { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: white; font: 700 18px "Fraunces", Georgia, serif; box-shadow: 0 2px 8px rgba(46, 67, 52, .25); }
+.brand-logo { object-fit: contain; background: #fff; }
 .brand-text small { display: block; margin-top: -3px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0; }
 .top-actions { display: flex; align-items: center; gap: 8px; }
 .top-link, .logout-button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 12px; font-weight: 700; transition: border-color .15s, color .15s, background .15s; }
