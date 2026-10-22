@@ -1,12 +1,25 @@
 
     // --- Data Initializer ---
     const fmt = (n) => "Rp" + Number(n || 0).toLocaleString("id-ID");
+    document.getElementById("footerYear").textContent = new Date().getFullYear();
     let products = [];
     let deliveryFeeConfigured = 0;
     fetch("/api/store-config").then(r => r.ok ? r.json() : null).then(config => {
       if (!config) return;
       deliveryFeeConfigured = Number(config.delivery_fee) || 0;
       document.getElementById("brandTitle").textContent = config.store_name;
+      document.getElementById("footerStoreName").textContent = config.store_name;
+      document.getElementById("footerCopyrightName").textContent = config.store_name;
+      document.getElementById("footerStoreTagline").textContent = config.store_tagline || "Menu dan pemesanan";
+      const footerMark = document.getElementById("footerMark");
+      footerMark.textContent = [...config.store_name][0] || "R";
+      if (config.logo_url) {
+        const footerLogo = document.createElement("img");
+        footerLogo.src = config.logo_url;
+        footerLogo.alt = "";
+        footerLogo.className = "footer-logo";
+        footerMark.replaceWith(footerLogo);
+      }
       const brandMark = document.getElementById("brandMark");
       if (config.logo_url) {
         const logo = document.createElement("img");
@@ -785,6 +798,7 @@ Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
 
     // --- Admin Dashboard View ---
     document.getElementById("btnToggleAdmin").onclick = () => { window.location.href = "/admin/login"; };
+    document.getElementById("footerManage").onclick = () => { window.location.href = "/admin/login"; };
 
     document.getElementById("btnAdminBack").onclick = () => {
       document.getElementById("viewAdmin").style.display = "none";

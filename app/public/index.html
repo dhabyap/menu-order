@@ -18,7 +18,7 @@
 <body>
   <div class="shell">
     <!-- Top Navigation Bar -->
-    <header class="top">
+    <header class="top" id="top">
       <div class="brand">
         <span class="mark" id="brandMark">R</span>
         <div class="brand-text">
@@ -26,6 +26,11 @@
           <small id="brandTagline"></small>
         </div>
       </div>
+      <nav class="site-nav" aria-label="Navigasi utama">
+        <a href="#productGrid">Menu</a>
+        <a href="#orderGuide">Cara pesan</a>
+        <a href="#storeFooter">Kontak</a>
+      </nav>
       <div class="top-actions">
         <span class="badge-open" id="statusBadge">Pesan online</span>
         <button class="btn-cart-top" id="topCartBtn">
@@ -45,6 +50,10 @@
           <div class="eyebrow" id="heroEyebrow">Menu Racik Tea</div>
           <h1 id="heroHeading">Pilih minuman favoritmu.</h1>
           <p id="heroDescription">Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.</p>
+          <div class="hero-actions">
+            <a class="hero-action-primary" href="#productGrid">Lihat menu <span aria-hidden="true">↓</span></a>
+            <a class="hero-action-secondary" href="#orderGuide">Cara pesan</a>
+          </div>
           <div class="hero-badges" id="heroBadges" hidden>
           </div>
         </div>
@@ -65,6 +74,28 @@
 
       <!-- Products Grid -->
       <div class="products" id="productGrid"></div>
+
+      <section class="order-guide" id="orderGuide" aria-labelledby="orderGuideTitle">
+        <div class="section-heading">
+          <span class="eyebrow">Mudah dan praktis</span>
+          <h2 id="orderGuideTitle">Cara pesan</h2>
+          <p>Siapkan pesananmu dalam beberapa langkah.</p>
+        </div>
+        <ol class="order-steps">
+          <li><span class="step-number">01</span><div><strong>Pilih menu</strong><p>Jelajahi menu dan pilih minuman yang kamu suka.</p></div></li>
+          <li><span class="step-number">02</span><div><strong>Atur racikan</strong><p>Pilih opsi yang tersedia, jumlah, dan tambahkan catatan bila perlu.</p></div></li>
+          <li><span class="step-number">03</span><div><strong>Tinjau pesanan</strong><p>Periksa keranjang, lalu teruskan pesanan melalui WhatsApp.</p></div></li>
+        </ol>
+      </section>
+
+      <footer class="site-footer" id="storeFooter">
+      <a class="footer-brand" href="#top" aria-label="Kembali ke atas">
+        <span class="footer-mark" id="footerMark">R</span>
+        <span><strong id="footerStoreName">Racik Tea</strong><small id="footerStoreTagline">Menu dan pemesanan</small></span>
+      </a>
+      <div class="footer-links"><a href="#productGrid">Menu</a><a href="#orderGuide">Cara pesan</a><button type="button" id="footerManage">Kelola toko</button></div>
+      <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">Racik Tea</span></p>
+      </footer>
     </main>
 
     <!-- Admin / Management View -->
