@@ -82,6 +82,9 @@
       if (layer.id === "cartDrawer") {
         document.getElementById("cartBackdrop").classList.add("active");
       }
+      if (layer.id === "historyDrawer") {
+        historyBackdrop.classList.add("active");
+      }
 
       requestAnimationFrame(() => {
         const target = focusTarget || layer.querySelector(
@@ -106,6 +109,9 @@
       layer.inert = true;
       if (layer.id === "cartDrawer") {
         document.getElementById("cartBackdrop").classList.remove("active");
+      }
+      if (layer.id === "historyDrawer") {
+        document.getElementById("historyBackdrop").classList.remove("active");
       }
       if (layerIndex < 0) return;
 
@@ -139,6 +145,7 @@
       if (!layer) return;
       const closeById = {
         cartDrawer: closeCart,
+        historyDrawer: closeHistory,
         customModal: closeCustomize,
         menuEditorModal: closeMenuEditor,
         deleteMenuModal: closeDeleteMenu,
@@ -602,6 +609,147 @@
     document.getElementById("floatingCart").onclick = openCart;
     document.getElementById("btnCloseCart").onclick = closeCart;
     document.getElementById("cartBackdrop").onclick = closeCart;
+
+    // --- Order History Drawer ---
+    const historyDrawer = document.getElementById("historyDrawer");
+    const historyBackdrop = document.getElementById("historyBackdrop");
+    const btnCloseHistory = document.getElementById("btnCloseHistory");
+    const historyPhone = document.getElementById("historyPhone");
+    const btnFindHistory = document.getElementById("btnFindHistory");
+    const historyRefresh = document.getElementById("historyRefresh");
+    const historyList = document.getElementById("historyList");
+    const historyHint = document.getElementById("historyHint");
+    let lastHistoryPhone = "";
+
+    function openHistory() {
+      openLayer(historyDrawer, historyPhone);
+      if (profile.phone) {
+        historyPhone.value = profile.phone;
+        findHistory();
+      } else {
+        historyHint.textContent = "Masukkan nomor WhatsApp kamu untuk melihat pesanan.";
+      }
+    }
+
+    function closeHistory() {
+      closeLayer(historyDrawer);
+    }
+
+    btnCloseHistory.onclick = closeHistory;
+    historyBackdrop.onclick = closeHistory;
+    document.getElementById("navOrderHistory").onclick = (event) => { event.preventDefault(); openHistory(); };
+    document.getElementById("footerOrderHistory").onclick = openHistory;
+
+    btnFindHistory.onclick = findHistory;
+    historyRefresh.onclick = () => {
+      if (!lastHistoryPhone) {
+        historyHint.textContent = "Cari pesanan terlebih dahulu.";
+        return;
+      }
+      historyPhone.value = lastHistoryPhone;
+      findHistory();
+    };
+    historyPhone.addEventListener("input", () => { historyHint.textContent = ""; });
+
+    async function findHistory() {
+      const phone = normalizeIndonesianPhone(historyPhone.value.trim());
+
+      if (!phone) {
+        historyHint.textContent = "Masukkan nomor WhatsApp Indonesia yang valid, contoh 0812 3456 7890.";
+        historyPhone.focus();
+        return;
+      }
+
+      lastHistoryPhone = phone;
+      historyHint.textContent = "Mencari...";
+      historyList.innerHTML = "";
+
+      try {
+        const response = await fetch("/api/orders/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ phone }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Gagal mencari pesanan.");
+        }
+
+        renderHistory(data.orders || []);
+      } catch (error) {
+        historyHint.textContent = error.message || "Gagal mencari pesanan. Coba lagi.";
+      }
+    }
+
+    function renderHistory(orders) {
+      const processing = orders.filter((o) => o.status === "pending" || o.status === "processing");
+      const history = orders.filter((o) => o.status === "completed" || o.status === "cancelled");
+
+      historyHint.textContent = "";
+
+      if (!orders.length) {
+        historyList.innerHTML = `<p class="history-empty">Belum ada pesanan untuk nomor ini.</p>`;
+        return;
+      }
+
+      const groups = [];
+
+      if (processing.length) {
+        groups.push({ title: "Sedang diproses", items: processing });
+      }
+
+      if (history.length) {
+        groups.push({ title: "Riwayat", items: history });
+      }
+
+      historyList.innerHTML = groups.map((group) => `
+        <div class="history-group">
+          <h3 class="history-group-title">${esc(group.title)}</h3>
+          ${group.items.map(renderOrderCard).join("")}
+        </div>
+      `).join("");
+    }
+
+    function renderOrderCard(order) {
+      const itemsHtml = (order.items || []).map((item) => {
+        const options = Object.entries(item.options || {})
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(" · ");
+        return `
+        <li class="history-item">
+          <span class="history-item-qty">x${esc(item.quantity)}</span>
+          <span class="history-item-name">${esc(item.name)}</span>
+          ${options ? `<span class="history-item-opts">${esc(options)}</span>` : ""}
+        </li>
+      `;
+      }).join("");
+
+      return `
+        <div class="history-card">
+          <div class="history-card-head">
+            <span class="history-code">#${esc(order.code)}</span>
+            <span class="history-time">${esc(formatTime(order.created_at))}</span>
+          </div>
+          <div class="history-card-body">
+            <div class="history-card-row">
+              <span class="history-service">${esc(order.service)}</span>
+              <span class="history-badge history-badge-${esc(order.status)}">${esc(order.status_label)}</span>
+            </div>
+            <ul class="history-items">${itemsHtml}</ul>
+            <div class="history-total">Total: ${fmt(order.total)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function formatTime(value) {
+      if (!value) return "";
+      const d = new Date(String(value).replace(" ", "T"));
+      if (isNaN(d.getTime())) return String(value);
+      return d.toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" });
+    }
 
     // --- Service Switcher (Ambil Sendiri / Antar) ---
     document.getElementById("srvPickup").onclick = () => setService("Ambil Sendiri");

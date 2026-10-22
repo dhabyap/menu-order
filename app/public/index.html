@@ -29,6 +29,7 @@
       <nav class="site-nav" aria-label="Navigasi utama">
         <a href="#productGrid">Menu</a>
         <a href="#orderGuide">Cara pesan</a>
+        <a href="#" id="navOrderHistory">Cek Pesanan</a>
         <a href="#storeFooter">Kontak</a>
       </nav>
       <div class="top-actions">
@@ -93,7 +94,7 @@
         <span class="footer-mark" id="footerMark">R</span>
         <span><strong id="footerStoreName">Racik Tea</strong><small id="footerStoreTagline">Menu dan pemesanan</small></span>
       </a>
-      <div class="footer-links"><a href="#productGrid">Menu</a><a href="#orderGuide">Cara pesan</a><button type="button" id="footerManage">Kelola toko</button></div>
+      <div class="footer-links"><a href="#productGrid">Menu</a><a href="#orderGuide">Cara pesan</a><button type="button" id="footerOrderHistory">Cek pesanan</button><button type="button" id="footerManage">Kelola toko</button></div>
       <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">Racik Tea</span></p>
       </footer>
     </main>
@@ -258,6 +259,37 @@
         <button class="btn-sec-action" id="btnCopyOrder">Salin Format Teks</button>
         <button class="btn-sec-action" id="btnClearCart" style="color: var(--rose)">Kosongkan</button>
       </div>
+    </div>
+  </aside>
+
+  <!-- Order History Drawer / Bottom Sheet -->
+  <div class="drawer-backdrop" id="historyBackdrop"></div>
+  <aside class="drawer" id="historyDrawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="historyDrawerTitle" inert>
+    <div class="drawer-head">
+      <div>
+        <h2 id="historyDrawerTitle">Cek Pesanan</h2>
+        <span style="font-size: 11px; color: var(--muted)" id="historyDrawerSubtitle">Riwayat pesanan kamu</span>
+      </div>
+      <button class="btn-close" id="btnCloseHistory" type="button" aria-label="Tutup cek pesanan">&times;</button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="history-search">
+        <div class="field" style="margin-bottom: 10px">
+          <label for="historyPhone">Nomor WhatsApp</label>
+          <input type="tel" id="historyPhone" autocomplete="tel" inputmode="tel" placeholder="Contoh: 0812 3456 7890" />
+        </div>
+        <div class="history-search-actions">
+          <button class="btn-primary-action" id="btnFindHistory" type="button">
+            <span>Cari Pesanan</span>
+          </button>
+          <button class="btn-sec-action" id="historyRefresh" type="button">Muat Ulang</button>
+        </div>
+        <p class="field-hint" style="margin: 10px 0 0">Pesanan ditampilkan berdasarkan nomor WhatsApp yang dipakai saat memesan.</p>
+      </div>
+
+      <p class="history-hint" id="historyHint" role="status" aria-live="polite"></p>
+      <div id="historyList"></div>
     </div>
   </aside>
 
