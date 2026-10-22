@@ -345,7 +345,7 @@
         listEl.innerHTML = cart
           .map(
             (item, idx) => `
-      <div class="cart-line">
+      ${(() => { const product = products.find((p) => p.id === item.id); return `<div class="cart-line${product?.imageUrl ? " has-image" : ""}">${product?.imageUrl ? `<img class="cart-line-image" src="${esc(product.imageUrl)}" alt="${esc(item.name)}">` : ""}`; })()}
         <div>
           <div class="cart-line-title">${esc(item.name)}</div>
           <div class="cart-line-opts">${esc(item.options.join(" · "))}</div>
@@ -429,6 +429,19 @@
 
       document.getElementById("modalDrinkTitle").textContent = p.name;
       document.getElementById("modalDrinkDesc").textContent = p.desc;
+      const modalImage = document.getElementById("modalDrinkImage");
+      if (modalImage) {
+        modalImage.replaceChildren();
+        if (p.imageUrl) {
+          const image = document.createElement("img");
+          image.src = p.imageUrl;
+          image.alt = p.name;
+          modalImage.append(image);
+          modalImage.hidden = false;
+        } else {
+          modalImage.hidden = true;
+        }
+      }
       document.getElementById("modalQtyVal").textContent = currentCustomQty;
       document.getElementById("customItemNote").value = editingItem?.note || "";
       document.querySelector("#btnConfirmCustom span:first-child").textContent = editingItem ? "Simpan Perubahan" : "Tambah ke Pesanan";

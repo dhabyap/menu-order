@@ -362,14 +362,16 @@
     }
 
     .prod-photo {
-      position: absolute;
-      inset: 0;
+      display: block;
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 320px;
       object-fit: contain;
     }
 
     .prod-art.has-photo {
+      height: auto;
+      min-height: 0;
       background: #e9efe8;
     }
 
@@ -809,6 +811,19 @@
       border-bottom: 1px solid var(--line-light);
     }
 
+    .cart-line-image {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #e9efe8;
+    }
+
+    .cart-line.has-image {
+      grid-template-columns: 56px minmax(0, 1fr) auto;
+      align-items: start;
+    }
+
     .cart-line-title {
       font-weight: 700;
       font-size: 13px;
@@ -1096,6 +1111,21 @@
 
     .modal-wrap.active .modal-card {
       transform: scale(1);
+    }
+
+    .modal-drink-image {
+      max-height: 260px;
+      overflow: hidden;
+      background: #e9efe8;
+      margin: 0 20px 12px;
+      border-radius: 12px;
+    }
+
+    .modal-drink-image img {
+      display: block;
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
     }
 
     .modal-head {
