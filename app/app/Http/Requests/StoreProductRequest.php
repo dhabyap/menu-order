@@ -39,6 +39,7 @@ class StoreProductRequest extends FormRequest
                     $size = @getimagesize($value->getRealPath());
                     if (! $size) {
                         $fail('Gambar tidak valid. Pastikan file gambar yang dipilih benar.');
+
                         return;
                     }
 
