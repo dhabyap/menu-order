@@ -72,6 +72,21 @@ class ApiContractTest extends TestCase
             ]);
     }
 
+    public function test_store_config_falls_back_to_environment_whatsapp_when_saved_number_is_blank(): void
+    {
+        config()->set('store.whatsapp', '6281234567890');
+        DB::table('store_settings')->insert([
+            'key' => 'whatsapp',
+            'value' => '',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->getJson('/api/store-config')
+            ->assertOk()
+            ->assertJson(['whatsapp' => '6281234567890']);
+    }
+
     public function test_products_endpoint_exposes_catalog_fields(): void
     {
         $this->seedProduct();
@@ -149,6 +164,7 @@ class ApiContractTest extends TestCase
         $this->seedProduct();
         DB::table('store_settings')->insert([
             ['key' => 'delivery_fee', 'value' => '5000', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $this->postJson('/api/orders', [
@@ -163,6 +179,51 @@ class ApiContractTest extends TestCase
         ])->assertCreated()->assertJson(['total' => 12000]);
 
         $this->assertDatabaseHas('orders', ['subtotal' => 12000, 'service_fee' => 0, 'total' => 12000]);
+    }
+
+    public function test_order_is_not_saved_when_store_whatsapp_is_not_configured(): void
+    {
+        config()->set('store.whatsapp', '');
+        $this->seedProduct();
+
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [[
+                'product_id' => 'proto-1',
+                'quantity' => 1,
+                'options' => ['Ukuran' => 'Regular'],
+            ]],
+        ])->assertStatus(422)
+            ->assertJson([
+                'message' => 'Pesanan belum disimpan karena nomor WhatsApp toko belum diatur. Silakan hubungi pengelola toko.',
+            ]);
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_order_uses_environment_whatsapp_when_saved_number_is_blank(): void
+    {
+        config()->set('store.whatsapp', '6281234567890');
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            'key' => 'whatsapp',
+            'value' => '',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [[
+                'product_id' => 'proto-1',
+                'quantity' => 1,
+                'options' => ['Ukuran' => 'Regular'],
+            ]],
+        ])->assertCreated()->assertJson(['whatsapp' => '6281234567890']);
     }
 
     public function test_order_rejects_delivery_without_address(): void

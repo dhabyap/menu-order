@@ -25,6 +25,8 @@ class OrderService
 
     public const MESSAGE_OPTION_INVALID = 'Opsi menu tidak valid.';
 
+    public const MESSAGE_WHATSAPP_NOT_CONFIGURED = 'Pesanan belum disimpan karena nomor WhatsApp toko belum diatur. Silakan hubungi pengelola toko.';
+
     /**
      * Create an order from validated checkout data.
      *
@@ -52,7 +54,14 @@ class OrderService
         [$items, $subtotal] = $this->buildItems($data['items'], $products);
 
         $deliveryFee = DB::table('store_settings')->where('key', 'delivery_fee')->value('value');
-        $whatsapp = DB::table('store_settings')->where('key', 'whatsapp')->value('value');
+        $whatsapp = trim((string) DB::table('store_settings')->where('key', 'whatsapp')->value('value'));
+        if ($whatsapp === '') {
+            $whatsapp = trim((string) config('store.whatsapp', ''));
+        }
+        if ($whatsapp === '') {
+            throw new RuntimeException(self::MESSAGE_WHATSAPP_NOT_CONFIGURED);
+        }
+
         $fee = $data['service'] === 'Antar' ? (int) ($deliveryFee ?? config('store.delivery_fee', 0)) : 0;
         $total = $subtotal + $fee;
         $code = 'RT-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
@@ -77,7 +86,7 @@ class OrderService
             'id' => $id,
             'code' => $code,
             'total' => $total,
-            'whatsapp' => $whatsapp ?? config('store.whatsapp'),
+            'whatsapp' => $whatsapp,
         ];
     }
 

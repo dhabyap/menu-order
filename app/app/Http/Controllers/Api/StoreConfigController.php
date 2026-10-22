@@ -22,10 +22,14 @@ class StoreConfigController extends Controller
     public function index()
     {
         $settings = DB::table('store_settings')->pluck('value', 'key');
+        $whatsapp = trim((string) ($settings['whatsapp'] ?? ''));
+        if ($whatsapp === '') {
+            $whatsapp = trim((string) config('store.whatsapp', ''));
+        }
 
         return [
             'delivery_fee' => (int) ($settings['delivery_fee'] ?? config('store.delivery_fee', 0)),
-            'whatsapp' => $settings['whatsapp'] ?? config('store.whatsapp'),
+            'whatsapp' => $whatsapp,
             'store_name' => $settings['store_name'] ?? 'Racik Tea',
             'store_tagline' => $settings['store_tagline'] ?? '',
             'logo_url' => app(StoreBrand::class)->current()['logoUrl'],
