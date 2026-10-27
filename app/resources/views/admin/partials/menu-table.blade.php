@@ -6,10 +6,11 @@
 
             <div class="table-scroll">
                 <table class="menu-table">
-                    <thead><tr><th>Menu Minuman</th><th>Kategori</th><th>Harga Dasar</th><th>Status Stok</th><th style="text-align:right">Tindakan</th></tr></thead>
-                    <tbody>
+                    <thead><tr><th style="width:40px" aria-label="Urutkan">☰</th><th>Menu Minuman</th><th>Kategori</th><th>Harga Dasar</th><th>Status Stok</th><th style="text-align:right">Tindakan</th></tr></thead>
+                    <tbody id="products-table-body">
                     @forelse($products as $product)
-                        <tr>
+                        <tr data-id="{{ $product->id }}">
+                            <td><span class="drag-handle" aria-hidden="true" style="cursor:grab;padding-right:8px">☰</span></td>
                             <td><div class="menu-cell"><span class="menu-art">@if($product->image_path)<img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) }}" alt="">@else{{ $product->icon ?: '✿' }}@endif</span><span><strong>{{ $product->name }}</strong><small>{{ $product->description ?: 'Belum ada deskripsi' }}</small></span></div></td>
                             <td><span class="category-pill">{{ $product->category ?: 'Tanpa kategori' }}</span></td>
                             <td><strong>Rp{{ number_format($product->price, 0, ',', '.') }}</strong></td>
@@ -29,7 +30,7 @@
                             </td>
                         </tr>
                         <tr class="edit-row">
-                            <td colspan="5">
+                            <td colspan="6">
                                 <details class="edit-details">
                                     <summary><span class="edit-open-{{ $product->id }}"></span></summary>
                                     <div class="edit-form">
@@ -52,10 +53,59 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5"><div class="empty-state"><strong>Belum ada menu</strong>Tambahkan menu pertama kedai menggunakan tombol Tambah Menu.</div></td></tr>
+                        <tr><td colspan="6"><div class="empty-state"><strong>Belum ada menu</strong>Tambahkan menu pertama kedai menggunakan tombol Tambah Menu.</div></td></tr>
                     @endforelse
                     </tbody>
                 </table>
             </div>
         </section>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+        <script>
+        (function () {
+            const tbody = document.getElementById('products-table-body');
+            if (!tbody) return;
+
+            let sortable = null;
+
+            function initSortable() {
+                sortable = new Sortable(tbody, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    onEnd: function () {
+                        const ids = Array.from(tbody.querySelectorAll('tr'))
+                            .map(tr => tr.dataset.id)
+                            .filter(Boolean);
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/admin/products/reorder';
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'order';
+                        input.value = JSON.stringify(ids);
+
+                        const method = document.createElement('input');
+                        method.type = 'hidden';
+                        method.name = '_method';
+                        method.value = 'PATCH';
+
+                        const token = document.createElement('input');
+                        token.type = 'hidden';
+                        token.name = '_token';
+                        token.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                        form.appendChild(input);
+                        form.appendChild(method);
+                        form.appendChild(token);
+                        document.body.appendChild(form);
+
+                        form.submit();
+                    }
+                });
+            }
+
+            initSortable();
+        })();
+        </script>
 

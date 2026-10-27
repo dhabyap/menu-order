@@ -110,6 +110,27 @@ class ProductController extends Controller
     }
 
     /**
+     * Update the display order of all products.
+     */
+    public function reorder(\Illuminate\Http\Request $request)
+    {
+        $validated = $request->validate([
+            'order' => 'required|array|min:1',
+            'order.*' => 'integer|exists:products,id',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['order'] as $position => $id) {
+                DB::table('products')
+                    ->where('id', $id)
+                    ->update(['sort_order' => $position + 1]);
+            }
+        });
+
+        return back()->with('success', 'Urutan menu berhasil disimpan.');
+    }
+
+    /**
      * Create or update the category row matching the given name.
      */
     private function syncCategory(string $name): int
