@@ -124,6 +124,28 @@ class ApiContractTest extends TestCase
             ]);
     }
 
+    public function test_products_endpoint_includes_available_flag(): void
+    {
+        $this->seedProduct(['available' => true]);
+
+        $this->getJson('/api/products')
+            ->assertOk()
+            ->assertJsonFragment([
+                'available' => 1,
+            ]);
+    }
+
+    public function test_unavailable_product_has_available_false(): void
+    {
+        $this->seedProduct(['available' => false]);
+
+        $this->getJson('/api/products')
+            ->assertOk()
+            ->assertJsonFragment([
+                'available' => 0,
+            ]);
+    }
+
     public function test_order_creation_returns_code_and_total(): void
     {
         $this->seedProduct();

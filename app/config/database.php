@@ -2,18 +2,20 @@
 
 use Illuminate\Support\Str;
 
-function mysql_ssl_ca_option(): array
-{
-    if (!extension_loaded('pdo_mysql') || !env('MYSQL_ATTR_SSL_CA')) {
+if (!function_exists('mysql_ssl_ca_option')) {
+    function mysql_ssl_ca_option(): array
+    {
+        if (!extension_loaded('pdo_mysql') || !env('MYSQL_ATTR_SSL_CA')) {
+            return [];
+        }
+        if (defined(\PDO::class . '::MYSQL_ATTR_SSL_CA')) {
+            return [\PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')];
+        }
+        if (class_exists(\PDO\MySQL::class) && defined(\PDO\MySQL::class . '::ATTR_SSL_CA')) {
+            return [\PDO\MySQL::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')];
+        }
         return [];
     }
-    if (defined(\PDO::class . '::MYSQL_ATTR_SSL_CA')) {
-        return [\PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')];
-    }
-    if (class_exists(\PDO\MySQL::class) && defined(\PDO\MySQL::class . '::ATTR_SSL_CA')) {
-        return [\PDO\MySQL::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')];
-    }
-    return [];
 }
 
 return [

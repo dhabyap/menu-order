@@ -230,15 +230,19 @@
       grid.innerHTML = filtered
         .map((p) => {
           const inCartQty = cart.filter((c) => c.id === p.id).reduce((s, x) => s + x.qty, 0);
-          return `<article class="product">
+          return `<article class="product ${p.available ? "" : "product-unavailable"}">
       <div class="prod-art ${p.tone || "green"} ${p.imageUrl ? "has-photo" : ""}" role="img" aria-label="${esc(p.name)}">
         ${p.imageUrl ? `<img class="prod-photo" src="${esc(p.imageUrl)}" alt="${esc(p.name)}" loading="lazy">` : ""}
         <span class="tag">${esc((p.labels || [])[0] || p.category)}</span>
+        ${p.available ? `
         <div class="steam-group">
           <div class="steam"></div><div class="steam"></div><div class="steam"></div>
         </div>
         <div class="cup"><span>${esc(p.icon || "✿")}</span></div>
-        ${p.available ? "" : '<div class="sold">HABIS HARI INI</div>'}
+        ` : `
+        <div class="sold-overlay"></div>
+        <span class="sold-badge">Habis</span>
+        `}
       </div>
       <div class="prod-body">
         <div>
