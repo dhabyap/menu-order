@@ -21,15 +21,13 @@ class OrderService
 
     public const MESSAGE_PRODUCT_UNAVAILABLE = 'Menu tidak tersedia.';
 
-    public const MESSAGE_STORE_CLOSED = 'Toko sedang tutup. Silakan kembali saat jam operasional.';
+    public const MESSAGE_STORE_CLOSED = 'Toko sedang tutup. Jam buka: %s - %s.';
 
     public const MESSAGE_OPTION_REQUIRED = 'Pilih satu opsi untuk setiap kelompok racikan.';
 
     public const MESSAGE_OPTION_INVALID = 'Opsi menu tidak valid.';
 
     public const MESSAGE_WHATSAPP_NOT_CONFIGURED = 'Pesanan belum disimpan karena nomor WhatsApp toko belum diatur. Silakan hubungi pengelola toko.';
-
-    public const MESSAGE_STORE_CLOSED = 'Toko sedang tutup. Jam buka: %s - %s.';
 
     /**
      * Create an order from validated checkout data.
