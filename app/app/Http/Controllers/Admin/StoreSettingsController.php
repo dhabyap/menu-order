@@ -28,6 +28,8 @@ class StoreSettingsController extends Controller
             'hero_heading' => $data['hero_heading'],
             'hero_description' => $data['hero_description'],
             'marketing_badges' => $data['marketing_badges'] ?? '',
+            'open_time' => $data['open_time'] ?? null,
+            'close_time' => $data['close_time'] ?? null,
         ] as $key => $value) {
             DB::table('store_settings')->updateOrInsert(['key' => $key], ['value' => $value, 'updated_at' => now(), 'created_at' => now()]);
         }

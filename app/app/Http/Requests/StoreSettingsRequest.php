@@ -22,10 +22,12 @@ class StoreSettingsRequest extends FormRequest
                 if (! $size) {
                     $fail('Gambar tidak valid. Pastikan file gambar yang dipilih benar.');
                 } elseif ($size[0] > 4000 || $size[1] > 4000) {
-                    $fail('Dimensi logo terlalu besar. Maksimal 4000 × 4000 piksel.');
+                    $fail('Dimensi logo terlalu besar. Maksimal 4000 Ã— 4000 piksel.');
                 }
             }],
             'remove_logo' => ['nullable', 'boolean'],
+            'open_time' => ['nullable', 'date_format:H:i'],
+            'close_time' => ['nullable', 'date_format:H:i', 'after:open_time'],
         ];
     }
 }
