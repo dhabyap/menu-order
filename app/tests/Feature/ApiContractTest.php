@@ -50,6 +50,8 @@ class ApiContractTest extends TestCase
                 'store_tagline' => '',
                 'hero_heading' => 'Pilih minuman favoritmu.',
                 'marketing_badges' => [],
+                'open_time' => '08:00',
+                'close_time' => '21:00',
             ]);
     }
 
