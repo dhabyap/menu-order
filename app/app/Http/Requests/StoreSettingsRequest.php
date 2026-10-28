@@ -17,8 +17,8 @@ class StoreSettingsRequest extends FormRequest
             'hero_heading' => ['required', 'string', 'max:160'],
             'hero_description' => ['required', 'string', 'max:500'],
             'marketing_badges' => ['nullable', 'string', 'max:1000'],
-            'open_time' => ['nullable', 'regex:/^(?:[01]\\d|2[0-3]):[0-5]\\d$/'],
-            'close_time' => ['nullable', 'regex:/^(?:[01]\\d|2[0-3]):[0-5]\\d$/'],
+            'open_time' => ['nullable', 'regex:/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/'],
+            'close_time' => ['nullable', 'regex:/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', function (string $attribute, UploadedFile $value, callable $fail): void {
                 $size = @getimagesize($value->getRealPath());
                 if (! $size) {
