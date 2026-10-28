@@ -29,6 +29,8 @@ class OrderService
 
     public const MESSAGE_WHATSAPP_NOT_CONFIGURED = 'Pesanan belum disimpan karena nomor WhatsApp toko belum diatur. Silakan hubungi pengelola toko.';
 
+    public const MESSAGE_STORE_CLOSED = 'Toko sedang tutup. Jam buka: %s - %s.';
+
     /**
      * Create an order from validated checkout data.
      *
@@ -39,6 +41,15 @@ class OrderService
      */
     public function create(array $data): array
     {
+        $openTime = DB::table('store_settings')->where('key', 'open_time')->value('value');
+        $closeTime = DB::table('store_settings')->where('key', 'close_time')->value('value');
+        if ($openTime && $closeTime) {
+            $now = now()->format('H:i');
+            if ($now < $openTime || $now >= $closeTime) {
+                throw new RuntimeException(sprintf(self::MESSAGE_STORE_CLOSED, $openTime, $closeTime));
+            }
+        }
+
         if ($data['service'] === 'Antar' && empty($data['address'])) {
             throw new RuntimeException(self::MESSAGE_ADDRESS_REQUIRED);
         }

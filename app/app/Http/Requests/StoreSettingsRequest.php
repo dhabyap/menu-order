@@ -28,6 +28,8 @@ class StoreSettingsRequest extends FormRequest
                 }
             }],
             'remove_logo' => ['nullable', 'boolean'],
+            'open_time' => ['nullable', 'date_format:H:i'],
+            'close_time' => ['nullable', 'date_format:H:i', 'after:open_time'],
         ];
     }
 
