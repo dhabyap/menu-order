@@ -24,6 +24,7 @@ class ProductController extends Controller
         return DB::table('products')
             ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
             ->select('products.*', 'categories.name as category_name')
+            ->where('products.available', true)
             ->orderBy('products.sort_order')
             ->get()
             ->map(function ($product) {

@@ -135,15 +135,13 @@ class ApiContractTest extends TestCase
             ]);
     }
 
-    public function test_unavailable_product_has_available_false(): void
+    public function test_unavailable_product_is_hidden_from_catalog(): void
     {
         $this->seedProduct(['available' => false]);
 
         $this->getJson('/api/products')
             ->assertOk()
-            ->assertJsonFragment([
-                'available' => 0,
-            ]);
+            ->assertJsonCount(0);
     }
 
     public function test_order_creation_returns_code_and_total(): void
