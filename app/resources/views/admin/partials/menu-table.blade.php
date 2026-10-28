@@ -80,10 +80,13 @@
                         form.method = 'POST';
                         form.action = '/admin/products/reorder';
 
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'order';
-                        input.value = JSON.stringify(ids);
+                        ids.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'order[]';
+                            input.value = id;
+                            form.appendChild(input);
+                        });
 
                         const method = document.createElement('input');
                         method.type = 'hidden';
@@ -95,7 +98,6 @@
                         token.name = '_token';
                         token.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                        form.appendChild(input);
                         form.appendChild(method);
                         form.appendChild(token);
                         document.body.appendChild(form);
