@@ -601,6 +601,36 @@
       z-index: 4;
     }
 
+    .product-unavailable {
+      pointer-events: none;
+    }
+
+    .product-unavailable .prod-title-button {
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    .product-unavailable .sold-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(24, 30, 22, 0.45);
+      z-index: 3;
+    }
+
+    .product-unavailable .sold-badge {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: rgba(120, 120, 120, 0.92);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      z-index: 5;
+    }
+
     .prod-body {
       padding: 14px;
       flex: 1;
