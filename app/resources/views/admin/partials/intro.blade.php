@@ -9,7 +9,7 @@
         @if(session('success'))
             <div class="notice" role="status">{{ session('success') }}</div>
         @endif
-        @if($errors->any())
+        @if($errors->any() && !session('success'))
             <div class="notice error" role="alert">
                 <strong>Periksa kembali informasi berikut:</strong>
                 <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
