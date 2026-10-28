@@ -50,6 +50,8 @@ class ApiContractTest extends TestCase
                 'store_tagline' => '',
                 'hero_heading' => 'Pilih minuman favoritmu.',
                 'marketing_badges' => [],
+                'open_time' => '08:00',
+                'close_time' => '21:00',
             ]);
     }
 
@@ -306,5 +308,46 @@ class ApiContractTest extends TestCase
             'service' => 'Kurir',
             'items' => [],
         ])->assertStatus(422)->assertJsonValidationErrors(['name', 'phone', 'service', 'items']);
+    }
+
+    public function test_order_rejects_when_store_is_closed(): void
+    {
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            ['key' => 'delivery_fee', 'value' => '5000', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'open_time', 'value' => '10:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '18:00', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $this->travelTo(now()->setTime(9, 30));
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [['product_id' => 'proto-1', 'quantity' => 1, 'options' => ['Ukuran' => 'Regular']]],
+        ])->assertStatus(422)
+            ->assertJson(['message' => 'Toko sedang tutup. Silakan kembali saat jam operasional.']);
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_order_accepts_when_store_is_open(): void
+    {
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            ['key' => 'delivery_fee', 'value' => '5000', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'open_time', 'value' => '10:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '18:00', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $this->travelTo(now()->setTime(12, 0));
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [['product_id' => 'proto-1', 'quantity' => 1, 'options' => ['Ukuran' => 'Regular']]],
+        ])->assertCreated();
     }
 }

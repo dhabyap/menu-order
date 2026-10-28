@@ -21,6 +21,8 @@ class OrderService
 
     public const MESSAGE_PRODUCT_UNAVAILABLE = 'Menu tidak tersedia.';
 
+    public const MESSAGE_STORE_CLOSED = 'Toko sedang tutup. Silakan kembali saat jam operasional.';
+
     public const MESSAGE_OPTION_REQUIRED = 'Pilih satu opsi untuk setiap kelompok racikan.';
 
     public const MESSAGE_OPTION_INVALID = 'Opsi menu tidak valid.';
@@ -40,6 +42,8 @@ class OrderService
         if ($data['service'] === 'Antar' && empty($data['address'])) {
             throw new RuntimeException(self::MESSAGE_ADDRESS_REQUIRED);
         }
+
+        $this->ensureStoreIsOpen();
 
         $products = DB::table('products')
             ->whereIn('prototype_id', collect($data['items'])->pluck('product_id'))
@@ -140,5 +144,31 @@ class OrderService
         }
 
         return [$items, $subtotal];
+    }
+
+    private function ensureStoreIsOpen(): void
+    {
+        $open = trim((string) DB::table('store_settings')->where('key', 'open_time')->value('value'));
+        $close = trim((string) DB::table('store_settings')->where('key', 'close_time')->value('value'));
+
+        if ($open === '' || $close === '') {
+            return;
+        }
+
+        if ($open === $close) {
+            throw new RuntimeException(self::MESSAGE_STORE_CLOSED);
+        }
+
+        $now = now()->format('H:i');
+
+        if ($open <= $close) {
+            $closed = $now < $open || $now >= $close;
+        } else {
+            $closed = $now < $open && $now >= $close;
+        }
+
+        if ($closed) {
+            throw new RuntimeException(self::MESSAGE_STORE_CLOSED);
+        }
     }
 }
