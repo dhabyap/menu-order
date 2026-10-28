@@ -17,8 +17,8 @@ class StoreSettingsRequest extends FormRequest
             'hero_heading' => ['required', 'string', 'max:160'],
             'hero_description' => ['required', 'string', 'max:500'],
             'marketing_badges' => ['nullable', 'string', 'max:1000'],
-            'open_time' => ['nullable', 'regex:/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/'],
-            'close_time' => ['nullable', 'regex:/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/'],
+            'open_time' => ['nullable', 'date_format:H:i'],
+            'close_time' => ['nullable', 'date_format:H:i'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', function (string $attribute, UploadedFile $value, callable $fail): void {
                 $size = @getimagesize($value->getRealPath());
                 if (! $size) {
@@ -33,9 +33,27 @@ class StoreSettingsRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $normalizeTime = static function ($value): ?string {
+            if (! is_string($value)) {
+                return null;
+            }
+
+            $value = trim($value);
+            if ($value === '') {
+                return null;
+            }
+
+            // Some clients submit HTML time values with seconds (HH:mm:ss).
+            if (preg_match('/^(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$/', $value)) {
+                return substr($value, 0, 5);
+            }
+
+            return $value;
+        };
+
         $this->merge([
-            'open_time' => $this->string('open_time')->trim()->isEmpty() ? null : $this->string('open_time')->trim(),
-            'close_time' => $this->string('close_time')->trim()->isEmpty() ? null : $this->string('close_time')->trim(),
+            'open_time' => $normalizeTime($this->input('open_time')),
+            'close_time' => $normalizeTime($this->input('close_time')),
         ]);
     }
 
