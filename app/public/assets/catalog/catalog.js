@@ -4,8 +4,10 @@
     document.getElementById("footerYear").textContent = new Date().getFullYear();
     let products = [];
     let deliveryFeeConfigured = 0;
+    let storeName = "Racik Tea";
     fetch("/api/store-config").then(r => r.ok ? r.json() : null).then(config => {
       if (!config) return;
+      storeName = config.store_name || storeName;
       deliveryFeeConfigured = Number(config.delivery_fee) || 0;
       document.getElementById("brandTitle").textContent = config.store_name;
       document.getElementById("footerStoreName").textContent = config.store_name;
@@ -899,7 +901,7 @@
 
       // Format WhatsApp Message
       const itemsText = cart.map((it, i) => `${i + 1}. *${it.name}* (x${it.qty}) - ${fmt(it.price * it.qty)}\n   Varian: ${it.options.join(", ")}${it.note ? `\n   Catatan: ${it.note}` : ""}`).join("\n\n");
-      const message = `*PESANAN BARU - RACIK TEA*
+      const message = `*PESANAN BARU - ${storeName}*
 Kode: *#${code}*
 Waktu: ${new Date().toLocaleString("id-ID")}
 -------------------------------------
@@ -937,7 +939,7 @@ Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
       const items = cart.map((item, i) =>
         `${i + 1}. ${item.qty}x ${item.name} (${item.options.join(", ")}) — ${fmt(item.price * item.qty)}${item.note ? `\n   Catatan: ${item.note}` : ""}`,
       ).join("\n");
-      const text = `PESANAN RACIK TEA\nPemesan: ${name}\n${phone ? `WhatsApp: ${phone}\n` : ""}Layanan: ${service}${service === "Antar" && addr ? `\nAlamat: ${addr}` : ""}\n\n${items}\n\nSubtotal: ${fmt(subtotal)}\n${service === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}Total: ${fmt(subtotal + delivery)}${note ? `\nCatatan umum: ${note}` : ""}`;
+      const text = `PESANAN ${storeName}\nPemesan: ${name}\n${phone ? `WhatsApp: ${phone}\n` : ""}Layanan: ${service}${service === "Antar" && addr ? `\nAlamat: ${addr}` : ""}\n\n${items}\n\nSubtotal: ${fmt(subtotal)}\n${service === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}Total: ${fmt(subtotal + delivery)}${note ? `\nCatatan umum: ${note}` : ""}`;
       try {
         if (navigator.clipboard?.writeText) {
           try {
