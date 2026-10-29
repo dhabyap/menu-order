@@ -17,6 +17,7 @@ class StoreSettingsRequest extends FormRequest
             'delivery_rounding_km' => ['nullable', 'numeric', 'gt:0', 'max:10'],
             'delivery_max_km' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'store_address' => ['nullable', 'string', 'max:500'],
+            'store_maps_url' => ['nullable', 'string', 'max:500'],
             'store_latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'store_longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'store_name' => ['required', 'string', 'max:120'],
