@@ -17,21 +17,13 @@
                             <div class="field"><label for="delivery-fee-per-km">Tarif per km (Rp)</label><input id="delivery-fee-per-km" name="delivery_fee_per_km" type="number" min="0" max="10000000" value="{{ old('delivery_fee_per_km', $settings['delivery_fee_per_km'] ?? 0) }}" placeholder="0 = ongkir tetap"><span class="field-hint">Isi 0 jika ongkir tidak tergantung jarak.</span></div>
                             <div class="field full">
                                 <label>Lokasi toko (untuk hitung ongkir)</label>
-                                <div style="margin-bottom:8px;">
-                                    <p class="field-hint">Lokasi sudah terisi otomatis. <a href="https://maps.google.com/?q={{ urlencode($settings['store_latitude'] ?? -6.8819220) }},{{ urlencode($settings['store_longitude'] ?? 107.5928889) }}" target="_blank" rel="noopener">Lihat di Google Maps</a></p>
-                                    <p style="font-size:13px;color:#333;margin-top:4px;">
-                                        <strong>Alamat:</strong> {{ old('store_address', $settings['store_address'] ?? '') }}
-                                    </p>
-                                </div>
-                                <div style="font-size:13px;color:#555;margin-top:4px;">
-                                    Latitude: <strong id="lat-display">{{ old('store_latitude', $settings['store_latitude'] ?? '') }}</strong>
-                                    &nbsp;&nbsp;
-                                    Longitude: <strong id="lng-display">{{ old('store_longitude', $settings['store_longitude'] ?? '') }}</strong>
-                                </div>
+                                <p class="field-hint">
+                                    <a href="https://maps.google.com/?q={{ urlencode($settings['store_latitude'] ?? -6.8819220) }},{{ urlencode($settings['store_longitude'] ?? 107.5928889) }}" target="_blank" rel="noopener">Lihat di Google Maps</a>
+                                </p>
+                                <div class="field"><label for="store-latitude">Latitude</label><input id="store-latitude" name="store_latitude" type="number" step="any" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}" placeholder="-6.8819220"></div>
+                                <div class="field"><label for="store-longitude">Longitude</label><input id="store-longitude" name="store_longitude" type="number" step="any" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}" placeholder="107.5928889"></div>
                             </div>
                             <div class="field full"><label for="store-address-input">Alamat lengkap toko</label><input id="store-address-input" name="store_address" maxlength="500" value="{{ old('store_address', $settings['store_address'] ?? '') }}" placeholder="Jl. Contoh No. 1, Kel. Contoh, Kec. Contoh, Kota"></div>
-                            <input type="hidden" name="store_latitude" id="store-latitude" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}">
-                            <input type="hidden" name="store_longitude" id="store-longitude" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}">
                             <input type="hidden" name="delivery_included_km" value="{{ old('delivery_included_km', $settings['delivery_included_km'] ?? 0) }}">
                             <input type="hidden" name="delivery_rounding_km" value="{{ old('delivery_rounding_km', $settings['delivery_rounding_km'] ?? 0.5) }}">
                             <input type="hidden" name="delivery_max_km" value="{{ old('delivery_max_km', $settings['delivery_max_km'] ?? 0) }}">
