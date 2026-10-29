@@ -89,6 +89,13 @@
                                 if (!mapEl || mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) return;
                                 try {
                                     if (!map) {
+                                        if (mapEl._leaflet_id !== undefined) {
+                                            // Leaflet already initialized on this container.
+                                            // Walk all L.Map instances or just mark ready — the existing map works.
+                                            mapInited = true;
+                                            map = L.Map.getContainer ? L.Map.getContainer(mapEl) : null;
+                                            return;
+                                        }
                                         map = L.map('store-map', {
                                             center: isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118],
                                             zoom: isFinite(savedLat) && isFinite(savedLng) ? 15 : 5,
@@ -98,26 +105,21 @@
                                         if (isFinite(savedLat) && isFinite(savedLng)) {
                                             marker = L.marker([savedLat, savedLng], { draggable: true }).addTo(map);
                                         }
+                                        mapInited = true;
                                     }
-                                    mapInited = true;
                                 } catch (err) {
                                     if (err && /already initialized/.test(err.message)) {
-                                        // Container already has a Leaflet map — just use it
-                                        try {
-                                            // Leaflet stores the map instance in the container
-                                            map = mapEl._leaflet_map || mapEl._leaflet_map_id ? null : null;
-                                        } catch(e) {}
-                                        mapInited = true; // stop retrying
+                                        // Container already has a Leaflet map
+                                        mapInited = true;
                                     } else {
                                         console.warn('Leaflet init error:', err.message);
-                                        map = null;
                                     }
                                     return;
                                 }
                                 if (isFinite(savedLat) && isFinite(savedLng) && hint) {
                                     hint.textContent = 'Lokasi tersimpan saat ini. Klik peta atau geser penanda untuk mengubah.';
                                 }
-                                if (map) {
+                                if (map && map.on) {
                                     map.on('click', function (e) {
                                         if (marker) marker.setLatLng(e.latlng);
                                         else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
