@@ -25,6 +25,7 @@ class StoreOrderRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'regex:/^(?:\+?62|0)8[1-9][0-9]{7,11}$/'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'delivery_quote_id' => ['nullable', 'string', 'max:5000'],
             'service' => ['required', 'in:Ambil Sendiri,Antar'],
             'note' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', 'max:50'],

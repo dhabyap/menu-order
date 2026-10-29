@@ -41,6 +41,13 @@ class AdminCatalogTest extends TestCase
         $this->post('/admin/settings', [
             'whatsapp' => '6281234567890',
             'delivery_fee' => 5000,
+            'delivery_fee_per_km' => 2000,
+            'delivery_included_km' => 1,
+            'delivery_rounding_km' => 0.5,
+            'delivery_max_km' => 20,
+            'store_address' => 'Jalan Toko 1, Jakarta',
+            'store_latitude' => -6.2,
+            'store_longitude' => 106.8,
             'store_name' => 'Kedai Teh',
             'store_tagline' => 'Teh harian',
             'hero_heading' => 'Menu teh kami',

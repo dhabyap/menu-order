@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\DeliveryQuoteController;
 use App\Http\Controllers\Api\OrderLookupController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StoreConfigController;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/store-config', [StoreConfigController::class, 'index']);
+Route::post('/delivery-quote', DeliveryQuoteController::class)->middleware('throttle:10,1');
 Route::get('/products', [ProductController::class, 'index']);
 Route::post('/orders', [CheckoutController::class, 'store'])->middleware('throttle:10,1');
 Route::post('/orders/lookup', [OrderLookupController::class, 'show'])->middleware('throttle:10,1');

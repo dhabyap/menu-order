@@ -29,6 +29,11 @@ class StoreConfigController extends Controller
 
         return [
             'delivery_fee' => (int) ($settings['delivery_fee'] ?? config('store.delivery_fee', 0)),
+            'delivery_fee_per_km' => (int) ($settings['delivery_fee_per_km'] ?? 0),
+            'delivery_included_km' => (float) ($settings['delivery_included_km'] ?? 0),
+            'delivery_rounding_km' => (float) ($settings['delivery_rounding_km'] ?? 0.5),
+            'delivery_max_km' => (float) ($settings['delivery_max_km'] ?? 0),
+            'delivery_enabled' => is_numeric($settings['store_latitude'] ?? null) && is_numeric($settings['store_longitude'] ?? null),
             'whatsapp' => $whatsapp,
             'store_name' => $settings['store_name'] ?? 'Racik Tea',
             'store_tagline' => $settings['store_tagline'] ?? '',
