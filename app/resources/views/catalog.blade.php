@@ -162,8 +162,8 @@
         </div>
 
         <div class="field">
-          <label for="customItemNote">Catatan Tambahan (Opsional)</label>
-          <input type="text" id="customItemNote" placeholder="Contoh: es dipisah, jangan terlalu manis" />
+          <label for="inputNote">Catatan Tambahan (Opsional)</label>
+          <input type="text" id="inputNote" placeholder="Contoh: es dipisah, jangan terlalu manis" />
         </div>
       </div>
     </div>
