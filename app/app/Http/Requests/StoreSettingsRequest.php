@@ -81,9 +81,6 @@ class StoreSettingsRequest extends FormRequest
                 if (($latitude === null || $latitude === '') !== ($longitude === null || $longitude === '')) {
                     $validator->errors()->add('store_latitude', 'Isi koordinat lintang dan bujur toko secara berpasangan.');
                 }
-                if ($latitude !== null && $latitude !== '' && (int) $this->input('delivery_fee_per_km', 0) <= 0) {
-                    $validator->errors()->add('delivery_fee_per_km', 'Isi tarif per km lebih dari 0 untuk mengaktifkan ongkir berdasarkan jarak.');
-                }
             },
         ];
     }
