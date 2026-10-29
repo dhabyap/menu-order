@@ -89,18 +89,35 @@
                                 if (!mapEl || mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) return;
                                 try {
                                     if (!map) {
-                                        if (mapEl._leaflet_id !== undefined) {
-                                            // Leaflet already initialized on this container.
-                                            // Walk all L.Map instances or just mark ready — the existing map works.
+                                        if (mapEl._leafletMapInstance) {
+                                            // Map was already created — use it
+                                            map = mapEl._leafletMapInstance;
                                             mapInited = true;
-                                            map = L.Map.getContainer ? L.Map.getContainer(mapEl) : null;
+                                            if (isFinite(savedLat) && isFinite(savedLng) && hint) {
+                                                hint.textContent = 'Lokasi tersimpan saat ini. Klik peta atau geser penanda untuk mengubah.';
+                                            }
+                                            map.on('click', function (e) {
+                                                if (marker) marker.setLatLng(e.latlng);
+                                                else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+                                                setPoint(e.latlng.lat, e.latlng.lng);
+                                            });
+                                            if (marker) marker.on('dragend', function () {
+                                                var p = marker.getLatLng();
+                                                setPoint(p.lat, p.lng);
+                                            });
+                                            if (details) details.addEventListener('toggle', function () {
+                                                if (details.open && map) setTimeout(function () { map.invalidateSize(); }, 150);
+                                            });
+                                            map.invalidateSize();
                                             return;
                                         }
+                                        // Fresh init — store instance on the element
                                         map = L.map('store-map', {
                                             center: isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118],
                                             zoom: isFinite(savedLat) && isFinite(savedLng) ? 15 : 5,
                                             preferCanvas: true
                                         });
+                                        mapEl._leafletMapInstance = map;
                                         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
                                         if (isFinite(savedLat) && isFinite(savedLng)) {
                                             marker = L.marker([savedLat, savedLng], { draggable: true }).addTo(map);
@@ -109,8 +126,9 @@
                                     }
                                 } catch (err) {
                                     if (err && /already initialized/.test(err.message)) {
-                                        // Container already has a Leaflet map
+                                        // Container already has a Leaflet map — mark ready to stop retrying
                                         mapInited = true;
+                                        map = null;
                                     } else {
                                         console.warn('Leaflet init error:', err.message);
                                     }
