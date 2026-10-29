@@ -20,8 +20,8 @@
                                 <p class="field-hint">
                                     <a href="https://maps.google.com/?q={{ urlencode($settings['store_latitude'] ?? -6.8819220) }},{{ urlencode($settings['store_longitude'] ?? 107.5928889) }}" target="_blank" rel="noopener">Lihat di Google Maps</a>
                                 </p>
-                                <div class="field"><label for="store-latitude">Latitude</label><input id="store-latitude" name="store_latitude" type="number" step="any" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}" placeholder="-6.8819220"></div>
-                                <div class="field"><label for="store-longitude">Longitude</label><input id="store-longitude" name="store_longitude" type="number" step="any" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}" placeholder="107.5928889"></div>
+                                <div class="field"><label for="store-latitude">Latitude</label><input id="store-latitude" name="store_latitude" type="number" step="any" value="{{ $settings['store_latitude'] ?? '' }}" autofocus></div>
+                                <div class="field"><label for="store-longitude">Longitude</label><input id="store-longitude" name="store_longitude" type="number" step="any" value="{{ $settings['store_longitude'] ?? '' }}" autofocus></div>
                             </div>
                             <div class="field full"><label for="store-address-input">Alamat lengkap toko</label><input id="store-address-input" name="store_address" maxlength="500" value="{{ old('store_address', $settings['store_address'] ?? '') }}" placeholder="Jl. Contoh No. 1, Kel. Contoh, Kec. Contoh, Kota"></div>
                             <input type="hidden" name="delivery_included_km" value="{{ old('delivery_included_km', $settings['delivery_included_km'] ?? 0) }}">
