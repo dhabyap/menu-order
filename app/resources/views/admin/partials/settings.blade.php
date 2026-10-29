@@ -81,40 +81,62 @@
                             var mapEl = document.getElementById('store-map');
                             var details = mapEl && mapEl.closest('details');
                             var map = null;
+                            var marker = null;
+                            var mapInited = false;
 
                             function doInit() {
-                                if (map) return; // already inited
-                                if (mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) return; // still hidden, wait
-                                map = L.map('store-map').setView(isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118], isFinite(savedLat) && isFinite(savedLng) ? 15 : 5);
-                                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-                                var marker = (isFinite(savedLat) && isFinite(savedLng)) ? L.marker([savedLat, savedLng], { draggable: true }).addTo(map) : null;
-                                if (isFinite(savedLat) && isFinite(savedLng)) hint.textContent = 'Lokasi tersimpan saat ini. Klik peta atau geser penanda untuk mengubah.';
+                                if (mapInited) return;
+                                if (!mapEl || mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) return;
+                                if (mapEl._leaflet_id) { map = L.Map.getMapById ? L.Map.getMapById(mapEl._leaflet_id) : null; }
+                                try {
+                                    if (!map) {
+                                        map = L.map('store-map').setView(
+                                            isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118],
+                                            isFinite(savedLat) && isFinite(savedLng) ? 15 : 5
+                                        );
+                                        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+                                        marker = (isFinite(savedLat) && isFinite(savedLng)) ? L.marker([savedLat, savedLng], { draggable: true }).addTo(map) : null;
+                                    }
+                                    mapInited = true;
+                                } catch (err) {
+                                    console.warn('Leaflet init error:', err.message);
+                                    map = null;
+                                    return;
+                                }
+                                if (isFinite(savedLat) && isFinite(savedLng) && hint) {
+                                    hint.textContent = 'Lokasi tersimpan saat ini. Klik peta atau geser penanda untuk mengubah.';
+                                }
                                 map.on('click', function (e) {
-                                    if (marker) marker.setLatLng(e.latlng); else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+                                    if (marker) marker.setLatLng(e.latlng);
+                                    else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
                                     setPoint(e.latlng.lat, e.latlng.lng);
                                 });
                                 if (marker) marker.on('dragend', function () {
                                     var p = marker.getLatLng();
                                     setPoint(p.lat, p.lng);
                                 });
-                                if (details) details.addEventListener('toggle', function () { if (details.open) setTimeout(function () { map.invalidateSize(); }, 150); });
+                                if (details) details.addEventListener('toggle', function () {
+                                    if (details.open && map) setTimeout(function () { map.invalidateSize(); }, 150);
+                                });
+                                map.invalidateSize();
                             }
 
-                            // If details is already open, init now; otherwise wait for user to open it
+                            // If details is already open, init now; otherwise wait until user opens it
                             if (details && details.open) {
                                 doInit();
                             } else {
-                                // Try a few times in case CSS animation delays it
                                 var tries = 0;
                                 var interval = setInterval(function () {
                                     tries++;
                                     doInit();
-                                    if (map || tries > 20) clearInterval(interval);
+                                    if (mapInited || tries > 40) clearInterval(interval);
                                 }, 300);
                             }
 
                             document.getElementById('store-map-search-btn').addEventListener('click', function () {
-                                if (!map) { hint.textContent = 'Buka panel Pengaturan Toko terlebih dahulu agar peta muncul.'; return; }
+                                // Try to init if not ready yet (user might have opened panel manually)
+                                doInit();
+                                if (!map) { hint.textContent = 'Peta belum siap. Buka panel Pengaturan Toko, lalu coba lagi.'; return; }
                                 var q = startSearch();
                                 if (!q) { hint.textContent = 'Ketik dulu nama toko atau alamatnya.'; return; }
                                 hint.textContent = 'Mencari lokasi...';
@@ -124,7 +146,8 @@
                                         if (res && res[0]) {
                                             var lat = parseFloat(res[0].lat), lng = parseFloat(res[0].lon);
                                             map.setView([lat, lng], 16);
-                                            if (marker) marker.setLatLng([lat, lng]); else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                                            if (marker) marker.setLatLng([lat, lng]);
+                                            else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
                                             setPoint(lat, lng, res[0].display_name);
                                         } else {
                                             hint.textContent = 'Nama/alamat tidak ditemukan.';
