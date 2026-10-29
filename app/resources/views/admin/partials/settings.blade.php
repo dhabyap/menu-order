@@ -18,15 +18,57 @@
                             <div class="field"><label for="delivery-included-km">Jarak termasuk (km)</label><input id="delivery-included-km" name="delivery_included_km" type="number" min="0" max="1000" step="0.1" value="{{ old('delivery_included_km', $settings['delivery_included_km'] ?? 0) }}"></div>
                             <div class="field"><label for="delivery-rounding-km">Pembulatan jarak (km)</label><input id="delivery-rounding-km" name="delivery_rounding_km" type="number" min="0.1" max="10" step="0.1" value="{{ old('delivery_rounding_km', $settings['delivery_rounding_km'] ?? 0.5) }}"></div>
                             <div class="field"><label for="delivery-max-km">Maksimal jarak (km, 0 = tanpa batas)</label><input id="delivery-max-km" name="delivery_max_km" type="number" min="0" max="1000" step="0.1" value="{{ old('delivery_max_km', $settings['delivery_max_km'] ?? 0) }}"></div>
-                            <div class="field full"><label for="store-address">Alamat toko (titik awal rute)</label><input id="store-address" name="store_address" maxlength="500" value="{{ old('store_address', $settings['store_address'] ?? '') }}" placeholder="Alamat lengkap toko"></div>
-                            <div class="field"><label for="store-latitude">Latitude toko</label><input id="store-latitude" name="store_latitude" type="number" min="-90" max="90" step="any" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}" placeholder="Contoh: -6.2"></div>
-                            <div class="field"><label for="store-longitude">Longitude toko</label><input id="store-longitude" name="store_longitude" type="number" min="-180" max="180" step="any" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}" placeholder="Contoh: 106.8"></div>
-                            <p class="field-hint full">Isi koordinat toko untuk mengaktifkan estimasi ongkir. Ambil latitude/longitude dari pin lokasi toko. Tarif per km dan ongkir dasar dapat diubah di sini.</p>
+                            <div class="field full"><label for="store-maps-url">Tautan Google Maps <span class="field-hint-inline">(tempel untuk isi otomatis koordinat)</span></label><input id="store-maps-url" name="store_maps_url" type="url" maxlength="500" value="{{ old('store_maps_url', '') }}" placeholder="https://maps.google.com/.../?q=-6.2,106.8"></div>
+                            <div class="field full"><label for="store-address">Nama jalan, nomor, kota</label><input id="store-address" name="store_address" maxlength="500" value="{{ old('store_address', $settings['store_address'] ?? '') }}" placeholder="Nama jalan, nomor, kota"></div>
+                            <div class="field"><label for="store-latitude">Latitude</label><input id="store-latitude" name="store_latitude" type="number" step="any" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}" placeholder="cth: -6.2" readonly></div>
+                            <div class="field"><label for="store-longitude">Longitude</label><input id="store-longitude" name="store_longitude" type="number" step="any" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}" placeholder="cth: 106.8" readonly></div>
+                            <p class="field-hint full" id="maps-hint">Tempel tautan Google Maps agar koordinat terisi otomatis, atau ketik alamat manual. <a href="https://support.google.com/maps/answer/18539" target="_blank" rel="noopener">Petunjuk mendapatkan tautan</a>.</p>
                             <div class="field full"><label for="hero-description">Deskripsi halaman depan</label><textarea id="hero-description" name="hero_description" required maxlength="500">{{ old('hero_description', $settings['hero_description'] ?? 'Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.') }}</textarea></div>
                             <div class="field full"><label for="marketing-badges">Informasi singkat</label><textarea id="marketing-badges" name="marketing_badges" maxlength="1000" placeholder="Jam buka, area layanan, atau informasi toko">{{ old('marketing_badges', $settings['marketing_badges'] ?? '') }}</textarea><span class="field-hint">Satu informasi per baris.</span></div>
                         </div>
                         <div class="form-actions"><button class="button button-primary" type="submit">Simpan Pengaturan</button></div>
                     </form>
+                    <script>
+                    (function () {
+                        var mapsInput = document.getElementById('store-maps-url');
+                        var latInput  = document.getElementById('store-latitude');
+                        var lngInput  = document.getElementById('store-longitude');
+                        var hint      = document.getElementById('maps-hint');
+
+                        function parseGMaps(url) {
+                            var m;
+                            m = url.match(/[?&](?:q|ll)=(-?[\d.]+),(-?[\d.]+)/);
+                            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+                            m = url.match(/\((-?[\d.]+),(-?[\d.]+)\)/);
+                            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+                            m = url.match(/@(-?[\d.]+),(-?[\d.]+)/);
+                            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+                            return null;
+                        }
+
+                        function fillCoords(lat, lng) {
+                            latInput.value = lat.toFixed(7);
+                            lngInput.value = lng.toFixed(7);
+                            latInput.removeAttribute('readonly');
+                            lngInput.removeAttribute('readonly');
+                            latInput.setAttribute('readonly', 'readonly');
+                            lngInput.setAttribute('readonly', 'readonly');
+                        }
+
+                        function onMapsInput() {
+                            var coords = parseGMaps(mapsInput.value);
+                            if (coords) {
+                                fillCoords(coords.lat, coords.lng);
+                                if (hint) hint.textContent = 'Koordinat terdeteksi. Anda bisa langsung simpan.';
+                            }
+                        }
+
+                        if (mapsInput) {
+                            mapsInput.addEventListener('input', onMapsInput);
+                            if (mapsInput.value.trim()) onMapsInput();
+                        }
+                    })();
+                    </script>
                 </div>
             </details>
         </section>
