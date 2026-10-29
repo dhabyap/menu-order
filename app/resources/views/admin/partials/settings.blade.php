@@ -87,38 +87,51 @@
                             function doInit() {
                                 if (mapInited) return;
                                 if (!mapEl || mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) return;
-                                if (mapEl._leaflet_id) { map = L.Map.getMapById ? L.Map.getMapById(mapEl._leaflet_id) : null; }
                                 try {
                                     if (!map) {
-                                        map = L.map('store-map').setView(
-                                            isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118],
-                                            isFinite(savedLat) && isFinite(savedLng) ? 15 : 5
-                                        );
+                                        map = L.map('store-map', {
+                                            center: isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118],
+                                            zoom: isFinite(savedLat) && isFinite(savedLng) ? 15 : 5,
+                                            preferCanvas: true
+                                        });
                                         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-                                        marker = (isFinite(savedLat) && isFinite(savedLng)) ? L.marker([savedLat, savedLng], { draggable: true }).addTo(map) : null;
+                                        if (isFinite(savedLat) && isFinite(savedLng)) {
+                                            marker = L.marker([savedLat, savedLng], { draggable: true }).addTo(map);
+                                        }
                                     }
                                     mapInited = true;
                                 } catch (err) {
-                                    console.warn('Leaflet init error:', err.message);
-                                    map = null;
+                                    if (err && /already initialized/.test(err.message)) {
+                                        // Container already has a Leaflet map — just use it
+                                        try {
+                                            // Leaflet stores the map instance in the container
+                                            map = mapEl._leaflet_map || mapEl._leaflet_map_id ? null : null;
+                                        } catch(e) {}
+                                        mapInited = true; // stop retrying
+                                    } else {
+                                        console.warn('Leaflet init error:', err.message);
+                                        map = null;
+                                    }
                                     return;
                                 }
                                 if (isFinite(savedLat) && isFinite(savedLng) && hint) {
                                     hint.textContent = 'Lokasi tersimpan saat ini. Klik peta atau geser penanda untuk mengubah.';
                                 }
-                                map.on('click', function (e) {
-                                    if (marker) marker.setLatLng(e.latlng);
-                                    else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
-                                    setPoint(e.latlng.lat, e.latlng.lng);
-                                });
-                                if (marker) marker.on('dragend', function () {
-                                    var p = marker.getLatLng();
-                                    setPoint(p.lat, p.lng);
-                                });
-                                if (details) details.addEventListener('toggle', function () {
-                                    if (details.open && map) setTimeout(function () { map.invalidateSize(); }, 150);
-                                });
-                                map.invalidateSize();
+                                if (map) {
+                                    map.on('click', function (e) {
+                                        if (marker) marker.setLatLng(e.latlng);
+                                        else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+                                        setPoint(e.latlng.lat, e.latlng.lng);
+                                    });
+                                    if (marker) marker.on('dragend', function () {
+                                        var p = marker.getLatLng();
+                                        setPoint(p.lat, p.lng);
+                                    });
+                                    if (details) details.addEventListener('toggle', function () {
+                                        if (details.open && map) setTimeout(function () { map.invalidateSize(); }, 150);
+                                    });
+                                    map.invalidateSize();
+                                }
                             }
 
                             // If details is already open, init now; otherwise wait until user opens it
@@ -134,7 +147,6 @@
                             }
 
                             document.getElementById('store-map-search-btn').addEventListener('click', function () {
-                                // Try to init if not ready yet (user might have opened panel manually)
                                 doInit();
                                 if (!map) { hint.textContent = 'Peta belum siap. Buka panel Pengaturan Toko, lalu coba lagi.'; return; }
                                 var q = startSearch();
