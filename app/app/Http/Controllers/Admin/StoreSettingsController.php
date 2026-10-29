@@ -28,6 +28,7 @@ class StoreSettingsController extends Controller
             'delivery_rounding_km' => (string) ($data['delivery_rounding_km'] ?? 0.5),
             'delivery_max_km' => (string) ($data['delivery_max_km'] ?? 0),
             'store_address' => $data['store_address'] ?? '',
+            'store_maps_url' => $data['store_maps_url'] ?? '',
             'store_latitude' => $data['store_latitude'] ?? null,
             'store_longitude' => $data['store_longitude'] ?? null,
             'store_name' => $data['store_name'],
