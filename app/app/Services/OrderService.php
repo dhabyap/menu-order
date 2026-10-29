@@ -39,15 +39,6 @@ class OrderService
      */
     public function create(array $data): array
     {
-        $openTime = DB::table('store_settings')->where('key', 'open_time')->value('value');
-        $closeTime = DB::table('store_settings')->where('key', 'close_time')->value('value');
-        if ($openTime && $closeTime) {
-            $now = now()->format('H:i');
-            if ($now < $openTime || $now >= $closeTime) {
-                throw new RuntimeException(sprintf(self::MESSAGE_STORE_CLOSED, $openTime, $closeTime));
-            }
-        }
-
         if ($data['service'] === 'Antar' && empty($data['address'])) {
             throw new RuntimeException(self::MESSAGE_ADDRESS_REQUIRED);
         }
@@ -165,10 +156,11 @@ class OrderService
         }
 
         if ($open === $close) {
-            throw new RuntimeException(self::MESSAGE_STORE_CLOSED);
+            throw new RuntimeException(sprintf(self::MESSAGE_STORE_CLOSED, $open, $close));
         }
 
-        $now = now()->format('H:i');
+        // Store operating hours use the shop's local timezone, not the server timezone.
+        $now = now(config('store.timezone', 'Asia/Jakarta'))->format('H:i');
 
         if ($open <= $close) {
             $closed = $now < $open || $now >= $close;
@@ -177,7 +169,7 @@ class OrderService
         }
 
         if ($closed) {
-            throw new RuntimeException(self::MESSAGE_STORE_CLOSED);
+            throw new RuntimeException(sprintf(self::MESSAGE_STORE_CLOSED, $open, $close));
         }
     }
 }

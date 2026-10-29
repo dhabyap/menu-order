@@ -893,7 +893,12 @@
         const response = await fetch("/api/orders", { method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body:JSON.stringify({name, phone:normalizedPhone, address:addr, service, note, items:cart.map(item => ({product_id:item.id, quantity:item.qty, options:Object.fromEntries((products.find(product => product.id === item.id)?.groups || []).map((group,index) => [group.name,item.options[index]]))}))}) });
         savedOrder = await response.json();
         if (!response.ok) throw new Error(savedOrder.message || "Pesanan gagal disimpan.");
-      } catch (error) { showCheckoutFeedback(error.message || "Pesanan gagal disimpan. Coba lagi."); return; }
+      } catch (error) {
+        const message = error.message || "Pesanan gagal disimpan. Coba lagi.";
+        showCheckoutFeedback(message);
+        toast(message);
+        return;
+      }
       const code = savedOrder.code;
       const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
       const delivery = savedOrder.total - subtotal;

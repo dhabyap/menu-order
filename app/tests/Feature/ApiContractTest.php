@@ -334,6 +334,29 @@ class ApiContractTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_order_uses_jakarta_time_when_server_timezone_is_utc(): void
+    {
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            ['key' => 'delivery_fee', 'value' => '5000', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'open_time', 'value' => '08:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '21:00', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        // 06:00 UTC is 13:00 in Jakarta; the shop must be open.
+        $this->travelTo(now()->setTimezone('UTC')->setDate(2026, 1, 1)->setTime(6, 0));
+
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [['product_id' => 'proto-1', 'quantity' => 1, 'options' => ['Ukuran' => 'Regular']]],
+        ])->assertCreated();
+
+        $this->travelBack();
+    }
+
     public function test_order_succeeds_when_store_is_open(): void
     {
         $this->seedProduct();
