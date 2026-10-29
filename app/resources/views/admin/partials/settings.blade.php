@@ -13,16 +13,15 @@
                             <div class="field"><label for="store-open">Jam buka</label><input id="store-open" name="open_time" type="time" value="{{ old('open_time', $settings['open_time'] ?? config('store.open_time', '08:00')) }}" maxlength="5"></div>
                             <div class="field"><label for="store-close">Jam tutup</label><input id="store-close" name="close_time" type="time" value="{{ old('close_time', $settings['close_time'] ?? config('store.close_time', '21:00')) }}" maxlength="5"></div>
                             <div class="field"><label for="whatsapp">WhatsApp kedai</label><input id="whatsapp" name="whatsapp" inputmode="numeric" pattern="62[1-9][0-9]{7,12}" value="{{ old('whatsapp', $settings['whatsapp'] ?? '') }}" placeholder="6281234567890"><span class="field-hint">Format internasional, angka saja.</span></div>
-                            <div class="field"><label for="delivery-fee">Ongkos dasar antar (Rp)</label><input id="delivery-fee" name="delivery_fee" type="number" min="0" max="10000000" required value="{{ old('delivery_fee', $settings['delivery_fee'] ?? 0) }}"></div>
-                            <div class="field"><label for="delivery-fee-per-km">Tarif per km (Rp)</label><input id="delivery-fee-per-km" name="delivery_fee_per_km" type="number" min="0" max="10000000" value="{{ old('delivery_fee_per_km', $settings['delivery_fee_per_km'] ?? 0) }}"></div>
-                            <div class="field"><label for="delivery-included-km">Jarak termasuk (km)</label><input id="delivery-included-km" name="delivery_included_km" type="number" min="0" max="1000" step="0.1" value="{{ old('delivery_included_km', $settings['delivery_included_km'] ?? 0) }}"></div>
-                            <div class="field"><label for="delivery-rounding-km">Pembulatan jarak (km)</label><input id="delivery-rounding-km" name="delivery_rounding_km" type="number" min="0.1" max="10" step="0.1" value="{{ old('delivery_rounding_km', $settings['delivery_rounding_km'] ?? 0.5) }}"></div>
-                            <div class="field"><label for="delivery-max-km">Maksimal jarak (km, 0 = tanpa batas)</label><input id="delivery-max-km" name="delivery_max_km" type="number" min="0" max="1000" step="0.1" value="{{ old('delivery_max_km', $settings['delivery_max_km'] ?? 0) }}"></div>
-                            <div class="field full"><label for="store-maps-url">Tautan Google Maps <span class="field-hint-inline">(tempel untuk isi otomatis koordinat)</span></label><input id="store-maps-url" name="store_maps_url" type="url" maxlength="500" value="{{ old('store_maps_url', $settings['store_maps_url'] ?? '') }}" placeholder="https://maps.google.com/.../?q=-6.2,106.8"></div>
-                            <div class="field full"><label for="store-address">Nama jalan, nomor, kota</label><input id="store-address" name="store_address" maxlength="500" value="{{ old('store_address', $settings['store_address'] ?? '') }}" placeholder="Nama jalan, nomor, kota"></div>
-                            <div class="field"><label for="store-latitude">Latitude</label><input id="store-latitude" name="store_latitude" type="number" step="any" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}" placeholder="cth: -6.2" readonly></div>
-                            <div class="field"><label for="store-longitude">Longitude</label><input id="store-longitude" name="store_longitude" type="number" step="any" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}" placeholder="cth: 106.8" readonly></div>
-                            <p class="field-hint full" id="maps-hint">Tempel tautan Google Maps agar koordinat terisi otomatis, atau ketik alamat manual. <a href="https://support.google.com/maps/answer/18539" target="_blank" rel="noopener">Petunjuk mendapatkan tautan</a>.</p>
+                            <div class="field"><label for="delivery-fee">Ongkir dasar (Rp)</label><input id="delivery-fee" name="delivery_fee" type="number" min="0" max="10000000" required value="{{ old('delivery_fee', $settings['delivery_fee'] ?? 0) }}"></div>
+                            <div class="field"><label for="delivery-fee-per-km">Tarif per km (Rp)</label><input id="delivery-fee-per-km" name="delivery_fee_per_km" type="number" min="0" max="10000000" value="{{ old('delivery_fee_per_km', $settings['delivery_fee_per_km'] ?? 0) }}" placeholder="0 = ongkir tetap"><span class="field-hint">Isi 0 jika ongkir tidak tergantung jarak.</span></div>
+                            <div class="field full"><label for="store-maps-url">Link lokasi toko (Google Maps)</label><input id="store-maps-url" name="store_maps_url" type="url" maxlength="500" value="{{ old('store_maps_url', $settings['store_maps_url'] ?? '') }}" placeholder="Tempel link dari Google Maps"><span class="field-hint" id="maps-hint"></span></div>
+                            <input type="hidden" name="store_latitude" id="store-latitude" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}">
+                            <input type="hidden" name="store_longitude" id="store-longitude" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}">
+                            <input type="hidden" name="store_address" id="store-address" value="{{ old('store_address', $settings['store_address'] ?? '') }}">
+                            <input type="hidden" name="delivery_included_km" value="{{ old('delivery_included_km', $settings['delivery_included_km'] ?? 0) }}">
+                            <input type="hidden" name="delivery_rounding_km" value="{{ old('delivery_rounding_km', $settings['delivery_rounding_km'] ?? 0.5) }}">
+                            <input type="hidden" name="delivery_max_km" value="{{ old('delivery_max_km', $settings['delivery_max_km'] ?? 0) }}">
                             <div class="field full"><label for="hero-description">Deskripsi halaman depan</label><textarea id="hero-description" name="hero_description" required maxlength="500">{{ old('hero_description', $settings['hero_description'] ?? 'Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.') }}</textarea></div>
                             <div class="field full"><label for="marketing-badges">Informasi singkat</label><textarea id="marketing-badges" name="marketing_badges" maxlength="1000" placeholder="Jam buka, area layanan, atau informasi toko">{{ old('marketing_badges', $settings['marketing_badges'] ?? '') }}</textarea><span class="field-hint">Satu informasi per baris.</span></div>
                         </div>
@@ -34,6 +33,7 @@
                         var latInput  = document.getElementById('store-latitude');
                         var lngInput  = document.getElementById('store-longitude');
                         var hint      = document.getElementById('maps-hint');
+                        var perKm     = document.getElementById('delivery-fee-per-km');
 
                         function parseGMaps(url) {
                             var m;
@@ -46,26 +46,29 @@
                             return null;
                         }
 
-                        function fillCoords(lat, lng) {
-                            latInput.value = lat.toFixed(7);
-                            lngInput.value = lng.toFixed(7);
-                            latInput.removeAttribute('readonly');
-                            lngInput.removeAttribute('readonly');
-                            latInput.setAttribute('readonly', 'readonly');
-                            lngInput.setAttribute('readonly', 'readonly');
-                        }
-
-                        function onMapsInput() {
-                            var coords = parseGMaps(mapsInput.value);
+                        function refresh() {
+                            var coords = parseGMaps(mapsInput.value || '');
                             if (coords) {
-                                fillCoords(coords.lat, coords.lng);
-                                if (hint) hint.textContent = 'Koordinat terdeteksi. Anda bisa langsung simpan.';
+                                latInput.value = coords.lat.toFixed(7);
+                                lngInput.value = coords.lng.toFixed(7);
+                                hint.textContent = 'Lokasi terdeteksi, tinggal simpan.';
+                                return;
                             }
+                            if (latInput.value && lngInput.value) {
+                                hint.textContent = 'Lokasi sudah tersimpan.';
+                                return;
+                            }
+                            if (perKm && Number(perKm.value) > 0) {
+                                hint.textContent = 'Buka Google Maps, cari toko Anda, lalu tempel link-nya di sini.';
+                                return;
+                            }
+                            hint.textContent = '';
                         }
 
                         if (mapsInput) {
-                            mapsInput.addEventListener('input', onMapsInput);
-                            if (mapsInput.value.trim()) onMapsInput();
+                            mapsInput.addEventListener('input', refresh);
+                            if (perKm) perKm.addEventListener('input', refresh);
+                            refresh();
                         }
                     })();
                     </script>
