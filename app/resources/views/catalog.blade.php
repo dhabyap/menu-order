@@ -158,7 +158,11 @@
 
         <div class="field" id="fieldAddress" style="display: none">
           <label for="inputAddress">Alamat Pengantaran *</label>
-          <textarea id="inputAddress" autocomplete="street-address" maxlength="240" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
+          <textarea id="inputAddress" autocomplete="street-address" maxlength="1000" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
+          <button class="btn-sec-action" type="button" id="btnCalculateDelivery" hidden>Hitung ongkir</button>
+          <p class="field-hint">Alamat digunakan untuk mencari rute dan menghitung estimasi ongkir.</p>
+          <p id="deliveryQuoteFeedback" class="checkout-hint" role="status" aria-live="polite"></p>
+          <label id="deliveryQuoteConfirmWrap" hidden><input type="checkbox" id="deliveryQuoteConfirm"> Saya konfirmasi alamat tujuan di atas sudah benar.</label>
         </div>
 
         <div class="field">
@@ -176,8 +180,8 @@
       </div>
       <div id="deliveryRow"
         style="display: none; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px">
-        <span>Ongkos Kirim</span>
-        <span style="font-weight: 600; font-variant-numeric: tabular-nums">Rp8.000</span>
+        <span>Ongkos Kirim <small id="deliveryDistanceLabel"></small></span>
+        <span style="font-weight: 600; font-variant-numeric: tabular-nums">Rp0</span>
       </div>
       <div
         style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 14px">

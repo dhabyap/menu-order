@@ -12,6 +12,13 @@ class StoreSettingsRequest extends FormRequest
         return [
             'whatsapp' => ['nullable', 'regex:/^62[1-9][0-9]{7,12}$/'],
             'delivery_fee' => ['required', 'integer', 'min:0', 'max:10000000'],
+            'delivery_fee_per_km' => ['nullable', 'integer', 'min:0', 'max:10000000'],
+            'delivery_included_km' => ['nullable', 'numeric', 'min:0', 'max:1000'],
+            'delivery_rounding_km' => ['nullable', 'numeric', 'gt:0', 'max:10'],
+            'delivery_max_km' => ['nullable', 'numeric', 'min:0', 'max:1000'],
+            'store_address' => ['nullable', 'string', 'max:500'],
+            'store_latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'store_longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'store_name' => ['required', 'string', 'max:120'],
             'store_tagline' => ['nullable', 'string', 'max:120'],
             'hero_heading' => ['required', 'string', 'max:160'],
@@ -66,6 +73,15 @@ class StoreSettingsRequest extends FormRequest
 
                 if ($open && $close && $open >= $close) {
                     $validator->errors()->add('open_time', 'Jam buka harus lebih awal dari jam tutup.');
+                }
+
+                $latitude = $this->input('store_latitude');
+                $longitude = $this->input('store_longitude');
+                if (($latitude === null || $latitude === '') !== ($longitude === null || $longitude === '')) {
+                    $validator->errors()->add('store_latitude', 'Isi koordinat lintang dan bujur toko secara berpasangan.');
+                }
+                if ($latitude !== null && $latitude !== '' && (int) $this->input('delivery_fee_per_km', 0) <= 0) {
+                    $validator->errors()->add('delivery_fee_per_km', 'Isi tarif per km lebih dari 0 untuk mengaktifkan ongkir berdasarkan jarak.');
                 }
             },
         ];

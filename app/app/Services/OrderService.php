@@ -14,6 +14,8 @@ use RuntimeException;
  */
 class OrderService
 {
+    public function __construct(private readonly DeliveryQuoteService $deliveryQuotes) {}
+
     /**
      * Validation messages that the API contract exposes to customers.
      */
@@ -44,6 +46,17 @@ class OrderService
         }
 
         $this->ensureStoreIsOpen();
+        $deliveryQuote = null;
+        if ($data['service'] === 'Antar') {
+            $hasConfiguredOrigin = DB::table('store_settings')->where('key', 'store_latitude')->value('value') !== null
+                && DB::table('store_settings')->where('key', 'store_longitude')->value('value') !== null;
+            if ($hasConfiguredOrigin) {
+                if (empty($data['delivery_quote_id'])) {
+                    throw new RuntimeException('Hitung dan konfirmasi ongkir sebelum membuat pesanan.');
+                }
+                $deliveryQuote = $this->deliveryQuotes->validateQuote($data['delivery_quote_id'], $data['address']);
+            }
+        }
 
         $products = DB::table('products')
             ->whereIn('prototype_id', collect($data['items'])->pluck('product_id'))
@@ -66,7 +79,11 @@ class OrderService
             throw new RuntimeException(self::MESSAGE_WHATSAPP_NOT_CONFIGURED);
         }
 
-        $fee = $data['service'] === 'Antar' ? (int) ($deliveryFee ?? config('store.delivery_fee', 0)) : 0;
+        $fee = $data['service'] === 'Antar'
+            ? (int) ($deliveryQuote['fee'] ?? $deliveryFee ?? config('store.delivery_fee', 0))
+            : 0;
+        $baseFeeSnapshot = $deliveryQuote['base_fee'] ?? ($data['service'] === 'Antar' ? $fee : 0);
+        $variableFeeSnapshot = $deliveryQuote ? max(0, $fee - (int) $baseFeeSnapshot) : 0;
         $total = $subtotal + $fee;
         $code = 'RT-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
 
@@ -79,6 +96,9 @@ class OrderService
             'note' => $data['note'] ?? null,
             'subtotal' => $subtotal,
             'service_fee' => $fee,
+            'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
+            'delivery_base_fee' => $baseFeeSnapshot,
+            'delivery_variable_fee' => $variableFeeSnapshot,
             'total' => $total,
             'status' => 'pending',
             'items' => json_encode($items),
@@ -90,6 +110,8 @@ class OrderService
             'id' => $id,
             'code' => $code,
             'total' => $total,
+            'service_fee' => $fee,
+            'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
             'whatsapp' => $whatsapp,
         ];
     }

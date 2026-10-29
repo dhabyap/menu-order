@@ -23,6 +23,13 @@ class StoreSettingsController extends Controller
         foreach ([
             'whatsapp' => $data['whatsapp'] ?? '',
             'delivery_fee' => (string) $data['delivery_fee'],
+            'delivery_fee_per_km' => (string) ($data['delivery_fee_per_km'] ?? 0),
+            'delivery_included_km' => (string) ($data['delivery_included_km'] ?? 0),
+            'delivery_rounding_km' => (string) ($data['delivery_rounding_km'] ?? 0.5),
+            'delivery_max_km' => (string) ($data['delivery_max_km'] ?? 0),
+            'store_address' => $data['store_address'] ?? '',
+            'store_latitude' => $data['store_latitude'] ?? null,
+            'store_longitude' => $data['store_longitude'] ?? null,
             'store_name' => $data['store_name'],
             'store_tagline' => $data['store_tagline'] ?? '',
             'hero_heading' => $data['hero_heading'],

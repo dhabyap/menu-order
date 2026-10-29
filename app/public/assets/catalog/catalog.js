@@ -4,11 +4,17 @@
     document.getElementById("footerYear").textContent = new Date().getFullYear();
     let products = [];
     let deliveryFeeConfigured = 0;
+    let deliveryDistanceEnabled = false;
+    let deliveryQuote = null;
     let storeName = "Racik Tea";
     fetch("/api/store-config").then(r => r.ok ? r.json() : null).then(config => {
       if (!config) return;
       storeName = config.store_name || storeName;
       deliveryFeeConfigured = Number(config.delivery_fee) || 0;
+      deliveryDistanceEnabled = Boolean(config.delivery_enabled);
+      document.getElementById("btnCalculateDelivery").hidden = !deliveryDistanceEnabled;
+      document.getElementById("deliveryQuoteFeedback").textContent = deliveryDistanceEnabled ? "" : "Ongkir memakai tarif tetap. Pengelola dapat mengaktifkan hitung jarak dari dashboard.";
+      updateCartUI();
       document.getElementById("brandTitle").textContent = config.store_name;
       document.getElementById("footerStoreName").textContent = config.store_name;
       document.getElementById("footerCopyrightName").textContent = config.store_name;
@@ -321,7 +327,7 @@
     function updateCartUI() {
       const count = cart.reduce((s, x) => s + x.qty, 0);
       const subtotal = cart.reduce((s, x) => s + x.price * x.qty, 0);
-      const deliveryFee = service === "Antar" ? deliveryFeeConfigured : 0;
+      const deliveryFee = service === "Antar" ? (deliveryDistanceEnabled ? (deliveryQuote?.fee ?? 0) : deliveryFeeConfigured) : 0;
       const grandTotal = subtotal + deliveryFee;
 
       // Top header button
@@ -350,7 +356,10 @@
       document.getElementById("cartGrandTotal").textContent = fmt(grandTotal);
       document.getElementById("btnCheckoutTotal").textContent = fmt(grandTotal);
       document.getElementById("deliveryRow").style.display = service === "Antar" ? "flex" : "none";
-      document.getElementById("btnCheckoutWA").disabled = count === 0;
+      document.querySelector("#deliveryRow span:last-child").textContent = fmt(deliveryFee);
+      document.getElementById("deliveryDistanceLabel").textContent = deliveryQuote && service === "Antar" ? `· ±${(deliveryQuote.distanceMeters / 1000).toFixed(1)} km` : "";
+      document.getElementById("btnCheckoutWA").disabled = count === 0 || (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked));
+      document.getElementById("btnCheckoutTotal").textContent = fmt(grandTotal);
       document.getElementById("btnCopyOrder").disabled = count === 0;
       document.getElementById("btnClearCart").disabled = count === 0;
 
@@ -839,6 +848,53 @@
       document.getElementById(id).addEventListener("input", () => showCheckoutFeedback(""));
     });
 
+    document.getElementById("inputAddress").addEventListener("input", () => {
+      deliveryQuote = null;
+      document.getElementById("deliveryQuoteConfirm").checked = false;
+      document.getElementById("deliveryQuoteConfirmWrap").hidden = true;
+      document.getElementById("deliveryQuoteFeedback").textContent = "Alamat berubah. Hitung ulang ongkir.";
+      updateCartUI();
+    });
+
+    document.getElementById("btnCalculateDelivery").addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      const address = document.getElementById("inputAddress").value.trim();
+      const feedback = document.getElementById("deliveryQuoteFeedback");
+      if (!address) {
+        feedback.textContent = "Masukkan alamat pengantaran terlebih dahulu.";
+        document.getElementById("inputAddress").focus();
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "Menghitung ongkir...";
+      feedback.textContent = "Mencari alamat dan menghitung rute jalan...";
+      try {
+        const response = await fetch("/api/delivery-quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ address }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Ongkir gagal dihitung.");
+        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address };
+        document.getElementById("deliveryQuoteConfirmWrap").hidden = false;
+        document.getElementById("deliveryQuoteConfirm").checked = false;
+        feedback.textContent = `Tujuan: ${result.destination_label} · Estimasi rute ${result.distance_km} km · Ongkir ${fmt(result.fee)}. Pastikan lokasi sudah benar.`;
+        updateCartUI();
+      } catch (error) {
+        deliveryQuote = null;
+        document.getElementById("deliveryQuoteConfirmWrap").hidden = true;
+        feedback.textContent = error.message || "Ongkir gagal dihitung. Coba lagi.";
+        updateCartUI();
+      } finally {
+        button.disabled = false;
+        button.textContent = "Hitung ongkir";
+      }
+    });
+
+    document.getElementById("deliveryQuoteConfirm").addEventListener("change", () => updateCartUI());
+
+
     function populateProfile() {
       if (profile.name) document.getElementById("inputName").value = profile.name;
       if (profile.phone) document.getElementById("inputPhone").value = profile.phone;
@@ -878,6 +934,11 @@
         document.getElementById("inputAddress").focus();
         return;
       }
+      if (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked)) {
+        showCheckoutFeedback("Hitung dan konfirmasi ongkir sebelum mengirim pesanan.");
+        document.getElementById("btnCalculateDelivery").focus();
+        return;
+      }
       clearPhoneError();
       showCheckoutFeedback("");
 
@@ -890,7 +951,7 @@
 
       let savedOrder;
       try {
-        const response = await fetch("/api/orders", { method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body:JSON.stringify({name, phone:normalizedPhone, address:addr, service, note, items:cart.map(item => ({product_id:item.id, quantity:item.qty, options:Object.fromEntries((products.find(product => product.id === item.id)?.groups || []).map((group,index) => [group.name,item.options[index]]))}))}) });
+        const response = await fetch("/api/orders", { method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body:JSON.stringify({name, phone:normalizedPhone, address:addr, service, note, delivery_quote_id: service === "Antar" && deliveryDistanceEnabled ? deliveryQuote?.id : null, items:cart.map(item => ({product_id:item.id, quantity:item.qty, options:Object.fromEntries((products.find(product => product.id === item.id)?.groups || []).map((group,index) => [group.name,item.options[index]]))}))}) });
         savedOrder = await response.json();
         if (!response.ok) throw new Error(savedOrder.message || "Pesanan gagal disimpan.");
       } catch (error) {
@@ -919,8 +980,7 @@ ${service === "Antar" ? `Alamat Antar: ${addr}\n` : ""}${note ? `Catatan: "${not
 ${itemsText}
 
 -------------------------------------
-*Subtotal: ${fmt(subtotal)}*
-${service === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}*Total: ${fmt(total)}*
+*Subtotal: ${fmt(subtotal)}*\n${service === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}\n*Total: ${fmt(total)}*
 
 Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
 
@@ -940,7 +1000,7 @@ Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
       const addr = document.getElementById("inputAddress").value.trim();
       const note = document.getElementById("inputNote").value.trim();
       const subtotal = cart.reduce((s, x) => s + x.price * x.qty, 0);
-      const delivery = service === "Antar" ? deliveryFeeConfigured : 0;
+      const delivery = service === "Antar" ? (deliveryQuote?.fee ?? deliveryFeeConfigured) : 0;
       const items = cart.map((item, i) =>
         `${i + 1}. ${item.qty}x ${item.name} (${item.options.join(", ")}) — ${fmt(item.price * item.qty)}${item.note ? `\n   Catatan: ${item.note}` : ""}`,
       ).join("\n");
@@ -1017,4 +1077,4 @@ Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
 
     // Kickstart
     init();
-  
+
