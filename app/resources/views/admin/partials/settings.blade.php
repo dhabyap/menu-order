@@ -15,7 +15,21 @@
                             <div class="field"><label for="whatsapp">WhatsApp kedai</label><input id="whatsapp" name="whatsapp" inputmode="numeric" pattern="62[1-9][0-9]{7,12}" value="{{ old('whatsapp', $settings['whatsapp'] ?? '') }}" placeholder="6281234567890"><span class="field-hint">Format internasional, angka saja.</span></div>
                             <div class="field"><label for="delivery-fee">Ongkir dasar (Rp)</label><input id="delivery-fee" name="delivery_fee" type="number" min="0" max="10000000" required value="{{ old('delivery_fee', $settings['delivery_fee'] ?? 0) }}"></div>
                             <div class="field"><label for="delivery-fee-per-km">Tarif per km (Rp)</label><input id="delivery-fee-per-km" name="delivery_fee_per_km" type="number" min="0" max="10000000" value="{{ old('delivery_fee_per_km', $settings['delivery_fee_per_km'] ?? 0) }}" placeholder="0 = ongkir tetap"><span class="field-hint">Isi 0 jika ongkir tidak tergantung jarak.</span></div>
-                            <div class="field full"><label for="store-maps-url">Link lokasi toko (Google Maps)</label><input id="store-maps-url" name="store_maps_url" type="url" maxlength="500" value="{{ old('store_maps_url', $settings['store_maps_url'] ?? '') }}" placeholder="Tempel link dari Google Maps"><span class="field-hint" id="maps-hint"></span></div>
+                            <div class="field full">
+                                <label for="store-map-search">Lokasi toko (untuk hitung ongkir)</label>
+                                <div class="map-picker">
+                                    <div class="map-search"><input id="store-map-search" type="text" maxlength="200" placeholder="Ketik nama toko atau alamat, mis. Racik Tea Bandung"><button class="btn-sec-action" type="button" id="store-map-search-btn">Cari</button></div>
+                                    <div id="store-map" style="height:300px;border-radius:12px;border:1px solid #ddd;"></div>
+                                    <p class="field-hint" id="maps-hint">Klik titik lokasi toko Anda di peta. Koordinat terisi otomatis.</p>
+                                </div>
+                                <div id="maps-fallback" hidden>
+                                    <p class="field-hint">Peta tidak dapat dimuat. Masukkan angka koordinat manual dari Google Maps (contoh: -6.2088, 106.8456).</p>
+                                    <div class="field"><label for="manual-lat">Latitude</label><input id="manual-lat" type="number" step="any"></div>
+                                    <div class="field"><label for="manual-lng">Longitude</label><input id="manual-lng" type="number" step="any"></div>
+                                    <button class="btn-sec-action" type="button" id="manual-coords-btn">Pakai koordinat ini</button>
+                                </div>
+                                <input type="hidden" name="store_maps_url" value="{{ old('store_maps_url', $settings['store_maps_url'] ?? '') }}">
+                            </div>
                             <input type="hidden" name="store_latitude" id="store-latitude" value="{{ old('store_latitude', $settings['store_latitude'] ?? '') }}">
                             <input type="hidden" name="store_longitude" id="store-longitude" value="{{ old('store_longitude', $settings['store_longitude'] ?? '') }}">
                             <input type="hidden" name="store_address" id="store-address" value="{{ old('store_address', $settings['store_address'] ?? '') }}">
@@ -27,49 +41,83 @@
                         </div>
                         <div class="form-actions"><button class="button button-primary" type="submit">Simpan Pengaturan</button></div>
                     </form>
+                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
                     <script>
                     (function () {
-                        var mapsInput = document.getElementById('store-maps-url');
                         var latInput  = document.getElementById('store-latitude');
                         var lngInput  = document.getElementById('store-longitude');
+                        var addrInput = document.getElementById('store-address');
                         var hint      = document.getElementById('maps-hint');
-                        var perKm     = document.getElementById('delivery-fee-per-km');
+                        var picker    = document.querySelector('.map-picker');
+                        var fallback  = document.getElementById('maps-fallback');
+                        var savedLat  = latInput.value ? parseFloat(latInput.value) : null;
+                        var savedLng  = lngInput.value ? parseFloat(lngInput.value) : null;
 
-                        function parseGMaps(url) {
-                            var m;
-                            m = url.match(/[?&](?:q|ll)=(-?[\d.]+),(-?[\d.]+)/);
-                            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-                            m = url.match(/\((-?[\d.]+),(-?[\d.]+)\)/);
-                            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-                            m = url.match(/@(-?[\d.]+),(-?[\d.]+)/);
-                            if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-                            return null;
+                        function setPoint(lat, lng, label) {
+                            latInput.value = lat.toFixed(7);
+                            lngInput.value = lng.toFixed(7);
+                            if (label && addrInput) addrInput.value = label;
+                            hint.textContent = 'Titik dipilih: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '. Jangan lupa tekan Simpan.';
                         }
 
-                        function refresh() {
-                            var coords = parseGMaps(mapsInput.value || '');
-                            if (coords) {
-                                latInput.value = coords.lat.toFixed(7);
-                                lngInput.value = coords.lng.toFixed(7);
-                                hint.textContent = 'Lokasi terdeteksi, tinggal simpan.';
-                                return;
-                            }
-                            if (latInput.value && lngInput.value) {
-                                hint.textContent = 'Lokasi sudah tersimpan.';
-                                return;
-                            }
-                            if (perKm && Number(perKm.value) > 0) {
-                                hint.textContent = 'Buka Google Maps, cari toko Anda, lalu tempel link-nya di sini.';
-                                return;
-                            }
-                            hint.textContent = '';
+                        function startSearch() {
+                            var box = document.getElementById('store-map-search');
+                            return (box && box.value.trim()) || (addrInput && addrInput.value.trim()) || '';
                         }
 
-                        if (mapsInput) {
-                            mapsInput.addEventListener('input', refresh);
-                            if (perKm) perKm.addEventListener('input', refresh);
-                            refresh();
+                        function loadFallback() {
+                            if (picker) picker.hidden = true;
+                            if (fallback) fallback.hidden = false;
+                            hint.textContent = 'Peta gagal dimuat. Isi koordinat manual atau periksa koneksi internet.';
+                            var btn = document.getElementById('manual-coords-btn');
+                            if (btn) btn.addEventListener('click', function () {
+                                var la = parseFloat(document.getElementById('manual-lat').value);
+                                var lo = parseFloat(document.getElementById('manual-lng').value);
+                                if (isFinite(la) && isFinite(lo)) setPoint(la, lo);
+                            });
                         }
+
+                        function initMap(L) {
+                            var map = L.map('store-map').setView(isFinite(savedLat) && isFinite(savedLng) ? [savedLat, savedLng] : [-2.5, 118], isFinite(savedLat) && isFinite(savedLng) ? 15 : 5);
+                            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+                            var marker = (isFinite(savedLat) && isFinite(savedLng)) ? L.marker([savedLat, savedLng], { draggable: true }).addTo(map) : null;
+                            if (isFinite(savedLat) && isFinite(savedLng)) hint.textContent = 'Lokasi tersimpan saat ini. Klik peta atau geser penanda untuk mengubah.';
+                            map.on('click', function (e) {
+                                if (marker) marker.setLatLng(e.latlng); else marker = L.marker(e.latlng, { draggable: true }).addTo(map);
+                                setPoint(e.latlng.lat, e.latlng.lng);
+                            });
+                            if (marker) marker.on('dragend', function () {
+                                var p = marker.getLatLng();
+                                setPoint(p.lat, p.lng);
+                            });
+                            var details = document.getElementById('store-map').closest('details');
+                            if (details) details.addEventListener('toggle', function () { if (details.open) setTimeout(function () { map.invalidateSize(); }, 150); });
+                            setTimeout(function () { map.invalidateSize(); }, 200);
+                            document.getElementById('store-map-search-btn').addEventListener('click', function () {
+                                var q = startSearch();
+                                if (!q) { hint.textContent = 'Ketik dulu nama toko atau alamatnya.'; return; }
+                                hint.textContent = 'Mencari lokasi...';
+                                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'id' } })
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (res) {
+                                        if (res && res[0]) {
+                                            var lat = parseFloat(res[0].lat), lng = parseFloat(res[0].lon);
+                                            map.setView([lat, lng], 16);
+                                            if (marker) marker.setLatLng([lat, lng]); else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                                            setPoint(lat, lng, res[0].display_name);
+                                        } else {
+                                            hint.textContent = 'Nama/alamat tidak ditemukan. Klik langsung titik toko Anda di peta.';
+                                        }
+                                    })
+                                    .catch(function () { hint.textContent = 'Pencarian gagal. Klik langsung titik toko Anda di peta.'; });
+                            });
+                        }
+
+                        var script = document.createElement('script');
+                        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                        script.onload = function () { if (window.L) initMap(window.L); else loadFallback(); };
+                        script.onerror = loadFallback;
+                        document.head.appendChild(script);
                     })();
                     </script>
                 </div>
