@@ -647,7 +647,10 @@
 
     btnCloseHistory.onclick = closeHistory;
     historyBackdrop.onclick = closeHistory;
-    document.getElementById("navOrderHistory").onclick = (event) => { event.preventDefault(); openHistory(); };
+    document.getElementById("navOrderHistory").onclick = (event) => {
+        event.preventDefault();
+        window.location.href = "/track";
+    };
     document.getElementById("footerOrderHistory").onclick = openHistory;
 
     btnFindHistory.onclick = findHistory;
