@@ -6,7 +6,7 @@
     let deliveryFeeConfigured = 0;
     let deliveryDistanceEnabled = false;
     let deliveryQuote = null;
-    let storeName = "Abyssoft";
+    let storeName = "Toko";
     fetch("/api/store-config").then(r => r.ok ? r.json() : null).then(config => {
       if (!config) return;
       storeName = config.store_name || storeName;

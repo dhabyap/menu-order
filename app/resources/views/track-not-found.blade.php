@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kode Tidak Ditemukan — {{ config('app.name', 'Abyssoft') }}</title>
+    <title>Kode Tidak Ditemukan — {{ $settings['store_name'] ?? 'Toko' }}</title>
     <link rel="stylesheet" href="assets/catalog/catalog.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
             <div class="brand">
                 <div class="mark" id="brandMark">R</div>
                 <div class="brand-text">
-                    <span id="brandTitle">Abyssoft</span>
+                    <span id="brandTitle">{{ $settings['store_name'] ?? 'Toko' }}</span>
                     <small id="brandTagline"></small>
                 </div>
             </div>
@@ -26,7 +26,7 @@
         <main id="viewPublic" style="padding-top: 24px;">
             <section class="hero" style="border-bottom: 1px solid var(--line);">
                 <div>
-                    <div class="eyebrow">Menu Abyssoft</div>
+                    <div class="eyebrow">Menu {{ $settings['store_name'] ?? '' }}</div>
                     <h1>Kode Tidak Ditemukan</h1>
                     <p>Kode pesanan yang Anda masukkan tidak terdaftar. Periksa kembali kode dan coba lagi.</p>
                 </div>
@@ -48,7 +48,7 @@
             <div class="footer-brand">
                 <div class="footer-mark" id="footerMark">R</div>
                 <span>
-                    <strong id="footerStoreName">Abyssoft</strong>
+                    <strong id="footerStoreName">{{ $settings['store_name'] ?? 'Toko' }}</strong>
                     <small id="footerCopyrightName"></small>
                 </span>
             </div>

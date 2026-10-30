@@ -7,6 +7,7 @@ use App\Http\Requests\LookupOrderRequest;
 use App\Support\OrderStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Lets a customer look up their own orders by phone number.
@@ -121,12 +122,16 @@ class OrderLookupController extends Controller
 
     public function showPublic(string $code)
     {
+        $settings = Schema::hasTable('store_settings')
+            ? DB::table('store_settings')->pluck('value', 'key')->all()
+            : [];
+
         $order = DB::table('orders')
             ->where('code', $code)
             ->first(['code', 'customer_name', 'service', 'subtotal', 'service_fee', 'total', 'status', 'items', 'created_at', 'updated_at']);
 
         if (! $order) {
-            return view('track-not-found', ['code' => $code]);
+            return view('track-not-found', ['code' => $code, 'settings' => $settings]);
         }
 
         $items = $this->items($order->items);
@@ -144,6 +149,7 @@ class OrderLookupController extends Controller
             'created_at' => $order->created_at,
             'updated_at' => $order->updated_at,
             'note' => '',
+            'settings' => $settings,
         ]);
     }
 }

@@ -46,7 +46,7 @@ class ApiContractTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'delivery_fee' => 0,
-                'store_name' => 'Racik Tea',
+                'store_name' => 'Toko',
                 'store_tagline' => '',
                 'hero_heading' => 'Pilih minuman favoritmu.',
                 'marketing_badges' => [],

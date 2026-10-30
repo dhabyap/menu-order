@@ -35,7 +35,7 @@ class StoreConfigController extends Controller
             'delivery_max_km' => (float) ($settings['delivery_max_km'] ?? 0),
             'delivery_enabled' => is_numeric($settings['store_latitude'] ?? null) && is_numeric($settings['store_longitude'] ?? null),
             'whatsapp' => $whatsapp,
-            'store_name' => $settings['store_name'] ?? 'Abyssoft',
+            'store_name' => $settings['store_name'] ?? 'Toko',
             'store_tagline' => $settings['store_tagline'] ?? '',
             'logo_url' => app(StoreBrand::class)->current()['logoUrl'],
             'hero_heading' => $settings['hero_heading'] ?? 'Pilih minuman favoritmu.',

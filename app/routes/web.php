@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StoreSettingsController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,7 +21,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('catalog');
+    $settings = Schema::hasTable('store_settings')
+        ? DB::table('store_settings')->pluck('value', 'key')->all()
+        : [];
+
+    return view('catalog', ['settings' => $settings]);
 });
 
 Route::get('/track/{code}', [App\Http\Controllers\Api\OrderLookupController::class, 'showPublic'])->name('track.public');

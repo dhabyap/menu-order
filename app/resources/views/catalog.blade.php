@@ -5,14 +5,14 @@
   <meta charset="utf-8" />
   <meta name="viewport"
     content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Abyssoft — Menu & Pesanan Cepat</title>
-  <meta property="og:title" content="Abyssoft — Menu & Pesanan Cepat" />
-  <meta property="og:description" content="Telusuri menu yang tersedia dan sesuaikan pesanan sebelum dikirim via WhatsApp." />
-  <meta property="og:url" content="https://menu.abyssoft.my.id/" />
+  <title>{{ $settings['store_name'] ?? 'Toko' }} — Menu & Pesanan Cepat</title>
+  <meta property="og:title" content="{{ $settings['store_name'] ?? 'Toko' }} — Menu & Pesanan Cepat" />
+  <meta property="og:description" content="{{ $settings['store_tagline'] ?? 'Telusuri menu yang tersedia dan sesuaikan pesanan sebelum dikirim via WhatsApp.' }}" />
+  <meta property="og:url" content="{{ url()->current() }}" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Abyssoft — Menu & Pesanan Cepat" />
-  <meta name="twitter:description" content="Telusuri menu yang tersedia dan sesuaikan pesanan sebelum dikirim via WhatsApp." />
+  <meta name="twitter:title" content="{{ $settings['store_name'] ?? 'Toko' }} — Menu & Pesanan Cepat" />
+  <meta name="twitter:description" content="{{ $settings['store_tagline'] ?? 'Telusuri menu yang tersedia dan sesuaikan pesanan sebelum dikirim via WhatsApp.' }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -29,7 +29,7 @@
       <div class="brand">
         <span class="mark" id="brandMark">R</span>
         <div class="brand-text">
-          <span id="brandTitle">Abyssoft</span>
+          <span id="brandTitle">{{ $settings['store_name'] ?? 'Toko' }}</span>
           <small id="brandTagline"></small>
         </div>
       </div>
@@ -56,7 +56,7 @@
       <!-- Hero Section -->
       <section class="hero">
         <div>
-          <div class="eyebrow" id="heroEyebrow">Menu Abyssoft</div>
+          <div class="eyebrow" id="heroEyebrow">Menu {{ $settings['store_name'] ?? '' }}</div>
           <h1 id="heroHeading">Pilih minuman favoritmu.</h1>
           <p id="heroDescription">Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.</p>
           <div class="hero-actions">
@@ -100,10 +100,10 @@
       <footer class="site-footer" id="storeFooter">
       <a class="footer-brand" href="#top" aria-label="Kembali ke atas">
         <span class="footer-mark" id="footerMark">R</span>
-        <span><strong id="footerStoreName">Abyssoft</strong><small id="footerStoreTagline">Menu dan pemesanan</small></span>
+        <span><strong id="footerStoreName">{{ $settings['store_name'] ?? 'Toko' }}</strong><small id="footerStoreTagline">{{ $settings['store_tagline'] ?? 'Menu dan pemesanan' }}</small></span>
       </a>
       <div class="footer-links"><a href="#productGrid">Menu</a><a href="#orderGuide">Cara pesan</a><button type="button" id="footerOrderHistory">Cek pesanan</button></div>
-      <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">Abyssoft</span></p>
+      <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">{{ $settings['store_name'] ?? 'Toko' }}</span></p>
       <p class="footer-address" id="footerStoreAddress" style="display:none;"></p>
       </footer>
     </main>
