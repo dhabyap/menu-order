@@ -219,7 +219,6 @@ body.dialog-open { overflow: hidden; }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; margin-top: 22px; }
 .tab-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.panel-heading { position: sticky; top: var(--header-h, 132px); z-index: 4; background: var(--surface); padding: 17px 18px; border-bottom: 1px solid var(--line-light); }
 .stat-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 

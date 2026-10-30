@@ -1,5 +1,4 @@
-        <section class="panel settings-panel" aria-label="Pengaturan toko">
-            <details class="settings-details">
+        <details class="settings-details" open>
                 <summary>Pengaturan Toko</summary>
                 <div class="settings-content">
                     <p>Informasi ini digunakan pada halaman katalog dan saat pelanggan membuat pesanan.</p>
@@ -54,5 +53,4 @@
 
                 </div>
             </details>
-        </section>
 
