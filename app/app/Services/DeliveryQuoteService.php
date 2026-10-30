@@ -131,11 +131,13 @@ class DeliveryQuoteService
             throw new RuntimeException('Layanan pencarian alamat sedang sibuk. Coba hitung ongkir lagi sebentar.');
         }
 
+        $q = str_contains(strtolower($query), 'bandung') ? $query : $query.', Kota Bandung';
+
         $response = Http::acceptJson()
             ->withUserAgent('MenuOrderDeliveryQuote/1.0 ('.(string) config('app.url').')')
             ->timeout(8)
             ->get('https://nominatim.openstreetmap.org/search', [
-                'q' => $query,
+                'q' => $q,
                 'format' => 'jsonv2',
                 'limit' => $limit,
                 'addressdetails' => 1,
@@ -160,8 +162,10 @@ class DeliveryQuoteService
             if ($lat === null || $lon === null) {
                 continue;
             }
+
+            $label = $this->formatSuggestionLabel($row);
             $suggestions[] = [
-                'label' => (string) $row['display_name'],
+                'label' => $label,
                 'lat' => $lat,
                 'lon' => $lon,
             ];
@@ -181,6 +185,26 @@ class DeliveryQuoteService
             'label' => $first['label'],
             'suggestions' => $suggestions,
         ];
+    }
+
+    private function formatSuggestionLabel(array $row): string
+    {
+        $addr = $row['address'] ?? [];
+
+        $road = (string) ($addr['road'] ?? '');
+        $houseNumber = (string) ($addr['house_number'] ?? '');
+        $suburb = (string) ($addr['suburb'] ?? ''); // kelurahan
+        $city = (string) ($addr['city'] ?? ($addr['town'] ?? ($addr['municipality'] ?? '')));
+        $district = (string) ($addr['district'] ?? ''); // kecamatan
+
+        $parts = array_values(array_filter([
+            $road && $houseNumber ? $road.' No. '.$houseNumber : $road,
+            $suburb,
+            $district,
+            $city,
+        ]));
+
+        return $parts ? implode(', ', $parts) : (string) $row['display_name'];
     }
 
     private function route(float $originLon, float $originLat, float $destLon, float $destLat): array
