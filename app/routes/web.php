@@ -35,6 +35,12 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/table', [OrderController::class, 'table'])->name('admin.orders.table');
     Route::get('/orders/export', [OrderController::class, 'export'])->name('admin.orders.export');
+    Route::get('/backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('admin.backups.index');
+    Route::post('/backups/now', function () {
+        \Artisan::call(\App\Console\Commands\BackupDatabase::class);
+        return response()->json(['message' => 'Backup selesai.']);
+    })->name('admin.backups.now');
+    Route::get('/backups/download/{filename}', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('admin.backups.download');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->whereNumber('id')->name('admin.orders.show');
     Route::patch('/orders/{id}/status', [OrderController::class, 'update'])->whereNumber('id')->name('admin.orders.update');
 

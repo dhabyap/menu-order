@@ -30,6 +30,25 @@
                             <div class="field full"><label for="hero-description">Deskripsi halaman depan</label><textarea id="hero-description" name="hero_description" required maxlength="500">{{ old('hero_description', $settings['hero_description'] ?? 'Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.') }}</textarea></div>
                             <div class="field full"><label for="marketing-badges">Informasi singkat</label><textarea id="marketing-badges" name="marketing_badges" maxlength="1000" placeholder="Jam buka, area layanan, atau informasi toko">{{ old('marketing_badges', $settings['marketing_badges'] ?? '') }}</textarea><span class="field-hint">Satu informasi per baris.</span></div>
                         </div>
+
+                        <div class="panel-heading" style="margin-top: 24px;">
+                            <div>
+                                <h2>Backup Database</h2>
+                                <p>Simpan salinan database untuk keamanan.</p>
+                            </div>
+                            <div class="orders-heading-actions">
+                                <button class="button button-soft button-small" type="button" id="backup-now">Backup Sekarang</button>
+                                <button class="button button-soft button-small" type="button" id="backup-refresh">⟳ Muat ulang</button>
+                            </div>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="orders-table">
+                                <thead><tr><th>File</th><th>Ukuran</th><th>Diperbarui</th><th>Aksi</th></tr></thead>
+                                <tbody id="backups-body">
+                                    <tr><td colspan="4" style="text-align:center; color: var(--muted);">Memuat…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="form-actions"><button class="button button-primary" type="submit">Simpan Pengaturan</button></div>
                     </form>
 

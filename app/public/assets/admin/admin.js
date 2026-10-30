@@ -356,3 +356,63 @@ if (orderDetailDialog) {
         if (event.target === orderDetailDialog) closeOrderDetail();
     });
 }
+
+const backupsBody = document.getElementById('backups-body');
+const backupNow = document.getElementById('backup-now');
+const backupRefresh = document.getElementById('backup-refresh');
+
+const formatBytes = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+const reloadBackups = async () => {
+    if (!backupsBody) return;
+    try {
+        const response = await fetch('/admin/backups', { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('failed');
+        const data = await response.json();
+        const backups = data.backups || [];
+        if (!backups.length) {
+            backupsBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Belum ada backup.</td></tr>';
+            return;
+        }
+        backupsBody.innerHTML = backups.map((backup) => `
+            <tr>
+                <td><code>${backup.name}</code></td>
+                <td>${formatBytes(backup.size)}</td>
+                <td>${backup.modified}</td>
+                <td><a class="button button-soft button-small" href="/admin/backups/download/${backup.name}" download>Unduh</a></td>
+            </tr>
+        `).join('');
+    } catch {
+        backupsBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Gagal memuat backup.</td></tr>';
+    }
+};
+
+if (backupNow) {
+    backupNow.addEventListener('click', async () => {
+        backupNow.disabled = true;
+        backupNow.textContent = 'Membuat…';
+        try {
+            await fetch('/admin/backups/now', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' } });
+            await reloadBackups();
+        } catch {
+            alert('Gagal membuat backup.');
+        } finally {
+            backupNow.disabled = false;
+            backupNow.textContent = 'Backup Sekarang';
+        }
+    });
+}
+
+if (backupRefresh) {
+    backupRefresh.addEventListener('click', reloadBackups);
+}
+
+if (backupsBody) {
+    reloadBackups();
+}
