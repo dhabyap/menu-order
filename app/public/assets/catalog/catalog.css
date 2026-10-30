@@ -1899,27 +1899,33 @@
       border: 1px solid var(--line); background: #fff;
       padding: 12px 14px; border-radius: 10px; font-size: 14px; outline: none;
     }
+    .track-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(46,67,52,.12); }
     .track-card {
       background: var(--surface); border: 1px solid var(--line);
-      border-radius: 16px; padding: 20px; margin-top: 24px;
+      border-radius: 20px; padding: 24px; margin-top: 24px;
+      box-shadow: var(--shadow);
     }
     .track-card-head {
-      display: flex; justify-content: space-between; align-items: baseline;
-      gap: 8px; margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; margin-bottom: 16px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--line-light);
     }
-    .track-code { font: bold 18px 'Fraunces', serif; color: var(--ink); }
-    .track-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-    .track-value { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-    .track-items { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .track-code { font: 700 18px 'Fraunces', serif; color: var(--ink); }
+    .track-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .track-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+    .track-value { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .track-items { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
     .track-item {
-      display: flex; justify-content: space-between; font-size: 13px;
-      padding: 8px; background: var(--surface2); border-radius: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 500;
+      padding: 10px 12px; background: var(--surface2); border-radius: 12px;
+      border: 1px solid var(--line-light);
     }
-    .track-item-price { font-weight: 700; }
-    .track-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; }
-    .track-row-divider { border-top: 1px dashed var(--line-light); }
-    .track-total { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; font-weight: 800; color: var(--green); }
-    .track-meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .track-item-price { font-weight: 700; color: var(--ink); }
+    .track-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500; padding: 8px 0; }
+    .track-row-divider { border-top: 1px dashed var(--line-light); padding-top: 12px; margin-top: 4px; }
+    .track-total { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px; padding: 10px 0; font-weight: 800; color: var(--green); }
+    .track-meta { font-size: 11px; color: var(--muted); margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line-light); }
     .track-footer { margin-top: 40px; }
     .product-skeleton {
       background: linear-gradient(90deg, var(--surface2) 25%, var(--line) 50%, var(--surface2) 75%);
