@@ -398,4 +398,28 @@ class ApiContractTest extends TestCase
             'items' => [['product_id' => 'proto-1', 'quantity' => 1, 'options' => ['Ukuran' => 'Regular']]],
         ])->assertCreated();
     }
+
+    public function test_checkout_rate_limits_after_ten_requests(): void
+    {
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            ['key' => 'delivery_fee', 'value' => '5000', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'open_time', 'value' => '00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '23:59', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $payload = [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [['product_id' => 'proto-1', 'quantity' => 1, 'options' => ['Ukuran' => 'Regular']]],
+        ];
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->postJson('/api/orders', $payload)->assertStatus(201);
+        }
+
+        $this->postJson('/api/orders', $payload)->assertStatus(429);
+    }
 }
