@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lacak Pesanan — {{ config('app.name', 'Racik Tea') }}</title>
+    <title>Lacak Pesanan — {{ config('app.name', 'Abyssoft') }}</title>
     <link rel="stylesheet" href="assets/catalog/catalog.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
             <div class="brand">
                 <div class="mark" id="brandMark">R</div>
                 <div class="brand-text">
-                    <span id="brandTitle">Racik Tea</span>
+                    <span id="brandTitle">Abyssoft</span>
                     <small id="brandTagline"></small>
                 </div>
             </div>
@@ -26,7 +26,7 @@
         <main id="viewPublic" class="track-main">
             <section class="hero track-hero">
                 <div>
-                    <div class="eyebrow">Menu Racik Tea</div>
+                    <div class="eyebrow">Menu Abyssoft</div>
                     <h1>Lacak Pesanan</h1>
                     <p>Masukkan kode pesanan untuk melihat status dan rincian.</p>
                 </div>
@@ -88,7 +88,7 @@
             <div class="footer-brand">
                 <div class="footer-mark" id="footerMark">R</div>
                 <span>
-                    <strong id="footerStoreName">Racik Tea</strong>
+                    <strong id="footerStoreName">Abyssoft</strong>
                     <small id="footerCopyrightName"></small>
                 </span>
             </div>

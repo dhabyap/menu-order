@@ -49,7 +49,7 @@ class BackupDatabase extends Command
 
     private function dumpSql(): string
     {
-        $sql = "-- Backup Racik Tea\n-- Generated: ".now()->toDateTimeString()."\n\n";
+        $sql = "-- Backup Abyssoft\n-- Generated: ".now()->toDateTimeString()."\n\n";
 
         $tables = $this->listTables();
 

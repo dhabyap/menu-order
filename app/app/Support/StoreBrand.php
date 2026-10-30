@@ -13,7 +13,7 @@ class StoreBrand
         $path = $settings['logo_path'] ?? null;
 
         return [
-            'storeName' => $settings['store_name'] ?? 'Racik Tea',
+            'storeName' => $settings['store_name'] ?? 'Abyssoft',
             'storeTagline' => $settings['store_tagline'] ?? '',
             'logoUrl' => $path && Storage::disk('public')->exists($path) ? Storage::disk('public')->url($path) : null,
         ];
