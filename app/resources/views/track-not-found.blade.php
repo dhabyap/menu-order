@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kode Tidak Ditemukan — {{ $settings['store_name'] ?? 'Toko' }}</title>
-    <link rel="stylesheet" href="assets/catalog/catalog.css">
+    <link rel="stylesheet" href="/assets/catalog/catalog.css">
 </head>
 <body>
     <div class="shell">
