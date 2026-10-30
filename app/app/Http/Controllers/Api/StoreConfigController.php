@@ -43,6 +43,7 @@ class StoreConfigController extends Controller
             'marketing_badges' => array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $settings['marketing_badges'] ?? '')))),
             'open_time' => $settings['open_time'] ?? config('store.open_time', '08:00'),
             'close_time' => $settings['close_time'] ?? config('store.close_time', '21:00'),
+            'store_address' => $settings['store_address'] ?? '',
         ];
     }
 }

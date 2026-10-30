@@ -39,8 +39,7 @@
         <span class="badge-open" id="statusBadge">Pesan online</span>
         <button class="btn-cart-top" id="topCartBtn">
           <span>Keranjang</span>
-          <span id="topCartCount"
-            style="background: rgba(255, 255, 255, 0.25); padding: 1px 6px; border-radius: 6px; font-size: 10px; display: none">0</span>
+          <span id="topCartCount" class="cart-count-badge">0</span>
         </button>
       </div>
     </header>
@@ -98,6 +97,7 @@
       </a>
       <div class="footer-links"><a href="#productGrid">Menu</a><a href="#orderGuide">Cara pesan</a><button type="button" id="footerOrderHistory">Cek pesanan</button></div>
       <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">Racik Tea</span></p>
+      <p class="footer-address" id="footerStoreAddress" style="display:none;"></p>
       </footer>
     </main>
 

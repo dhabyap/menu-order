@@ -19,6 +19,11 @@
       document.getElementById("footerStoreName").textContent = config.store_name;
       document.getElementById("footerCopyrightName").textContent = config.store_name;
       document.getElementById("footerStoreTagline").textContent = config.store_tagline || "Menu dan pemesanan";
+      const footerAddress = document.getElementById("footerStoreAddress");
+      if (footerAddress && config.store_address) {
+        footerAddress.textContent = config.store_address;
+        footerAddress.style.display = "";
+      }
       const footerMark = document.getElementById("footerMark");
       footerMark.textContent = [...config.store_name][0] || "R";
       if (config.logo_url) {
@@ -249,7 +254,7 @@
         <div class="cup"><span>${esc(p.icon || "✿")}</span></div>
         ` : `
         <div class="sold-overlay"></div>
-        <span class="sold-badge">Habis</span>
+        <span class="sold-badge" title="Stok habis">Habis</span>
         `}
       </div>
       <div class="prod-body">
