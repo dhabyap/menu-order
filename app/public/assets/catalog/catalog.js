@@ -797,18 +797,7 @@
             </div>
             <ul class="history-items">${itemsHtml}</ul>
             <div class="history-total">Total: ${fmt(order.total)}</div>
-            <button type="button" class="history-detail-toggle" data-order-detail-toggle
-                    data-code="${esc(order.code)}" aria-expanded="false" aria-controls="${esc(detailId)}">Lihat detail</button>
-            <div class="history-card-detail" id="${esc(detailId)}" hidden>
-              ${detailItemsHtml || `<div class="history-detail-row"><span>Rincian item tidak tersedia.</span></div>`}
-              <div class="history-detail-row"><span>Subtotal</span><span>${fmt(order.subtotal)}</span></div>
-              ${showFee ? `<div class="history-detail-row"><span>Ongkir antar</span><span>${fmt(order.service_fee)}</span></div>` : ""}
-              <div class="history-detail-row history-detail-total"><span>Total</span><span>${fmt(order.total)}</span></div>
-              <div class="history-detail-meta">
-                <span>Dipesan ${esc(formatTime(order.created_at))}</span>
-                <span>Diperbarui ${esc(formatTime(order.updated_at))}</span>
-              </div>
-            </div>
+            <a class="history-detail-toggle" href="/track/${encodeURIComponent(order.code)}" data-order-detail-toggle data-code="${esc(order.code)}">Lihat detail</a>
           </div>
         </div>
       `;
