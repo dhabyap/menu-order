@@ -89,4 +89,41 @@ class OrderController extends Controller
             'label' => OrderStatus::label($data['status']),
         ]);
     }
+
+    /**
+     * Export all orders to a downloadable CSV file.
+     */
+    public function export()
+    {
+        $orders = DB::table('orders')->latest()->get();
+
+        $filename = 'pesanan-'.now()->format('Y-m-d').'.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ];
+
+        $callback = function () use ($orders) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\u{FEFF}");
+            fputcsv($out, ['Kode', 'Nama', 'Telepon', 'Alamat', 'Layanan', 'Total', 'Status', 'Tanggal']);
+
+            foreach ($orders as $order) {
+                fputcsv($out, [
+                    $order->code,
+                    $order->customer_name,
+                    $order->phone,
+                    $order->address ?? '',
+                    $order->service,
+                    (int) $order->total,
+                    OrderStatus::label($order->status),
+                    $order->created_at,
+                ]);
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

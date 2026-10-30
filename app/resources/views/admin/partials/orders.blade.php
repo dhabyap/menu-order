@@ -7,6 +7,7 @@
                 <div class="orders-heading-actions">
                     <span class="orders-live" id="orders-live" aria-live="polite">Memuat…</span>
                     <button class="button button-soft button-small" type="button" id="orders-refresh">⟳ Muat ulang</button>
+                    <a class="button button-soft button-small" href="{{ route('admin.orders.export') }}" download>Export CSV</a>
                 </div>
             </div>
             <div class="table-scroll">

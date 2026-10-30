@@ -107,4 +107,16 @@ class AdminOrderProcessingTest extends TestCase
             ->assertSee('RT-261022-A1IZW')
             ->assertSee('Pelanggan');
     }
+
+    public function test_admin_can_export_orders_to_csv(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->seedOrder();
+
+        $response = $this->get('/admin/orders/export');
+
+        $response->assertOk();
+        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('.csv', $response->headers->get('Content-Disposition'));
+    }
 }

@@ -34,6 +34,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/table', [OrderController::class, 'table'])->name('admin.orders.table');
+    Route::get('/orders/export', [OrderController::class, 'export'])->name('admin.orders.export');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->whereNumber('id')->name('admin.orders.show');
     Route::patch('/orders/{id}/status', [OrderController::class, 'update'])->whereNumber('id')->name('admin.orders.update');
 
