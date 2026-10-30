@@ -22,9 +22,11 @@ class DeliveryQuoteService
 
         $normalizedAddress = Str::of($address)->squish()->lower()->toString();
         $cacheKey = 'delivery:geocode:'.hash('sha256', $normalizedAddress);
-        $destination = Cache::get($cacheKey);
-        if (! is_array($destination)) {
-            $destination = $this->geocode($address);
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached)) {
+            $destination = $cached;
+        } else {
+            $destination = $this->geocodeWithRetry($address);
             Cache::put($cacheKey, $destination, now()->addDays(7));
         }
 
@@ -70,7 +72,7 @@ class DeliveryQuoteService
             'expires_at' => $expiresAt,
         ];
 
-        return [
+        $response = [
             'quote_id' => Crypt::encryptString(json_encode($payload, JSON_THROW_ON_ERROR)),
             'distance_meters' => $distanceMeters,
             'distance_km' => round($distanceKm, 1),
@@ -78,6 +80,12 @@ class DeliveryQuoteService
             'destination_label' => $destination['label'],
             'expires_at' => now()->addMinutes(15)->toIso8601String(),
         ];
+
+        if (! empty($destination['suggestions'])) {
+            $response['suggestions'] = $destination['suggestions'];
+        }
+
+        return $response;
     }
 
     public function validateQuote(string $token, string $address): array
@@ -98,9 +106,27 @@ class DeliveryQuoteService
         return $payload;
     }
 
-    private function geocode(string $address): array
+    private function geocodeWithRetry(string $address): array
     {
-        // Nominatim policy: identify the application and throttle uncached lookups globally.
+        $candidates = $this->nominatimSearch($address, 5);
+        if ($candidates !== null) {
+            return $candidates;
+        }
+
+        $retryQuery = preg_replace('/\b\d+[a-zA-Z]*\b/', '', $address, 1);
+        $retryQuery = Str::of($retryQuery)->squish()->toString();
+        if ($retryQuery !== '' && $retryQuery !== $address) {
+            $retry = $this->nominatimSearch($retryQuery, 5);
+            if ($retry !== null) {
+                return $retry;
+            }
+        }
+
+        throw new RuntimeException('Alamat tidak ditemukan. Gunakan nama jalan, kelurahan, kecamatan, dan kota.');
+    }
+
+    private function nominatimSearch(string $query, int $limit): ?array
+    {
         if (! Cache::add('delivery:nominatim:last-request', now()->timestamp, now()->addSeconds(2))) {
             throw new RuntimeException('Layanan pencarian alamat sedang sibuk. Coba hitung ongkir lagi sebentar.');
         }
@@ -109,27 +135,52 @@ class DeliveryQuoteService
             ->withUserAgent('MenuOrderDeliveryQuote/1.0 ('.(string) config('app.url').')')
             ->timeout(8)
             ->get('https://nominatim.openstreetmap.org/search', [
-                'q' => $address,
+                'q' => $query,
                 'format' => 'jsonv2',
-                'limit' => 1,
+                'limit' => $limit,
                 'addressdetails' => 1,
             ]);
 
         if (! $response->successful()) {
             throw new RuntimeException('Pencarian alamat sementara tidak tersedia. Coba lagi nanti.');
         }
-        $row = $response->json('0');
-        if (! is_array($row) || ! isset($row['lat'], $row['lon'], $row['display_name'])) {
-            throw new RuntimeException('Alamat tidak ditemukan. Masukkan alamat yang lebih lengkap.');
+
+        $rows = $response->json();
+        if (! is_array($rows) || empty($rows)) {
+            return null;
         }
 
-        $lat = $this->coordinate($row['lat'], -90, 90);
-        $lon = $this->coordinate($row['lon'], -180, 180);
-        if ($lat === null || $lon === null) {
-            throw new RuntimeException('Lokasi alamat tidak valid. Periksa kembali alamat.');
+        $suggestions = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! isset($row['lat'], $row['lon'], $row['display_name'])) {
+                continue;
+            }
+            $lat = $this->coordinate($row['lat'], -90, 90);
+            $lon = $this->coordinate($row['lon'], -180, 180);
+            if ($lat === null || $lon === null) {
+                continue;
+            }
+            $suggestions[] = [
+                'label' => (string) $row['display_name'],
+                'lat' => $lat,
+                'lon' => $lon,
+            ];
+            if (count($suggestions) >= 5) {
+                break;
+            }
         }
 
-        return ['lat' => $lat, 'lon' => $lon, 'label' => (string) $row['display_name']];
+        if (! $suggestions) {
+            return null;
+        }
+
+        $first = $suggestions[0];
+        return [
+            'lat' => $first['lat'],
+            'lon' => $first['lon'],
+            'label' => $first['label'],
+            'suggestions' => $suggestions,
+        ];
     }
 
     private function route(float $originLon, float $originLat, float $destLon, float $destLat): array

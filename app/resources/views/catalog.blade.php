@@ -163,6 +163,7 @@
           <span class="field-error" id="addressError" aria-live="polite"></span>
           <button class="btn-sec-action" type="button" id="btnCalculateDelivery" hidden>Hitung ongkir</button>
           <p class="field-hint">Alamat digunakan untuk mencari rute dan menghitung estimasi ongkir.</p>
+          <div id="dq-suggestions" class="dq-suggestions" role="listbox" aria-label="Saran alamat"></div>
 
           <div id="deliveryQuoteCard" class="delivery-quote-card" hidden aria-live="polite">
             <div class="dqc-head">

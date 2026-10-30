@@ -867,6 +867,58 @@
       if (el) el.textContent = "";
     }
 
+    function renderSuggestions(suggestions, original) {
+      const container = document.getElementById("dq-suggestions");
+      if (!suggestions.length) { container.innerHTML = ""; return; }
+      container.innerHTML = suggestions.map((s, i) => `<button class="dq-item" type="button" data-index="${i}" data-label="${escapeHtml(s.label).replace(/"/g,"&quot;")}" data-lat="${s.lat}" data-lon="${s.lon}">${escapeHtml(s.label)}</button>`).join("");
+      container.querySelectorAll(".dq-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.getElementById("inputAddress").value = btn.dataset.label;
+          selectSuggestion(Number(btn.dataset.lat), Number(btn.dataset.lon), btn.dataset.label);
+        });
+      });
+    }
+
+    function selectSuggestion(lat, lon, label) {
+      const feedback = document.getElementById("deliveryQuoteFeedback");
+      const button = document.getElementById("btnCalculateDelivery");
+      document.getElementById("dq-suggestions").innerHTML = "";
+      feedback.textContent = "Menggunakan alamat terpilih...";
+      button.disabled = true;
+      button.textContent = "Menghitung ongkir...";
+      fetch("/api/delivery-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ address: label, selected_lat: lat, selected_lon: lon }),
+      }).then(r => r.ok ? r.json() : Promise.reject(r)).then(result => {
+        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address: label };
+        document.getElementById("deliveryQuoteCard").hidden = false;
+        document.getElementById("deliveryQuoteDest").textContent = result.destination_label || label;
+        document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km`;
+        document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
+        document.getElementById("deliveryQuoteConfirm").checked = false;
+        document.getElementById("deliveryQuoteError").hidden = true;
+        feedback.textContent = "";
+        updateCartUI();
+      }).catch((res) => {
+        deliveryQuote = null;
+        document.getElementById("deliveryQuoteCard").hidden = true;
+        if (res && res.json) {
+          res.json().then(data => {
+            const message = data.message || "Ongkir gagal dihitung.";
+            document.getElementById("deliveryQuoteErrorMsg").textContent = message;
+            document.getElementById("deliveryQuoteError").hidden = false;
+            feedback.textContent = "";
+          });
+        }
+      }).finally(() => {
+        button.disabled = false;
+        button.textContent = "Hitung ongkir";
+      });
+    }
+
+    const escapeHtml = (str) => String(str ?? "").replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
     document.getElementById("inputPhone").addEventListener("input", () => {
       clearPhoneError();
       showCheckoutFeedback("");
@@ -884,6 +936,7 @@
       document.getElementById("deliveryQuoteCard").hidden = true;
       document.getElementById("deliveryQuoteError").hidden = true;
       document.getElementById("deliveryQuoteFeedback").textContent = "Alamat berubah. Hitung ulang ongkir.";
+      document.getElementById("dq-suggestions").innerHTML = "";
       updateCartUI();
     });
 
@@ -916,11 +969,19 @@
         });
         const result = await response.json();
         if (!response.ok) {
+          if (result.suggestions && result.suggestions.length) {
+            renderSuggestions(result.suggestions, address);
+            feedback.textContent = "Pilih salah satu alamat di bawah ini.";
+            button.disabled = false;
+            button.textContent = "Hitung ongkir";
+            return;
+          }
           const message = result.message || "Ongkir gagal dihitung.";
           errorCard.hidden = false;
           errorMsg.textContent = message;
           errorTitle.textContent = message.includes("tidak ditemukan") ? "Alamat tidak ditemukan" : "Gagal menghitung ongkir";
           feedback.textContent = "";
+          document.getElementById("dq-suggestions").innerHTML = "";
           throw new Error(message);
         }
         deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address };
@@ -929,6 +990,7 @@
         document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km`;
         document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
         document.getElementById("deliveryQuoteConfirm").checked = false;
+        document.getElementById("dq-suggestions").innerHTML = "";
         errorCard.hidden = true;
         feedback.textContent = "";
         updateCartUI();

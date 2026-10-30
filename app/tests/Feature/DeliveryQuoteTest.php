@@ -130,6 +130,20 @@ class DeliveryQuoteTest extends TestCase
 
         $this->postJson('/api/delivery-quote', ['address' => 'zzzz no address found'])
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Alamat tidak ditemukan. Masukkan alamat yang lebih lengkap.');
+            ->assertJsonPath('message', 'Alamat tidak ditemukan. Gunakan nama jalan, kelurahan, kecamatan, dan kota.');
+    }
+
+    public function test_quote_returns_suggestions_when_multiple_matches(): void
+    {
+        $this->configureStore();
+        Http::fake(['nominatim.openstreetmap.org/*' => Http::response([
+            ['lat' => '-6.210000', 'lon' => '106.810000', 'display_name' => 'Jalan Test A, Jakarta'],
+            ['lat' => '-6.220000', 'lon' => '106.820000', 'display_name' => 'Jalan Test B, Jakarta'],
+        ], 200), 'router.project-osrm.org/*' => Http::response(['code' => 'Ok', 'routes' => [['distance' => 4200]]], 200)]);
+
+        $this->postJson('/api/delivery-quote', ['address' => 'Jalan Test'])
+            ->assertOk()
+            ->assertJsonCount(2, 'suggestions')
+            ->assertJsonPath('suggestions.0.label', 'Jalan Test A, Jakarta');
     }
 }

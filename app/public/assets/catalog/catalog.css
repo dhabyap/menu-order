@@ -1686,6 +1686,38 @@
       line-height: 1.4;
     }
 
+    /* Delivery Address Suggestions */
+    .dq-suggestions {
+      margin-top: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .dq-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--ink);
+      background: #fff;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .dq-item:last-child {
+      border-bottom: none;
+    }
+    .dq-item:hover,
+    .dq-item:focus {
+      background: #f6f7f2;
+      outline: none;
+    }
+    .dq-item:active {
+      background: #eef0e6;
+    }
+
     .cart-line-actions {
       display: flex;
       flex-wrap: wrap;
