@@ -127,7 +127,7 @@ class DeliveryQuoteService
 
     private function nominatimSearch(string $query, int $limit): ?array
     {
-        if (! Cache::add('delivery:nominatim:last-request', now()->timestamp, now()->addSeconds(2))) {
+        if (! Cache::add('delivery:nominatim:last-request', now()->timestamp, now()->addSeconds(3))) {
             throw new RuntimeException('Layanan pencarian alamat sedang sibuk. Coba hitung ongkir lagi sebentar.');
         }
 
