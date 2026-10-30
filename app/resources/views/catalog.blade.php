@@ -145,9 +145,10 @@
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" id="fieldName">
           <label for="inputName">Nama Kamu *</label>
-          <input type="text" id="inputName" autocomplete="name" maxlength="80" placeholder="Contoh: Rian" />
+          <input type="text" id="inputName" autocomplete="name" maxlength="80" aria-describedby="nameError" placeholder="Contoh: Rian" />
+          <span class="field-error" id="nameError" aria-live="polite"></span>
         </div>
 
         <div class="field" id="fieldPhone">
@@ -158,7 +159,8 @@
 
         <div class="field" id="fieldAddress" style="display: none">
           <label for="inputAddress">Alamat Pengantaran *</label>
-          <textarea id="inputAddress" autocomplete="street-address" maxlength="1000" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
+          <textarea id="inputAddress" autocomplete="street-address" maxlength="1000" rows="2" aria-describedby="addressError" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
+          <span class="field-error" id="addressError" aria-live="polite"></span>
           <button class="btn-sec-action" type="button" id="btnCalculateDelivery" hidden>Hitung ongkir</button>
           <p class="field-hint">Alamat digunakan untuk mencari rute dan menghitung estimasi ongkir.</p>
 

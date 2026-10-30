@@ -613,6 +613,10 @@
       openLayer(document.getElementById("cartDrawer"), document.getElementById("btnCloseCart"));
     }
     function closeCart() {
+      deliveryQuote = null;
+      document.getElementById("deliveryQuoteCard").hidden = true;
+      document.getElementById("deliveryQuoteError").hidden = true;
+      document.getElementById("deliveryQuoteConfirm").checked = false;
       closeLayer(document.getElementById("cartDrawer"));
     }
     document.getElementById("topCartBtn").onclick = openCart;
@@ -842,16 +846,32 @@
       document.getElementById("inputPhone").removeAttribute("aria-invalid");
     }
 
+    function clearNameError() {
+      document.getElementById("fieldName").classList.remove("has-error");
+      const el = document.getElementById("nameError");
+      if (el) el.textContent = "";
+      const input = document.getElementById("inputName");
+      if (input) input.removeAttribute("aria-invalid");
+    }
+
+    function clearAddressError() {
+      document.getElementById("fieldAddress").classList.remove("has-error");
+      const el = document.getElementById("addressError");
+      if (el) el.textContent = "";
+    }
+
     document.getElementById("inputPhone").addEventListener("input", () => {
       clearPhoneError();
       showCheckoutFeedback("");
     });
 
-    ["inputName", "inputAddress"].forEach((id) => {
-      document.getElementById(id).addEventListener("input", () => showCheckoutFeedback(""));
+    document.getElementById("inputName").addEventListener("input", () => {
+      clearNameError();
+      showCheckoutFeedback("");
     });
 
     document.getElementById("inputAddress").addEventListener("input", () => {
+      clearAddressError();
       deliveryQuote = null;
       document.getElementById("deliveryQuoteConfirm").checked = false;
       document.getElementById("deliveryQuoteCard").hidden = true;
@@ -939,6 +959,10 @@
 
       if (!name) {
         showCheckoutFeedback("Isi nama pemesan terlebih dahulu.");
+        document.getElementById("fieldName").classList.add("has-error");
+        const nameErr = document.getElementById("nameError");
+        if (nameErr) nameErr.textContent = "Nama pemesan wajib diisi.";
+        document.getElementById("inputName").setAttribute("aria-invalid", "true");
         document.getElementById("inputName").focus();
         return;
       }
@@ -955,6 +979,9 @@
 
       if (service === "Antar" && !addr) {
         showCheckoutFeedback("Isi alamat lengkap agar pesanan antar memiliki tujuan yang jelas.");
+        document.getElementById("fieldAddress").classList.add("has-error");
+        const addrErr = document.getElementById("addressError");
+        if (addrErr) addrErr.textContent = "Alamat pengantaran wajib diisi untuk layanan Antar.";
         document.getElementById("inputAddress").focus();
         return;
       }
