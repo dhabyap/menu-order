@@ -1,7 +1,7 @@
 @php($orderStatuses = \App\Support\OrderStatus::labels())
 @forelse($orders as $order)
     @php($orderItems = is_string($order->items) ? json_decode($order->items, true) : $order->items)
-    <tr>
+    <tr data-status="{{ $order->status }}">
         <td><span class="order-code">{{ $order->code }}</span><br><span class="order-time">{{ $order->created_at }}</span></td>
         <td class="order-customer"><strong>{{ $order->customer_name }}</strong><small>{{ $order->phone }}@if($order->address) · {{ $order->address }}@endif</small></td>
         <td>{{ ucfirst($order->service) }}@if($order->note)<br><span class="order-time">Catatan: {{ $order->note }}</span>@endif</td>

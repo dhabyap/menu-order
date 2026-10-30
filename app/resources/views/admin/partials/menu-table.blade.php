@@ -9,7 +9,7 @@
                     <thead><tr><th style="width:40px" aria-label="Urutkan">☰</th><th>Menu Minuman</th><th>Kategori</th><th>Harga Dasar</th><th>Status Stok</th><th style="text-align:right">Tindakan</th></tr></thead>
                     <tbody id="products-table-body">
                     @forelse($products as $product)
-                        <tr data-id="{{ $product->id }}">
+                        <tr data-id="{{ $product->id }}" data-name="{{ $product->name }}" data-category="{{ $product->category ?: '' }}">
                             <td><span class="drag-handle" aria-hidden="true" style="cursor:grab;padding-right:8px">☰</span></td>
                             <td><div class="menu-cell"><span class="menu-art">@if($product->image_path)<img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) }}" alt="">@else{{ $product->icon ?: '✿' }}@endif</span><span><strong>{{ $product->name }}</strong><small>{{ $product->description ?: 'Belum ada deskripsi' }}</small></span></div></td>
                             <td><span class="category-pill">{{ $product->category ?: 'Tanpa kategori' }}</span></td>

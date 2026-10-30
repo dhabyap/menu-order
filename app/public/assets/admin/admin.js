@@ -445,3 +445,96 @@ if (activityLogBody) {
     };
     reloadActivityLog();
 }
+
+// Tab switching and quick-action filters
+function switchTab(name) {
+    document.querySelectorAll('.tab-link').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.toggle('active', panel.dataset.tab === name));
+    window.history.replaceState(null, '', `?tab=${encodeURIComponent(name)}`);
+}
+document.querySelectorAll('.tab-link').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+const urlTab = new URLSearchParams(window.location.search).get('tab');
+if (urlTab) switchTab(urlTab);
+
+document.querySelectorAll('.stat-card').forEach(card => {
+    card.addEventListener('click', () => switchTab(card.dataset.tab));
+});
+
+document.getElementById('quick-add-menu')?.addEventListener('click', () => {
+    const dialog = document.getElementById('add-menu-dialog');
+    if (dialog) { dialog.showModal(); document.body.classList.add('dialog-open'); }
+});
+document.getElementById('quick-export')?.addEventListener('click', () => {
+    window.location.href = "{{ route('admin.orders.export') }}";
+});
+
+const productsSearch = document.getElementById('products-search');
+if (productsSearch) {
+    productsSearch.addEventListener('input', () => {
+        const q = productsSearch.value.trim().toLowerCase();
+        document.querySelectorAll('#products-table-body tr[data-name]').forEach(row => {
+            const name = (row.dataset.name || '').toLowerCase();
+            const cat = (row.dataset.category || '').toLowerCase();
+            row.style.display = (!q || name.includes(q) || cat.includes(q)) ? '' : 'none';
+        });
+    });
+}
+
+const ordersStatusFilter = document.getElementById('orders-status-filter');
+if (ordersStatusFilter) {
+    ordersStatusFilter.addEventListener('change', () => {
+        const q = ordersStatusFilter.value;
+        document.querySelectorAll('#orders-body tr[data-status]').forEach(row => {
+            row.style.display = (!q || row.dataset.status === q) ? '' : 'none';
+        });
+    });
+}
+
+const recentOrdersBody = document.getElementById('recent-orders-body');
+if (recentOrdersBody) {
+    const loadRecentOrders = async () => {
+        try {
+            const response = await fetch('/admin/orders', { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const data = await response.json();
+            const orders = (Array.isArray(data.orders) ? data.orders : data).slice(-5).reverse();
+            const live = document.getElementById('quick-orders-live');
+            if (live) live.textContent = `${data.count || orders.length} pesanan · diperbarui ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+            recentOrdersBody.innerHTML = orders.map(order => `
+                <tr data-code="${escapeHtml(order.code)}">
+                    <td><a href="#" class="order-code">${escapeHtml(order.code)}</a></td>
+                    <td class="order-customer"><strong>${escapeHtml(order.customer_name || '—')}</strong><small>${escapeHtml(order.phone || '')}</small></td>
+                    <td class="order-total">${formatRupiah(order.total)}</td>
+                    <td><span class="order-status status-${order.status}">${escapeHtml(order.status_label || order.status)}</span></td>
+                </tr>
+            `).join('');
+        } catch {
+            recentOrdersBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Gagal memuat pesanan terbaru.</td></tr>';
+        }
+    };
+    loadRecentOrders();
+    setInterval(loadRecentOrders, 30000);
+}
+
+const recentActivityBody = document.getElementById('recent-activity-body');
+if (recentActivityBody) {
+    const loadRecentActivity = async () => {
+        try {
+            const response = await fetch('/admin/activity-log', { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const data = await response.json();
+            const logs = (data.logs || []).slice(0, 10);
+            recentActivityBody.innerHTML = logs.map(log => `
+                <tr>
+                    <td>${new Date(log.created_at).toLocaleString('id-ID')}</td>
+                    <td><code>${escapeHtml(log.action)}</code></td>
+                    <td>${escapeHtml(log.description || '—')}</td>
+                </tr>
+            `).join('');
+        } catch {
+            recentActivityBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--muted);">Gagal memuat aktivitas.</td></tr>';
+        }
+    };
+    loadRecentActivity();
+    setInterval(loadRecentActivity, 60000);
+}
