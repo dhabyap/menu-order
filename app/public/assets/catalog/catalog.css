@@ -1637,6 +1637,11 @@
       color: var(--green);
     }
 
+    .delivery-quote-card[hidden],
+    .delivery-quote-error[hidden] {
+      display: none !important;
+    }
+
     /* Delivery Quote Error */
     .delivery-quote-error {
       margin-top: 10px;

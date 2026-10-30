@@ -867,16 +867,19 @@
       const errorCard = document.getElementById("deliveryQuoteError");
       const errorMsg = document.getElementById("deliveryQuoteErrorMsg");
       const errorTitle = errorCard.querySelector(".dqe-title");
+      const successCard = document.getElementById("deliveryQuoteCard");
 
       if (!address) {
         feedback.textContent = "Masukkan alamat pengantaran terlebih dahulu.";
         errorCard.hidden = true;
+        successCard.hidden = true;
         document.getElementById("inputAddress").focus();
         return;
       }
       button.disabled = true;
       button.textContent = "Menghitung ongkir...";
       errorCard.hidden = true;
+      successCard.hidden = true;
       feedback.textContent = "Mencari alamat dan menghitung rute jalan...";
       try {
         const response = await fetch("/api/delivery-quote", {
@@ -894,7 +897,7 @@
           throw new Error(message);
         }
         deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address };
-        document.getElementById("deliveryQuoteCard").hidden = false;
+        successCard.hidden = false;
         document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
         document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km`;
         document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
@@ -904,7 +907,7 @@
         updateCartUI();
       } catch (error) {
         deliveryQuote = null;
-        document.getElementById("deliveryQuoteCard").hidden = true;
+        successCard.hidden = true;
         feedback.textContent = "";
         updateCartUI();
       } finally {
