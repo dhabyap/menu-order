@@ -83,6 +83,9 @@ class AdminCatalogTest extends TestCase
 
     public function test_admin_can_upload_and_remove_store_logo(): void
     {
+        if (! function_exists('imagecreatetruecolor')) {
+            $this->markTestSkipped('GD extension is not installed.');
+        }
         Storage::fake('public');
         $this->actingAs(User::factory()->create());
         $settings = [
@@ -152,6 +155,9 @@ class AdminCatalogTest extends TestCase
 
     public function test_admin_can_upload_and_remove_a_product_image(): void
     {
+        if (! function_exists('imagecreatetruecolor')) {
+            $this->markTestSkipped('GD extension is not installed.');
+        }
         Storage::fake('public');
         $this->actingAs(User::factory()->create());
 
