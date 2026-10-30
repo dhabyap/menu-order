@@ -143,8 +143,6 @@ class OrderLookupTest extends TestCase
 
         $response->assertOk()
             ->assertJsonCount(1, 'orders')
-            ->assertJsonPath('orders.0.subtotal', 7000)
-            ->assertJsonPath('orders.0.service_fee', 0)
             ->assertJsonPath('orders.0.items.0.unit_price', 7000)
             ->assertJsonPath('orders.0.items.0.subtotal', 14000);
     }

@@ -32,7 +32,7 @@
         @endauth
         <a href="#productGrid">Menu</a>
         <a href="#orderGuide">Cara pesan</a>
-        <a href="/track" id="navOrderHistory">Cek Pesanan</a>
+        <a href="#" id="navOrderHistory">Cek Pesanan</a>
         <a href="#storeFooter">Kontak</a>
       </nav>
       <div class="top-actions">

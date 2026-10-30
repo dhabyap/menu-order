@@ -649,7 +649,7 @@
     historyBackdrop.onclick = closeHistory;
     document.getElementById("navOrderHistory").onclick = (event) => {
         event.preventDefault();
-        window.location.href = "/track";
+        openHistory();
     };
     document.getElementById("footerOrderHistory").onclick = openHistory;
 

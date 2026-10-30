@@ -7,7 +7,6 @@ use App\Http\Requests\LookupOrderRequest;
 use App\Support\OrderStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Lets a customer look up their own orders by phone number.
@@ -36,15 +35,13 @@ class OrderLookupController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(self::LIMIT)
-            ->get(['code', 'service', 'status', 'subtotal', 'service_fee', 'total', 'created_at', 'updated_at', 'items']);
+            ->get(['code', 'service', 'status', 'total', 'created_at', 'updated_at', 'items']);
 
         $orders = $rows->map(fn ($row) => [
             'code' => $row->code,
             'service' => $row->service,
             'status' => $row->status,
             'status_label' => OrderStatus::label($row->status),
-            'subtotal' => (int) $row->subtotal,
-            'service_fee' => (int) $row->service_fee,
             'total' => (int) $row->total,
             'created_at' => $row->created_at,
             'updated_at' => $row->updated_at,
@@ -129,7 +126,7 @@ class OrderLookupController extends Controller
             ->first(['code', 'customer_name', 'service', 'subtotal', 'service_fee', 'total', 'status', 'items', 'created_at', 'updated_at']);
 
         if (! $order) {
-            throw new NotFoundHttpException('Kode pesanan tidak ditemukan.');
+            return view('track-not-found', ['code' => $code]);
         }
 
         $items = $this->items($order->items);

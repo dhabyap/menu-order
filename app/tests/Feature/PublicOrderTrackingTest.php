@@ -45,12 +45,13 @@ class PublicOrderTrackingTest extends TestCase
             ->assertSee(OrderStatus::label('processing'));
     }
 
-    public function test_unknown_code_returns_404(): void
+    public function test_unknown_code_returns_friendly_not_found_view(): void
     {
         $this->seedOrder();
 
         $this->get('/track/RT-999999-ZZZZZ')
-            ->assertNotFound();
+            ->assertOk()
+            ->assertSee('Kode Tidak Ditemukan');
     }
 
     public function test_tracking_page_does_not_require_login(): void
