@@ -416,3 +416,31 @@ if (backupRefresh) {
 if (backupsBody) {
     reloadBackups();
 }
+
+const activityLogBody = document.getElementById('activity-log-body');
+if (activityLogBody) {
+    const reloadActivityLog = async () => {
+        try {
+            const response = await fetch('/admin/activity-log', { headers: { Accept: 'application/json' } });
+            if (!response.ok) throw new Error('failed');
+            const data = await response.json();
+            const logs = data.logs || [];
+            if (!logs.length) {
+                activityLogBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted);">Belum ada aktivitas.</td></tr>';
+                return;
+            }
+            activityLogBody.innerHTML = logs.map((log) => `
+                <tr>
+                    <td>${new Date(log.created_at).toLocaleString('id-ID')}</td>
+                    <td>${log.user_email || '—'}</td>
+                    <td><code>${log.action}</code></td>
+                    <td>${log.description || '—'}</td>
+                    <td>${log.ip_address || '—'}</td>
+                </tr>
+            `).join('');
+        } catch {
+            activityLogBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted);">Gagal memuat activity log.</td></tr>';
+        }
+    };
+    reloadActivityLog();
+}

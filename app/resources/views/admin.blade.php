@@ -20,6 +20,7 @@
         @include('admin.partials.menu-table')
         @include('admin.partials.settings')
         @include('admin.partials.orders')
+        @include('admin.partials.activity-log')
     </main>
 </div>
 @include('admin.partials.add-menu-dialog')

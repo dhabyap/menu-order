@@ -28,7 +28,7 @@ Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admi
 Route::post('/admin/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.post');
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
-Route::middleware('auth')->prefix('admin')->group(function () {
+Route::middleware(['auth', 'log.activity'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::post('/settings', [StoreSettingsController::class, 'update'])->name('admin.settings.update');
 
@@ -48,5 +48,6 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::put('/products/{id}', [ProductController::class, 'update'])->whereNumber('id')->name('admin.products.update');
     Route::patch('/products/{id}', [ProductController::class, 'toggle'])->whereNumber('id')->name('admin.products.toggle');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->whereNumber('id')->name('admin.products.delete');
+    Route::get('/activity-log', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('admin.activity-log');
     Route::patch('/products/reorder', [ProductController::class, 'reorder'])->name('admin.products.reorder');
 });
