@@ -854,7 +854,7 @@
     document.getElementById("inputAddress").addEventListener("input", () => {
       deliveryQuote = null;
       document.getElementById("deliveryQuoteConfirm").checked = false;
-      document.getElementById("deliveryQuoteConfirmWrap").hidden = true;
+      document.getElementById("deliveryQuoteCard").hidden = true;
       document.getElementById("deliveryQuoteFeedback").textContent = "Alamat berubah. Hitung ulang ongkir.";
       updateCartUI();
     });
@@ -880,13 +880,16 @@
         const result = await response.json();
         if (!response.ok) throw new Error(result.message || "Ongkir gagal dihitung.");
         deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address };
-        document.getElementById("deliveryQuoteConfirmWrap").hidden = false;
+        document.getElementById("deliveryQuoteCard").hidden = false;
+        document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
+        document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km`;
+        document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
         document.getElementById("deliveryQuoteConfirm").checked = false;
-        feedback.textContent = `Tujuan: ${result.destination_label} · Estimasi rute ${result.distance_km} km · Ongkir ${fmt(result.fee)}. Pastikan lokasi sudah benar.`;
+        feedback.textContent = "";
         updateCartUI();
       } catch (error) {
         deliveryQuote = null;
-        document.getElementById("deliveryQuoteConfirmWrap").hidden = true;
+        document.getElementById("deliveryQuoteCard").hidden = true;
         feedback.textContent = error.message || "Ongkir gagal dihitung. Coba lagi.";
         updateCartUI();
       } finally {

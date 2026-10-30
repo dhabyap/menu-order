@@ -161,8 +161,32 @@
           <textarea id="inputAddress" autocomplete="street-address" maxlength="1000" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
           <button class="btn-sec-action" type="button" id="btnCalculateDelivery" hidden>Hitung ongkir</button>
           <p class="field-hint">Alamat digunakan untuk mencari rute dan menghitung estimasi ongkir.</p>
+
+          <div id="deliveryQuoteCard" class="delivery-quote-card" hidden aria-live="polite">
+            <div class="dqc-head">
+              <span class="dqc-icon">📍</span>
+              <div class="dqc-main">
+                <div class="dqc-label">Tujuan pengantaran</div>
+                <div class="dqc-dest" id="deliveryQuoteDest">—</div>
+              </div>
+            </div>
+            <div class="dqc-rows">
+              <div class="dqc-row">
+                <span class="dqc-key">Estimasi rute</span>
+                <span class="dqc-val" id="deliveryQuoteDist">—</span>
+              </div>
+              <div class="dqc-row dqc-row-fee">
+                <span class="dqc-key">Ongkos kirim</span>
+                <span class="dqc-val dqc-fee" id="deliveryQuoteFee">Rp0</span>
+              </div>
+            </div>
+            <label class="dqc-confirm" id="deliveryQuoteConfirmWrap">
+              <input type="checkbox" id="deliveryQuoteConfirm">
+              <span>Konfirmasi alamat sudah benar</span>
+            </label>
+          </div>
+
           <p id="deliveryQuoteFeedback" class="checkout-hint" role="status" aria-live="polite"></p>
-          <label id="deliveryQuoteConfirmWrap" hidden><input type="checkbox" id="deliveryQuoteConfirm"> Saya konfirmasi alamat tujuan di atas sudah benar.</label>
         </div>
 
         <div class="field">
