@@ -1637,6 +1637,43 @@
       color: var(--green);
     }
 
+    /* Delivery Quote Error */
+    .delivery-quote-error {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--rose-light);
+      border: 1px solid #e8c4bf;
+      border-radius: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: slideUp 0.22s ease;
+    }
+
+    .dqe-icon {
+      font-size: 18px;
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    .dqe-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .dqe-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--rose);
+      margin-bottom: 2px;
+    }
+
+    .dqe-msg {
+      font-size: 12px;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
     .cart-line-actions {
       display: flex;
       flex-wrap: wrap;

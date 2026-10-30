@@ -186,6 +186,14 @@
             </label>
           </div>
 
+          <div id="deliveryQuoteError" class="delivery-quote-error" hidden role="alert" aria-live="assertive">
+            <span class="dqe-icon">⚠️</span>
+            <div class="dqe-main">
+              <div class="dqe-title">Alamat tidak ditemukan</div>
+              <div class="dqe-msg" id="deliveryQuoteErrorMsg">Masukkan alamat yang lebih lengkap.</div>
+            </div>
+          </div>
+
           <p id="deliveryQuoteFeedback" class="checkout-hint" role="status" aria-live="polite"></p>
         </div>
 
