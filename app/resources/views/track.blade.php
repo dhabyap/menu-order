@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="shell">
-        <header class="top" style="margin: 0 -20px; padding: 0 20px;">
+        <header class="top">
             <div class="brand">
                 <div class="mark" id="brandMark">R</div>
                 <div class="brand-text">
@@ -23,8 +23,8 @@
             </nav>
         </header>
 
-        <main id="viewPublic" style="padding-top: 24px;">
-            <section class="hero" style="border-bottom: 1px solid var(--line);">
+        <main id="viewPublic" class="track-main">
+            <section class="hero track-hero">
                 <div>
                     <div class="eyebrow">Menu Racik Tea</div>
                     <h1>Lacak Pesanan</h1>
@@ -32,52 +32,51 @@
                 </div>
             </section>
 
-            <section id="trackForm" style="padding: 32px 0; max-width: 520px; margin: auto;">
-                <form method="GET" action="/track" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <input type="text" name="code" placeholder="Contoh: RT-261028-ABC12" required
-                           style="flex: 1; min-width: 200px; border: 1px solid var(--line); background: #fff; padding: 12px 14px; border-radius: 10px; font-size: 14px; outline: none;">
-                    <button type="submit" class="hero-action-primary" style="border: 0; cursor: pointer;">Lacak</button>
+            <section id="trackForm" class="track-form">
+                <form method="GET" action="/track" class="track-form-inner">
+                    <input type="text" name="code" placeholder="Contoh: RT-261028-ABC12" required class="track-input">
+                    <button type="submit" class="hero-action-primary">Lacak</button>
                 </form>
 
                 @if ($code)
-                    <div style="margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 12px;">
-                            <span style="font: bold 18px 'Fraunces', serif;">#{{ $code }}</span>
-                            <span class="history-badge history-badge-{{ $status }}" style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 99px; white-space: nowrap;">{{ $status_label }}</span>
+                    <div class="track-card">
+                        <div class="track-card-head">
+                            <span class="track-code">#{{ $code }}</span>
+                            <span class="history-badge history-badge-{{ $status }}">{{ $status_label }}</span>
                         </div>
 
-                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Nama</div>
-                        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">{{ $name }}</div>
+                        <div class="track-label">Nama</div>
+                        <div class="track-value">{{ $name }}</div>
 
-                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Layanan</div>
-                        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">{{ $service }}</div>
+                        <div class="track-label">Layanan</div>
+                        <div class="track-value">{{ $service }}</div>
 
-                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">Rincian</div>
-                        <ul style="list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px;">
+                        <div class="track-label">Rincian</div>
+                        <ul class="track-items">
                             @foreach ($items as $item)
-                                <li style="display: flex; justify-content: space-between; font-size: 13px; padding: 8px; background: var(--surface2); border-radius: 10px;">
+                                <li class="track-item">
                                     <span>{{ $item['quantity'] }}x {{ $item['name'] }}</span>
-                                    <span style="font-weight: 700;">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                                    <span class="track-item-price">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
                                 </li>
                             @endforeach
                         </ul>
 
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-top: 1px dashed var(--line-light);">
+                        <div class="track-row track-row-divider">
                             <span>Subtotal</span>
-                            <span style="font-weight: 700;">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                            <span class="track-item-price">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
                         @if ($service_fee > 0)
-                            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0;">
+                            <div class="track-row">
                                 <span>Ongkir antar</span>
-                                <span style="font-weight: 700;">Rp {{ number_format($service_fee, 0, ',', '.') }}</span>
+                                <span class="track-item-price">Rp {{ number_format($service_fee, 0, ',', '.') }}</span>
                             </div>
                         @endif
-                        <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; font-weight: 800; color: var(--green);">
+                        <div class="track-total">
                             <span>Total</span>
                             <span>Rp {{ number_format($total, 0, ',', '.') }}</span>
                         </div>
 
-                        <div style="font-size: 11px; color: var(--muted); margin-top: 8px;">
+                        <div class="track-meta">
                             Dipesan {{ \Carbon\Carbon::parse($created_at)->format('d M Y H:i') }} · Diperbarui {{ \Carbon\Carbon::parse($updated_at)->format('d M Y H:i') }}
                         </div>
                     </div>
@@ -85,7 +84,7 @@
             </section>
         </main>
 
-        <footer class="site-footer" id="storeFooter" style="margin-top: 40px;">
+        <footer class="site-footer track-footer" id="storeFooter">
             <div class="footer-brand">
                 <div class="footer-mark" id="footerMark">R</div>
                 <span>

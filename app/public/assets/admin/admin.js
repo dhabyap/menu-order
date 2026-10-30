@@ -14,6 +14,7 @@ const optionsJson = document.getElementById('options-json');
 const priceInput = document.getElementById('new-price');
 const pricePreview = document.getElementById('price-preview');
 const formatRupiah = (value) => `Rp${Number(value || 0).toLocaleString('id-ID')}`;
+const escapeHtml = (str) => String(str ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 document.getElementById('open-add-menu').addEventListener('click', () => {
     addMenuDialog.showModal();
@@ -382,7 +383,7 @@ const reloadBackups = async () => {
         }
         backupsBody.innerHTML = backups.map((backup) => `
             <tr>
-                <td><code>${backup.name}</code></td>
+                <td><code>${escapeHtml(backup.name)}</code></td>
                 <td>${formatBytes(backup.size)}</td>
                 <td>${backup.modified}</td>
                 <td><a class="button button-soft button-small" href="/admin/backups/download/${backup.name}" download>Unduh</a></td>
@@ -433,8 +434,8 @@ if (activityLogBody) {
                 <tr>
                     <td>${new Date(log.created_at).toLocaleString('id-ID')}</td>
                     <td>${log.user_email || '—'}</td>
-                    <td><code>${log.action}</code></td>
-                    <td>${log.description || '—'}</td>
+                    <td><code>${escapeHtml(log.action)}</code></td>
+                    <td>${escapeHtml(log.description || '—')}</td>
                     <td>${log.ip_address || '—'}</td>
                 </tr>
             `).join('');

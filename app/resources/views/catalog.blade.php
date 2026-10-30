@@ -186,6 +186,7 @@
               <input type="checkbox" id="deliveryQuoteConfirm">
               <span>Konfirmasi alamat sudah benar</span>
             </label>
+            <small class="dqc-expires">Berlaku 15 menit</small>
           </div>
 
           <div id="deliveryQuoteError" class="delivery-quote-error" hidden role="alert" aria-live="assertive">

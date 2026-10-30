@@ -62,6 +62,8 @@
       badges.hidden = config.marketing_badges.length === 0;
     }).catch(() => {});
     fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [] })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
+    const grid = document.getElementById("productGrid");
+    if (grid && !products.length) { grid.innerHTML = Array.from({length:8}, () => `<div class="product-skeleton" aria-hidden="true"></div>`).join(""); }
     localStorage.removeItem("racik_cart_v2");
     let cart = JSON.parse(localStorage.getItem("racik_cart_v3") || "[]");
     localStorage.removeItem("racik_orders_v2");
