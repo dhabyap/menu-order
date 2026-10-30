@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +9,9 @@
 </head>
 <body>
     <div class="shell">
-        <header class="top">
+        <header class="top" id="top">
             <div class="brand">
-                <div class="mark" id="brandMark">R</div>
+                <span class="mark" id="brandMark">R</span>
                 <div class="brand-text">
                     <span id="brandTitle">{{ $settings['store_name'] ?? 'Toko' }}</span>
                     <small id="brandTagline"></small>
@@ -23,18 +24,18 @@
             </nav>
         </header>
 
-        <main id="viewPublic" class="track-main">
+        <main id="viewPublic">
             <section class="hero track-hero">
                 <div>
-                    <div class="eyebrow">Menu {{ $settings['store_name'] ?? '' }}</div>
+                    <div class="eyebrow" id="heroEyebrow">Menu {{ $settings['store_name'] ?? '' }}</div>
                     <h1>Lacak Pesanan</h1>
                     <p>Masukkan kode pesanan untuk melihat status dan rincian.</p>
                 </div>
             </section>
 
             <section id="trackForm" class="track-form">
-                <form method="GET" action="/track" class="track-form-inner">
-                    <input type="text" name="code" placeholder="Contoh: RT-261028-ABC12" required class="track-input">
+                <form method="GET" action="/track" class="track-form-inner" id="trackLookupForm">
+                    <input type="text" name="code" placeholder="Contoh: RT-261028-ABC12" required class="track-input" value="{{ $code ?? '' }}">
                     <button type="submit" class="hero-action-primary">Lacak</button>
                 </form>
 
@@ -45,13 +46,21 @@
                             <span class="history-badge history-badge-{{ $status }}">{{ $status_label }}</span>
                         </div>
 
-                        <div class="track-label">Nama</div>
-                        <div class="track-value">{{ $name }}</div>
+                        <div class="track-grid">
+                            <div>
+                                <div class="track-label">Nama</div>
+                                <div class="track-value">{{ $name }}</div>
 
-                        <div class="track-label">Layanan</div>
-                        <div class="track-value">{{ $service }}</div>
+                                <div class="track-label">Layanan</div>
+                                <div class="track-value">{{ $service }}</div>
+                            </div>
+                            <div>
+                                <div class="track-label">Total</div>
+                                <div class="track-total">Rp {{ number_format($total, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
 
-                        <div class="track-label">Rincian</div>
+                        <div class="track-label" style="margin-top:16px">Rincian</div>
                         <ul class="track-items">
                             @foreach ($items as $item)
                                 <li class="track-item">
@@ -84,27 +93,41 @@
             </section>
         </main>
 
-        <footer class="site-footer track-footer" id="storeFooter">
-            <div class="footer-brand">
-                <div class="footer-mark" id="footerMark">R</div>
+        <footer class="site-footer" id="storeFooter">
+            <a class="footer-brand" href="#top" aria-label="Kembali ke atas">
+                <span class="footer-mark" id="footerMark">R</span>
                 <span>
                     <strong id="footerStoreName">{{ $settings['store_name'] ?? 'Toko' }}</strong>
-                    <small id="footerCopyrightName"></small>
+                    <small id="footerStoreTagline">{{ $settings['store_tagline'] ?? 'Menu dan pemesanan' }}</small>
                 </span>
-            </div>
+            </a>
             <div class="footer-links">
-                <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">Kembali ke atas</button>
+                <a href="/">Menu</a>
+                <a href="#trackForm">Cek pesanan</a>
             </div>
+            <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">{{ $settings['store_name'] ?? 'Toko' }}</span></p>
+            <p class="footer-address" id="footerStoreAddress" style="display:none;"></p>
         </footer>
     </div>
 
     <script>
         (function() {
+            document.getElementById('footerYear').textContent = new Date().getFullYear();
             const url = new URL(window.location.href);
             const code = url.searchParams.get('code');
             if (code) {
                 const input = document.querySelector('input[name="code"]');
                 if (input) input.value = code;
+            }
+            const form = document.getElementById('trackLookupForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const input = form.querySelector('input[name="code"]');
+                    const val = (input.value || '').trim();
+                    if (!val) return;
+                    window.location.href = '/track/' + encodeURIComponent(val);
+                });
             }
         })();
     </script>
