@@ -1105,11 +1105,16 @@ ${itemsText}
 Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
 
       closeCart();
+      cart = [];
+      saveAll();
+      updateCartUI();
+      renderProducts();
       const targetPhone = savedOrder.whatsapp;
       if (!targetPhone) { showCheckoutFeedback("Nomor WhatsApp belum diatur oleh pengelola. Hubungi kedai untuk rincian pesanan."); return; }
       const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank", "noopener,noreferrer");
       toast(`Pesanan ${code} tersimpan.`);
+      setTimeout(() => { window.location.href = `/track/${code}`; }, 2000);
     };
 
     // Copy format
