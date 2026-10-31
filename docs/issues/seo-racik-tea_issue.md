@@ -7,7 +7,7 @@ Site `https://menu.abysoft.my.id/` (Racik Tea — pemesanan minuman) di-audit de
 
 | No | Item Audit | Status | Bukti |
 |----|-----------|--------|-------|
-| 1 | Meta description | ❌ Gagal | Tidak ada `<meta name="description">` di `public/index.html` |
+| 1 | Meta description | ❌ Gagal | Tidak ada `<meta name="description">` di `resources/views/catalog.blade.php` |
 | 2 | Canonical tag | ❌ Gagal | Tidak ada `<link rel="canonical">` di `<head>` |
 | 3 | WWW canonicalization | ❌ Gagal | `https://www.menu.abysoft.my.id/` balas HTTP 200 (konten sama, tanpa redirect) |
 | 4 | OpenGraph meta | ❌ Gagal | 0 tag `og:` ditemukan |
@@ -26,7 +26,7 @@ Menaikkan skor SEO on-page manual. Murni frontend/statis — tidak menyentuh log
 ## File yang harus diubah
 | No | File | Aksi |
 |----|------|------|
-| 1 | `app/public/index.html` | Tambah meta description, canonical, OpenGraph, JSON-LD (di `<head>`) |
+| 1 | `app/resources/views/catalog.blade.php` | Tambah meta description, canonical, OpenGraph, JSON-LD (di `<head>`) |
 | 2 | `app/public/.htaccess` | Redirect `www` → non-www (301) |
 | 3 | `app/public/sitemap.xml` | **Buat baru** |
 | 4 | `app/public/robots.txt` | Tambah baris `Sitemap:` |
@@ -35,7 +35,7 @@ Menaikkan skor SEO on-page manual. Murni frontend/statis — tidak menyentuh log
 
 ## Langkah-Langkah Implementasi
 
-### 1. Meta description + canonical + OG + Schema — `app/public/index.html`
+### 1. Meta description + canonical + OG + Schema — `app/resources/views/catalog.blade.php`
 Tempatkan semua blok di bawah `<title>` (baris 8), sebelum `<link rel="preconnect">` (baris 9).
 
 **Meta description** (target keyword: *racik tea, pesan minuman, menu*):
@@ -137,5 +137,5 @@ Ulangi audit di https://rankmath.com/tools/seo-analyzer/ — target skor naik ke
 
 ## Reference
 - Audit asli: Rank Math SEO Analyzer 2026-10-23, `https://menu.abysoft.my.id/`
-- Sumber lokal: `D:/Latihan/website-pacar/app/public/index.html` (head baris 4–16), `app/public/.htaccess`, `app/public/robots.txt`
+- Sumber lokal: `D:/Latihan/website-pacar/app/resources/views/catalog.blade.php` (head baris 4–16), `app/public/.htaccess`, `app/public/robots.txt`
 - Google: https://developers.google.com/search/docs/fundamentals/seo-starter-guide

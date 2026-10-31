@@ -27,7 +27,7 @@
     <!-- Top Navigation Bar -->
     <header class="top" id="top">
       <div class="brand">
-        <span class="mark" id="brandMark">R</span>
+        <span class="mark" id="brandMark">{{ mb_substr($settings['store_name'] ?? 'Toko', 0, 1) }}</span>
         <div class="brand-text">
           <span id="brandTitle">{{ $settings['store_name'] ?? 'Toko' }}</span>
           <small id="brandTagline"></small>
@@ -43,7 +43,7 @@
         <a href="#storeFooter">Kontak</a>
       </nav>
       <div class="top-actions">
-        <span class="badge-open" id="statusBadge">Pesan online</span>
+        <span class="badge-open" id="statusBadge" aria-live="polite">Pesan online</span>
         <button class="btn-cart-top" id="topCartBtn">
           <span>Keranjang</span>
           <span id="topCartCount" class="cart-count-badge">0</span>
@@ -99,7 +99,7 @@
 
       <footer class="site-footer" id="storeFooter">
       <a class="footer-brand" href="#top" aria-label="Kembali ke atas">
-        <span class="footer-mark" id="footerMark">R</span>
+        <span class="footer-mark" id="footerMark">{{ mb_substr($settings['store_name'] ?? 'Toko', 0, 1) }}</span>
         <span><strong id="footerStoreName">{{ $settings['store_name'] ?? 'Toko' }}</strong><small id="footerStoreTagline">{{ $settings['store_tagline'] ?? 'Menu dan pemesanan' }}</small></span>
       </a>
       <div class="footer-links"><a href="#productGrid">Menu</a><a href="#orderGuide">Cara pesan</a><button type="button" id="footerOrderHistory">Cek pesanan</button></div>
@@ -142,7 +142,7 @@
       <div
         style="background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 14px">
         <span style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px">Data Pemesan</span>
-        <span class="field-hint" style="margin-bottom: 10px">Tersimpan hanya di browser/perangkat ini.</span>
+        <span class="field-hint" style="margin-bottom: 10px">Data pemesan disimpan di perangkat ini untuk memudahkan pesanan berikutnya. Pesanan yang dikirim tetap tersimpan di toko.</span>
 
         <div class="field">
           <label>Metode Pengambilan</label>
@@ -202,6 +202,7 @@
             <div class="dqe-main">
               <div class="dqe-title">Alamat tidak ditemukan</div>
               <div class="dqe-msg" id="deliveryQuoteErrorMsg">Masukkan alamat yang lebih lengkap.</div>
+              <button class="btn-action-text" type="button" id="btnDeliveryFallback" hidden>Gunakan tarif dasar</button>
             </div>
           </div>
 

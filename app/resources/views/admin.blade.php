@@ -33,7 +33,7 @@
                 </div>
                 <div class="tab-actions">
                     <button class="button button-soft button-small" type="button" id="quick-add-menu">Tambah Menu</button>
-                    <button class="button button-soft button-small" type="button" id="quick-export">Export CSV</button>
+                    <button class="button button-soft button-small" type="button" id="quick-export" data-export-url="{{ route('admin.orders.export') }}">Export CSV</button>
                     <span class="orders-live" id="quick-orders-live" aria-live="polite"></span>
                 </div>
             </div>
@@ -114,6 +114,7 @@
         </section>
     </main>
 </div>
+@include('admin.partials.order-detail-dialog')
 @include('admin.partials.add-menu-dialog')
 <script src="{{ asset('assets/admin/admin.js') }}"></script>
 </body>

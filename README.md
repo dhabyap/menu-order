@@ -1,6 +1,8 @@
-# Racik Tea — Pemesanan Digital
+# Pemesanan Digital — Katalog & Dashboard Toko
 
-Aplikasi web pemesanan minuman Racik Tea berbasis Laravel 10 dan MySQL. Pelanggan menjelajahi menu, menyesuaikan racikan, lalu checkout melalui WhatsApp. Dashboard pengelola melindungi kelola menu, pengaturan toko, dan riwayat pesanan di balik login.
+Aplikasi web pemesanan minuman berbasis Laravel 10 dan MySQL. Pelanggan menjelajahi menu, menyesuaikan racikan, lalu checkout melalui WhatsApp. Dashboard pengelola melindungi kelola menu, pengaturan toko, dan riwayat pesanan di balik login.
+
+Nama toko, slogan, logo, jam buka, dan informasi lain dibaca dari tabel `store_settings`, sehingga identitas toko tidak di-hardcode di tampilan. Untuk saat ini aplikasi melayani satu toko; struktur data disiapkan agar bisa berkembang ke multi-toko di kemudian hari.
 
 ## Menjalankan aplikasi
 
@@ -51,10 +53,10 @@ Kode aplikasi Laravel ada di `app/app/` (namespace `App\`):
 - `app/Services/` — logika bisnis: `OrderService`, `ProductImageService`, `ProductOptionsValidator`.
 - `resources/views/admin/partials/` — potongan Blade dashboard (header, statistik, tabel menu, pengaturan, pesanan, dialog).
 - `public/assets/admin/` — CSS/JS dashboard pengelola.
-- `public/assets/catalog/` — CSS/JS katalog pelanggan (`public/index.html`).
+- `public/assets/catalog/` — CSS/JS katalog pelanggan (`resources/views/catalog.blade.php`).
 - `tests/Feature/` — tes kontrak API, katalog admin, autentikasi, dan upload gambar.
 
-Route (`routes/api.php`, `routes/web.php`) hanya memetakan URL ke controller. Halaman katalog pelanggan adalah `public/index.html` statis tanpa proses build.
+Route (`routes/api.php`, `routes/web.php`) hanya memetakan URL ke controller. Halaman katalog pelanggan dirender oleh Blade (`resources/views/catalog.blade.php`) tanpa proses build; tidak ada lagi salinan statis di `public/index.html`.
 
 ## Fitur
 

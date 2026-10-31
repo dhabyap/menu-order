@@ -31,6 +31,30 @@ class PublicOrderTrackingTest extends TestCase
         ], $overrides));
     }
 
+    public function test_tracking_page_shows_options_notes_address_and_timeline(): void
+    {
+        $this->seedOrder([
+            'address' => 'Jl. Karang Layung Dalam No. 11',
+            'note' => 'Tolong dibungkus rapi',
+        ]);
+
+        $this->get('/track/RT-261028-ABC12')
+            ->assertOk()
+            ->assertSee('Jl. Karang Layung Dalam No. 11')
+            ->assertSee('Tolong dibungkus rapi')
+            ->assertSee('Ukuran: Large')
+            ->assertSee('track-timeline', false)
+            ->assertSee('Pesanan sedang disiapkan.');
+    }
+
+    public function test_tracking_form_is_available_without_a_code(): void
+    {
+        $this->get('/track')
+            ->assertOk()
+            ->assertSee('Lacak Pesanan')
+            ->assertSee('Kode pesanan ada di pesan WhatsApp');
+    }
+
     public function test_known_code_returns_order_details_view(): void
     {
         $this->seedOrder();

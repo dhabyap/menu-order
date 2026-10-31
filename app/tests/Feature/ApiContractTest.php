@@ -399,6 +399,90 @@ class ApiContractTest extends TestCase
         ])->assertCreated();
     }
 
+    public function test_store_config_reports_open_and_closed_state(): void
+    {
+        DB::table('store_settings')->insert([
+            ['key' => 'open_time', 'value' => '08:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '21:00', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $this->travelTo(now()->create(2026, 1, 1, 10, 0, 0));
+        $this->getJson('/api/store-config')
+            ->assertOk()
+            ->assertJson([
+                'is_open' => true,
+                'status_label' => 'Buka sampai 21:00',
+                'status_message' => 'Pesanan diproses selama jam operasional 08:00–21:00.',
+            ]);
+
+        // 15:00 UTC is 22:00 in Jakarta, after the 21:00 closing time.
+        $this->travelTo(now()->create(2026, 1, 1, 15, 0, 0));
+        $this->getJson('/api/store-config')
+            ->assertOk()
+            ->assertJson([
+                'is_open' => false,
+                'status_label' => 'Tutup · Buka besok 08:00',
+                'status_message' => 'Toko sedang tutup. Jam buka: 08:00 - 21:00.',
+            ]);
+
+        $this->travelBack();
+    }
+
+    public function test_checkout_is_idempotent_with_client_token(): void
+    {
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'open_time', 'value' => '00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '23:59', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $payload = [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'client_token' => 'checkout-token-123',
+            'items' => [[
+                'product_id' => 'proto-1',
+                'quantity' => 1,
+                'options' => ['Ukuran' => 'Regular'],
+            ]],
+        ];
+
+        $first = $this->postJson('/api/orders', $payload)->assertCreated()->json();
+        $second = $this->postJson('/api/orders', $payload)->assertCreated()->json();
+
+        $this->assertSame($first['code'], $second['code']);
+        $this->assertSame($first['id'], $second['id']);
+        $this->assertDatabaseCount('orders', 1);
+    }
+
+    public function test_checkout_stores_per_item_notes(): void
+    {
+        $this->seedProduct();
+        DB::table('store_settings')->insert([
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'open_time', 'value' => '00:00', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'close_time', 'value' => '23:59', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan',
+            'phone' => '081234567890',
+            'service' => 'Ambil Sendiri',
+            'items' => [[
+                'product_id' => 'proto-1',
+                'quantity' => 1,
+                'note' => 'Es dipisah',
+                'options' => ['Ukuran' => 'Regular'],
+            ]],
+        ])->assertCreated();
+
+        $items = json_decode(DB::table('orders')->value('items'), true);
+
+        $this->assertSame('Es dipisah', $items[0]['note']);
+    }
+
     public function test_checkout_rate_limits_after_ten_requests(): void
     {
         $this->seedProduct();

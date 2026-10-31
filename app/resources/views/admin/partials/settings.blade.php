@@ -35,10 +35,6 @@
                                 <h2>Backup Database</h2>
                                 <p>Simpan salinan database untuk keamanan.</p>
                             </div>
-                            <div class="orders-heading-actions">
-                                <button class="button button-soft button-small" type="button" id="backup-now">Backup Sekarang</button>
-                                <button class="button button-soft button-small" type="button" id="backup-refresh">⟳ Muat ulang</button>
-                            </div>
                         </div>
                         <div class="table-scroll">
                             <table class="orders-table">

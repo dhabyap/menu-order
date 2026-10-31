@@ -286,8 +286,8 @@ const renderOrderDetail = (data) => {
     orderDetailField('address').textContent = data.address || '—';
     orderDetailField('service').textContent = data.service || '—';
     orderDetailField('note').textContent = data.note || '—';
-    orderDetailField('created').textContent = data.created_at || '—';
-    orderDetailField('updated').textContent = data.updated_at || '—';
+    orderDetailField('created').textContent = formatDateTime(data.created_at);
+    orderDetailField('updated').textContent = formatDateTime(data.updated_at);
 
     const status = orderDetailField('status');
     status.textContent = data.status_label || data.status;
@@ -299,7 +299,8 @@ const renderOrderDetail = (data) => {
         const options = Object.entries(item.options || {})
             .map(([key, value]) => `${key}: ${value}`)
             .join(' · ');
-        const name = options ? `${item.name} (${options})` : (item.name || '—');
+        const note = item.note ? ` · Catatan: ${item.note}` : '';
+        const name = `${item.name || '—'}${options ? ` (${options})` : ''}${note}`;
 
         const row = document.createElement('tr');
         const nameCell = document.createElement('td');
@@ -324,25 +325,41 @@ const renderOrderDetail = (data) => {
     orderDetailField('fee').textContent = formatRupiah(data.service_fee);
 };
 
-if (ordersBody) {
-    ordersBody.addEventListener('click', async (event) => {
+const formatDateTime = (value) => {
+    if (!value) return '—';
+    const date = new Date(String(value).replace(' ', 'T'));
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+};
+
+const openOrderDetail = async (id) => {
+    if (!id || !orderDetailDialog) return;
+
+    resetOrderDetail();
+    orderDetailDialog.showModal();
+    document.body.classList.add('dialog-open');
+
+    try {
+        const response = await fetch(`/admin/orders/${id}`, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('not found');
+        renderOrderDetail(await response.json());
+    } catch (error) {
+        orderDetailError.hidden = false;
+        orderDetailError.textContent = 'Gagal memuat detail pesanan.';
+    }
+};
+
+const bindOrderDetailTriggers = (container) => {
+    if (!container) return;
+    container.addEventListener('click', (event) => {
         const button = event.target.closest('[data-order-detail]');
-        if (!button || !orderDetailDialog) return;
-
-        resetOrderDetail();
-        orderDetailDialog.showModal();
-        document.body.classList.add('dialog-open');
-
-        try {
-            const response = await fetch(`/admin/orders/${button.dataset.id}`, { headers: { Accept: 'application/json' } });
-            if (!response.ok) throw new Error('not found');
-            renderOrderDetail(await response.json());
-        } catch (error) {
-            orderDetailError.hidden = false;
-            orderDetailError.textContent = 'Gagal memuat detail pesanan.';
-        }
+        if (!button) return;
+        event.preventDefault();
+        openOrderDetail(button.dataset.id);
     });
-}
+};
+
+bindOrderDetailTriggers(ordersBody);
+bindOrderDetailTriggers(document.getElementById('recent-orders-body'));
 
 if (orderDetailDialog) {
     document.getElementById('close-order-detail').addEventListener('click', closeOrderDetail);
@@ -464,8 +481,9 @@ document.getElementById('quick-add-menu')?.addEventListener('click', () => {
     const dialog = document.getElementById('add-menu-dialog');
     if (dialog) { dialog.showModal(); document.body.classList.add('dialog-open'); }
 });
-document.getElementById('quick-export')?.addEventListener('click', () => {
-    window.location.href = "{{ route('admin.orders.export') }}";
+document.getElementById('quick-export')?.addEventListener('click', (event) => {
+    const button = event.currentTarget;
+    window.location.href = button.dataset.exportUrl || '/admin/orders/export';
 });
 
 const productsSearch = document.getElementById('products-search');
@@ -495,17 +513,23 @@ if (recentOrdersBody) {
     const loadRecentOrders = async () => {
         try {
             const response = await fetch('/admin/orders', { headers: { Accept: 'application/json' } });
-            if (!response.ok) return;
+            if (!response.ok) throw new Error('failed');
             const data = await response.json();
-            const orders = (Array.isArray(data.orders) ? data.orders : data).slice(-5).reverse();
+            const orders = Array.isArray(data.orders) ? data.orders : [];
             const live = document.getElementById('quick-orders-live');
-            if (live) live.textContent = `${data.count || orders.length} pesanan · diperbarui ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+            if (live) live.textContent = `${data.count ?? orders.length} pesanan · diperbarui ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+
+            if (!orders.length) {
+                recentOrdersBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Belum ada pesanan.</td></tr>';
+                return;
+            }
+
             recentOrdersBody.innerHTML = orders.map(order => `
-                <tr data-code="${escapeHtml(order.code)}">
-                    <td><a href="#" class="order-code">${escapeHtml(order.code)}</a></td>
+                <tr>
+                    <td><a href="#" class="order-code" data-order-detail data-id="${order.id}">${escapeHtml(order.code)}</a><br><span class="order-time">${escapeHtml(formatDateTime(order.created_at))}</span></td>
                     <td class="order-customer"><strong>${escapeHtml(order.customer_name || '—')}</strong><small>${escapeHtml(order.phone || '')}</small></td>
                     <td class="order-total">${formatRupiah(order.total)}</td>
-                    <td><span class="order-status status-${order.status}">${escapeHtml(order.status_label || order.status)}</span></td>
+                    <td><span class="order-status status-${escapeHtml(order.status)}">${escapeHtml(order.status_label || order.status)}</span></td>
                 </tr>
             `).join('');
         } catch {

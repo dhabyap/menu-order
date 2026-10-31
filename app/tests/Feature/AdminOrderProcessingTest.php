@@ -80,9 +80,25 @@ class AdminOrderProcessingTest extends TestCase
 
         $this->getJson('/admin/orders')
             ->assertOk()
-            ->assertJson(['count' => 2, 'revenue' => 7000]);
+            ->assertJson(['count' => 2, 'revenue' => 7000])
+            ->assertJsonCount(2, 'orders')
+            ->assertJsonFragment([
+                'code' => 'RT-261022-B2JYX',
+                'status' => 'cancelled',
+                'status_label' => 'Dibatalkan',
+            ]);
 
         $this->assertNotNull($cancelled);
+    }
+
+    public function test_dashboard_includes_the_order_detail_dialog(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get('/admin')
+            ->assertOk()
+            ->assertSee('id="order-detail-dialog"', false)
+            ->assertSee('id="order-detail-items-body"', false);
     }
 
     public function test_dashboard_orders_table_renders_status_control(): void

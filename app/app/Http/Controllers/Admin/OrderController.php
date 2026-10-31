@@ -20,10 +20,28 @@ class OrderController extends Controller
     {
         $orders = DB::table('orders');
 
+        $recent = (clone $orders)
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'code', 'customer_name', 'phone', 'total', 'status', 'created_at'])
+            ->map(fn ($order) => [
+                'id' => (int) $order->id,
+                'code' => $order->code,
+                'customer_name' => $order->customer_name,
+                'phone' => $order->phone,
+                'total' => (int) $order->total,
+                'status' => $order->status,
+                'status_label' => OrderStatus::label($order->status),
+                'created_at' => $order->created_at,
+            ])
+            ->values()
+            ->all();
+
         return response()->json([
             'count' => (clone $orders)->count(),
             'latest_id' => (clone $orders)->max('id'),
             'revenue' => (clone $orders)->where('status', '!=', OrderStatus::CANCELLED)->sum('total'),
+            'orders' => $recent,
         ]);
     }
 

@@ -36,7 +36,7 @@ class OrderLookupController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(self::LIMIT)
-            ->get(['code', 'service', 'status', 'total', 'created_at', 'updated_at', 'items']);
+            ->get(['code', 'service', 'status', 'total', 'service_fee', 'created_at', 'updated_at', 'items']);
 
         $orders = $rows->map(fn ($row) => [
             'code' => $row->code,
@@ -44,6 +44,7 @@ class OrderLookupController extends Controller
             'status' => $row->status,
             'status_label' => OrderStatus::label($row->status),
             'total' => (int) $row->total,
+            'service_fee' => (int) $row->service_fee,
             'created_at' => $row->created_at,
             'updated_at' => $row->updated_at,
             'items' => $this->items($row->items),
@@ -112,6 +113,7 @@ class OrderLookupController extends Controller
                 'name' => (string) ($item['name'] ?? ''),
                 'quantity' => (int) ($item['quantity'] ?? 0),
                 'options' => $options,
+                'note' => isset($item['note']) ? (string) $item['note'] : null,
                 'unit_price' => (int) ($item['unit_price'] ?? 0),
                 'subtotal' => (int) ($item['subtotal'] ?? 0),
             ];
@@ -120,36 +122,60 @@ class OrderLookupController extends Controller
         return $items;
     }
 
+    /**
+     * Render the tracking form without a code (works without JavaScript).
+     */
+    public function showForm()
+    {
+        return view('track', [
+            'settings' => $this->settings(),
+            'code' => null,
+        ]);
+    }
+
     public function showPublic(string $code)
     {
-        $settings = Schema::hasTable('store_settings')
-            ? DB::table('store_settings')->pluck('value', 'key')->all()
-            : [];
+        $settings = $this->settings();
 
         $order = DB::table('orders')
             ->where('code', $code)
-            ->first(['code', 'customer_name', 'service', 'subtotal', 'service_fee', 'total', 'status', 'items', 'created_at', 'updated_at']);
+            ->first([
+                'code', 'customer_name', 'phone', 'address', 'service', 'note',
+                'subtotal', 'service_fee', 'total', 'status', 'items',
+                'delivery_distance_meters', 'created_at', 'updated_at',
+            ]);
 
         if (! $order) {
             return view('track-not-found', ['code' => $code, 'settings' => $settings]);
         }
 
-        $items = $this->items($order->items);
-
         return view('track', [
             'code' => $order->code,
             'name' => $order->customer_name,
+            'phone' => $order->phone,
+            'address' => $order->address,
             'service' => $order->service,
             'subtotal' => (int) $order->subtotal,
             'service_fee' => (int) $order->service_fee,
             'total' => (int) $order->total,
             'status' => $order->status,
             'status_label' => OrderStatus::label($order->status),
-            'items' => $items,
+            'items' => $this->items($order->items),
+            'delivery_distance_meters' => $order->delivery_distance_meters,
             'created_at' => $order->created_at,
             'updated_at' => $order->updated_at,
-            'note' => '',
+            'note' => $order->note,
             'settings' => $settings,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function settings(): array
+    {
+        return Schema::hasTable('store_settings')
+            ? DB::table('store_settings')->pluck('value', 'key')->all()
+            : [];
     }
 }

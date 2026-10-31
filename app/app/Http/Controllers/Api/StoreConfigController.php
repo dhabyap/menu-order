@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Support\StoreBrand;
+use App\Support\StoreHours;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,7 +28,14 @@ class StoreConfigController extends Controller
             $whatsapp = trim((string) config('store.whatsapp', ''));
         }
 
-        return [
+        $hours = StoreHours::fromSettings($settings->all());
+        $schedule = $hours->toArray();
+        // Keep the documented display defaults when the owner has not set hours,
+        // while still accepting orders at any time (is_open = true).
+        $schedule['open_time'] = $hours->openTime() ?? config('store.open_time', '08:00');
+        $schedule['close_time'] = $hours->closeTime() ?? config('store.close_time', '21:00');
+
+        return array_merge([
             'delivery_fee' => (int) ($settings['delivery_fee'] ?? config('store.delivery_fee', 0)),
             'delivery_fee_per_km' => (int) ($settings['delivery_fee_per_km'] ?? 0),
             'delivery_included_km' => (float) ($settings['delivery_included_km'] ?? 0),
@@ -41,9 +49,7 @@ class StoreConfigController extends Controller
             'hero_heading' => $settings['hero_heading'] ?? 'Pilih minuman favoritmu.',
             'hero_description' => $settings['hero_description'] ?? 'Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.',
             'marketing_badges' => array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $settings['marketing_badges'] ?? '')))),
-            'open_time' => $settings['open_time'] ?? config('store.open_time', '08:00'),
-            'close_time' => $settings['close_time'] ?? config('store.close_time', '21:00'),
             'store_address' => $settings['store_address'] ?? '',
-        ];
+        ], $schedule);
     }
 }

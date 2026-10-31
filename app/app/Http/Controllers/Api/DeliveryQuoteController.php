@@ -18,6 +18,7 @@ class DeliveryQuoteController extends Controller
             $address = $request->validated('address');
             $selectedLat = $request->input('selected_lat');
             $selectedLon = $request->input('selected_lon');
+            $fallback = (bool) $request->boolean('fallback');
 
             if ($selectedLat !== null && $selectedLon !== null) {
                 $settings = DB::table('store_settings')->pluck('value', 'key');
@@ -54,7 +55,7 @@ class DeliveryQuoteController extends Controller
                 ]);
             }
 
-            return response()->json($quotes->quote($address));
+            return response()->json($quotes->quote($address, $fallback));
         } catch (RuntimeException $error) {
             return response()->json(['message' => $error->getMessage()], 422);
         } catch (Throwable $error) {

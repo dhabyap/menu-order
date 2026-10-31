@@ -10,7 +10,7 @@ Saat ini produk dengan `available = false` masih tampil normal di katalog. Pelan
 
 ### Files yang disentuh
 - `app/app/Http/Controllers/Api/ProductController.php` — pastikan endpoint katalog kirim flag `available`
-- `app/public/index.html` atau `app/resources/views/catalog.blade.php` — tampilkan badge + disable button
+- `app/resources/views/catalog.blade.php` — tampilkan badge + disable button
 - `app/tests/Feature/ApiContractTest.php` — tambah assertion `available` ada di response
 
 ### Detail implementasi

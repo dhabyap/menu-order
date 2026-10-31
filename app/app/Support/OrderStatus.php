@@ -31,6 +31,16 @@ class OrderStatus
     }
 
     /**
+     * Ordered statuses used by the customer tracking timeline.
+     *
+     * @return array<int, string>
+     */
+    public static function flow(): array
+    {
+        return [self::PENDING, self::PROCESSING, self::COMPLETED];
+    }
+
+    /**
      * Human label for a stored status value.
      */
     public static function label(string $status): string

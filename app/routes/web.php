@@ -28,6 +28,7 @@ Route::get('/', function () {
     return view('catalog', ['settings' => $settings]);
 });
 
+Route::get('/track', [App\Http\Controllers\Api\OrderLookupController::class, 'showForm'])->name('track.form');
 Route::get('/track/{code}', [App\Http\Controllers\Api\OrderLookupController::class, 'showPublic'])->name('track.public');
 
 Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');

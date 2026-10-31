@@ -7,60 +7,90 @@
     let deliveryDistanceEnabled = false;
     let deliveryQuote = null;
     let storeName = "Toko";
-    fetch("/api/store-config").then(r => r.ok ? r.json() : null).then(config => {
-      if (!config) return;
-      storeName = config.store_name || storeName;
-      deliveryFeeConfigured = Number(config.delivery_fee) || 0;
-      deliveryDistanceEnabled = Boolean(config.delivery_enabled);
-      document.getElementById("btnCalculateDelivery").hidden = !deliveryDistanceEnabled;
-      document.getElementById("deliveryQuoteFeedback").textContent = deliveryDistanceEnabled ? "" : "Ongkir memakai tarif tetap. Pengelola dapat mengaktifkan hitung jarak dari dashboard.";
+    let storeIsOpen = true;
+    let storeStatusMessage = "";
+    let storeStatusLabel = "Buka setiap hari";
+    const defaultCheckoutHint = "Pesanan akan disimpan terlebih dahulu, lalu WhatsApp terbuka untuk mengirim rincian ke kedai.";
+
+    function applyStoreStatus(config) {
+      storeIsOpen = config.is_open !== false;
+      storeStatusMessage = config.status_message || (storeIsOpen ? "" : "Toko sedang tutup.");
+      storeStatusLabel = config.status_label || (storeIsOpen ? "Buka" : "Tutup");
+
+      const badge = document.getElementById("statusBadge");
+      if (badge) {
+        badge.textContent = storeStatusLabel;
+        badge.classList.toggle("badge-closed", !storeIsOpen);
+        badge.title = storeStatusMessage;
+      }
+
       updateCartUI();
-      document.getElementById("brandTitle").textContent = config.store_name;
-      document.getElementById("footerStoreName").textContent = config.store_name;
-      document.getElementById("footerCopyrightName").textContent = config.store_name;
-      document.getElementById("footerStoreTagline").textContent = config.store_tagline || "Menu dan pemesanan";
-      const footerAddress = document.getElementById("footerStoreAddress");
-      if (footerAddress && config.store_address) {
-        footerAddress.textContent = config.store_address;
-        footerAddress.style.display = "";
+    }
+
+    async function loadStoreConfig() {
+      try {
+        const response = await fetch("/api/store-config", { headers: { Accept: "application/json" } });
+        if (!response.ok) return null;
+        const config = await response.json();
+
+        storeName = config.store_name || storeName;
+        deliveryFeeConfigured = Number(config.delivery_fee) || 0;
+        deliveryDistanceEnabled = Boolean(config.delivery_enabled);
+        document.getElementById("btnCalculateDelivery").hidden = !deliveryDistanceEnabled;
+        document.getElementById("deliveryQuoteFeedback").textContent = deliveryDistanceEnabled ? "" : "Ongkir memakai tarif tetap. Pengelola dapat mengaktifkan hitung jarak dari dashboard.";
+        document.getElementById("brandTitle").textContent = config.store_name;
+        document.getElementById("footerStoreName").textContent = config.store_name;
+        document.getElementById("footerCopyrightName").textContent = config.store_name;
+        document.getElementById("footerStoreTagline").textContent = config.store_tagline || "Menu dan pemesanan";
+        const footerAddress = document.getElementById("footerStoreAddress");
+        if (footerAddress && config.store_address) {
+          footerAddress.textContent = config.store_address;
+          footerAddress.style.display = "";
+        }
+        const footerMark = document.getElementById("footerMark");
+        footerMark.textContent = [...config.store_name][0] || "R";
+        if (config.logo_url) {
+          const footerLogo = document.createElement("img");
+          footerLogo.src = config.logo_url;
+          footerLogo.alt = "";
+          footerLogo.className = "footer-logo";
+          footerMark.replaceWith(footerLogo);
+        }
+        const brandMark = document.getElementById("brandMark");
+        if (config.logo_url) {
+          const logo = document.createElement("img");
+          logo.className = "brand-logo";
+          logo.src = config.logo_url;
+          logo.alt = `Logo ${config.store_name}`;
+          brandMark.replaceWith(logo);
+          const favicon = document.createElement("link");
+          favicon.rel = "icon";
+          favicon.href = config.logo_url;
+          document.head.append(favicon);
+        } else {
+          brandMark.textContent = [...config.store_name][0] || "R";
+        }
+        document.getElementById("brandTagline").textContent = config.store_tagline || "";
+        document.getElementById("heroEyebrow").textContent = config.store_name;
+        document.getElementById("heroHeading").textContent = config.hero_heading;
+        document.getElementById("heroDescription").textContent = config.hero_description;
+        document.title = `${config.store_name} — Menu & Pesanan`;
+        const badges = document.getElementById("heroBadges");
+        badges.replaceChildren(...(config.marketing_badges || []).map(text => {
+          const item = document.createElement("span");
+          item.className = "badge-item";
+          item.textContent = `✓ ${text}`;
+          return item;
+        }));
+        badges.hidden = !(config.marketing_badges || []).length;
+
+        applyStoreStatus(config);
+        return config;
+      } catch {
+        return null;
       }
-      const footerMark = document.getElementById("footerMark");
-      footerMark.textContent = [...config.store_name][0] || "R";
-      if (config.logo_url) {
-        const footerLogo = document.createElement("img");
-        footerLogo.src = config.logo_url;
-        footerLogo.alt = "";
-        footerLogo.className = "footer-logo";
-        footerMark.replaceWith(footerLogo);
-      }
-      const brandMark = document.getElementById("brandMark");
-      if (config.logo_url) {
-        const logo = document.createElement("img");
-        logo.className = "brand-logo";
-        logo.src = config.logo_url;
-        logo.alt = `Logo ${config.store_name}`;
-        brandMark.replaceWith(logo);
-        const favicon = document.createElement("link");
-        favicon.rel = "icon";
-        favicon.href = config.logo_url;
-        document.head.append(favicon);
-      } else {
-        brandMark.textContent = [...config.store_name][0] || "R";
-      }
-      document.getElementById("brandTagline").textContent = config.store_tagline || "";
-      document.getElementById("heroEyebrow").textContent = config.store_name;
-      document.getElementById("heroHeading").textContent = config.hero_heading;
-      document.getElementById("heroDescription").textContent = config.hero_description;
-      document.title = `${config.store_name} — Menu & Pesanan`;
-      const badges = document.getElementById("heroBadges");
-      badges.replaceChildren(...config.marketing_badges.map(text => {
-        const item = document.createElement("span");
-        item.className = "badge-item";
-        item.textContent = `✓ ${text}`;
-        return item;
-      }));
-      badges.hidden = config.marketing_badges.length === 0;
-    }).catch(() => {});
+    }
+    loadStoreConfig();
     fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [] })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
     const grid = document.getElementById("productGrid");
     if (grid && !products.length) { grid.innerHTML = Array.from({length:8}, () => `<div class="product-skeleton" aria-hidden="true"></div>`).join(""); }
@@ -76,6 +106,7 @@
     let currentCustomQty = 1;
     let editingCartIndex = null;
     let removingCartIndex = null;
+    let checkoutInFlight = false;
     const activeLayers = [];
     const layerReturnFocus = new WeakMap();
 
@@ -365,7 +396,12 @@
       document.getElementById("deliveryRow").style.display = service === "Antar" ? "flex" : "none";
       document.querySelector("#deliveryRow span:last-child").textContent = fmt(deliveryFee);
       document.getElementById("deliveryDistanceLabel").textContent = deliveryQuote && service === "Antar" ? `· ±${(deliveryQuote.distanceMeters / 1000).toFixed(1)} km` : "";
-      document.getElementById("btnCheckoutWA").disabled = count === 0 || (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked));
+      const checkoutButton = document.getElementById("btnCheckoutWA");
+      checkoutButton.disabled = checkoutInFlight || count === 0 || !storeIsOpen || (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked));
+      const checkoutHint = document.getElementById("checkoutHint");
+      if (checkoutHint) {
+        checkoutHint.textContent = !storeIsOpen ? (storeStatusMessage || "Toko sedang tutup.") : defaultCheckoutHint;
+      }
       document.getElementById("btnCheckoutTotal").textContent = fmt(grandTotal);
       document.getElementById("btnCopyOrder").disabled = count === 0;
       document.getElementById("btnClearCart").disabled = count === 0;
@@ -971,6 +1007,14 @@
           errorTitle.textContent = message.includes("tidak ditemukan") ? "Alamat tidak ditemukan" : "Gagal menghitung ongkir";
           feedback.textContent = "";
           document.getElementById("dq-suggestions").innerHTML = "";
+          if (message.includes("tidak ditemukan")) {
+            const fallbackBtn = document.getElementById("btnDeliveryFallback");
+            if (fallbackBtn) {
+              fallbackBtn.hidden = false;
+              fallbackBtn.disabled = false;
+              fallbackBtn.textContent = "Gunakan tarif dasar";
+            }
+          }
           throw new Error(message);
         }
         deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address };
@@ -996,6 +1040,49 @@
 
     document.getElementById("deliveryQuoteConfirm").addEventListener("change", () => updateCartUI());
 
+    // Delivery fallback: use base fee when geocode fails
+    function useDeliveryFallback() {
+      const address = document.getElementById("inputAddress").value.trim();
+      if (!address) return;
+      const feedback = document.getElementById("deliveryQuoteFeedback");
+      const errorCard = document.getElementById("deliveryQuoteError");
+      const successCard = document.getElementById("deliveryQuoteCard");
+      const fallbackBtn = document.getElementById("btnDeliveryFallback");
+      fallbackBtn.hidden = true;
+      fallbackBtn.disabled = true;
+      feedback.textContent = "Menghitung ongkir dengan tarif dasar...";
+      errorCard.hidden = true;
+      successCard.hidden = true;
+      fetch("/api/delivery-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ address, fallback: true }),
+      }).then(r => r.ok ? r.json() : Promise.reject(r)).then(result => {
+        deliveryQuote = {
+          id: result.quote_id,
+          fee: Number(result.fee),
+          distanceMeters: Number(result.distance_meters),
+          address: address,
+          isFallback: true,
+        };
+        successCard.hidden = false;
+        document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
+        document.getElementById("deliveryQuoteDist").textContent = result.distance_km > 0 ? `± ${result.distance_km} km` : "Tarif dasar";
+        document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
+        document.getElementById("deliveryQuoteConfirm").checked = false;
+        document.getElementById("dq-suggestions").innerHTML = "";
+        feedback.textContent = result.distance_km > 0 ? "Ongkir dihitung dari tarif dasar." : "Alamat tidak terdeteksi. Ongkir memakai tarif dasar; kurir bisa konfirmasi.";
+        updateCartUI();
+      }).catch(() => {
+        deliveryQuote = null;
+        successCard.hidden = true;
+        feedback.textContent = "Gagal memuat tarif dasar. Coba lagi.";
+        errorCard.hidden = false;
+        updateCartUI();
+      });
+    }
+    document.getElementById("btnDeliveryFallback")?.addEventListener("click", useDeliveryFallback);
+
 
     function populateProfile() {
       if (profile.name) document.getElementById("inputName").value = profile.name;
@@ -1005,7 +1092,51 @@
     }
 
     // --- Checkout to WhatsApp ---
+    function createCheckoutToken(signature) {
+      const storageKey = "racik_checkout_token";
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) || "null");
+        if (stored && stored.signature === signature && stored.token) return stored.token;
+      } catch {}
+
+      const token = (globalThis.crypto?.randomUUID?.()) || `co-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      try { localStorage.setItem(storageKey, JSON.stringify({ token, signature })); } catch {}
+      return token;
+    }
+
+    function clearCheckoutToken() {
+      try { localStorage.removeItem("racik_checkout_token"); } catch {}
+    }
+
+    function showWhatsAppFallback(url, code) {
+      const feedback = document.getElementById("checkoutFeedback");
+      feedback.replaceChildren();
+
+      const text = document.createElement("span");
+      text.textContent = `Pesanan #${code} tersimpan. Browser memblokir WhatsApp otomatis. `;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Buka WhatsApp";
+
+      const status = document.createElement("a");
+      status.href = `/track/${encodeURIComponent(code)}`;
+      status.textContent = "Lihat status";
+      status.style.marginLeft = "8px";
+
+      feedback.append(text, link, document.createTextNode(" · "), status);
+    }
+
     document.getElementById("btnCheckoutWA").onclick = async () => {
+      if (checkoutInFlight) return;
+
+      if (!storeIsOpen) {
+        showCheckoutFeedback(storeStatusMessage || "Toko sedang tutup. Coba lagi saat jam buka.");
+        return;
+      }
+
       if (!cart.length) {
         toast("Keranjang masih kosong!");
         return;
@@ -1058,52 +1189,127 @@
       profile.srv = service;
       saveAll();
 
+      const itemsPayload = cart.map(item => ({
+        product_id: item.id,
+        quantity: item.qty,
+        note: item.note || null,
+        options: Object.fromEntries((products.find(product => product.id === item.id)?.groups || []).map((group, index) => [group.name, item.options[index]])),
+      }));
+      const signature = JSON.stringify({ name, phone: normalizedPhone, service, address: addr, note, items: itemsPayload });
+      const clientToken = createCheckoutToken(signature);
+
+      // Open the WhatsApp tab during the click so popup blockers do not reject it.
+      let whatsappWindow = null;
+      try {
+        whatsappWindow = window.open("", "_blank");
+        if (whatsappWindow) whatsappWindow.opener = null;
+      } catch {}
+
+      checkoutInFlight = true;
+      const checkoutButton = document.getElementById("btnCheckoutWA");
+      const buttonLabel = checkoutButton.querySelector("span");
+      const originalLabel = buttonLabel?.textContent || "Kirim Pesanan via WhatsApp";
+      if (buttonLabel) buttonLabel.textContent = "Menyimpan…";
+      updateCartUI();
+
       let savedOrder;
       try {
-        const response = await fetch("/api/orders", { method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"}, body:JSON.stringify({name, phone:normalizedPhone, address:addr, service, note, delivery_quote_id: service === "Antar" && deliveryDistanceEnabled ? deliveryQuote?.id : null, items:cart.map(item => ({product_id:item.id, quantity:item.qty, options:Object.fromEntries((products.find(product => product.id === item.id)?.groups || []).map((group,index) => [group.name,item.options[index]]))}))}) });
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            name,
+            phone: normalizedPhone,
+            address: addr,
+            service,
+            note,
+            client_token: clientToken,
+            delivery_quote_id: service === "Antar" && deliveryDistanceEnabled ? deliveryQuote?.id : null,
+            items: itemsPayload,
+          }),
+        });
         savedOrder = await response.json();
-        if (!response.ok) throw new Error(savedOrder.message || "Pesanan gagal disimpan.");
+        if (!response.ok) {
+          const message = savedOrder.message || "Pesanan gagal disimpan.";
+          if (/tutup/i.test(message)) loadStoreConfig();
+          throw new Error(message);
+        }
       } catch (error) {
+        if (whatsappWindow) {
+          try { whatsappWindow.close(); } catch {}
+        }
         const message = error.message || "Pesanan gagal disimpan. Coba lagi.";
         showCheckoutFeedback(message);
         toast(message);
         return;
+      } finally {
+        checkoutInFlight = false;
+        if (buttonLabel) buttonLabel.textContent = originalLabel;
+        updateCartUI();
       }
-      const code = savedOrder.code;
-      const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-      const delivery = savedOrder.total - subtotal;
-      const total = savedOrder.total;
 
-      // Format WhatsApp Message
-      const itemsText = cart.map((it, i) => `${i + 1}. *${it.name}* (x${it.qty}) - ${fmt(it.price * it.qty)}\n   Varian: ${it.options.join(", ")}${it.note ? `\n   Catatan: ${it.note}` : ""}`).join("\n\n");
+      // The WhatsApp message is built from the server snapshot, never from client prices.
+      const code = savedOrder.code;
+      const savedItems = Array.isArray(savedOrder.items) && savedOrder.items.length ? savedOrder.items : itemsPayload;
+      const subtotal = Number(savedOrder.subtotal ?? 0);
+      const delivery = Number(savedOrder.service_fee ?? 0);
+      const total = Number(savedOrder.total ?? 0);
+      const itemsText = savedItems.map((item, index) => {
+        const options = Object.values(item.options || {}).join(", ");
+        const itemNote = item.note ? `\n   Catatan: ${item.note}` : "";
+        const lineTotal = item.subtotal ?? (Number(item.unit_price) || 0) * (Number(item.quantity) || 0);
+        return `${index + 1}. *${item.name}* (x${item.quantity}) - ${fmt(lineTotal)}\n   Varian: ${options || "-"}${itemNote}`;
+      }).join("\n\n");
       const message = `*PESANAN BARU - ${storeName}*
 Kode: *#${code}*
 Waktu: ${new Date().toLocaleString("id-ID")}
 -------------------------------------
 *Data Pemesan:*
-Nama: *${name}*
-No. HP: ${normalizedPhone}
-Layanan: *${service}*
-${service === "Antar" ? `Alamat Antar: ${addr}\n` : ""}${note ? `Catatan: "${note}"\n` : ""}-------------------------------------
+Nama: *${savedOrder.customer_name || name}*
+No. HP: ${savedOrder.phone || normalizedPhone}
+Layanan: *${savedOrder.service || service}*
+${(savedOrder.service || service) === "Antar" ? `Alamat Antar: ${savedOrder.address || addr}\n` : ""}${(savedOrder.note || note) ? `Catatan: "${savedOrder.note || note}"\n` : ""}-------------------------------------
 *Rincian Menu:*
 ${itemsText}
 
 -------------------------------------
-*Subtotal: ${fmt(subtotal)}*\n${service === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}\n*Total: ${fmt(total)}*
+*Subtotal: ${fmt(subtotal)}*\n${(savedOrder.service || service) === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}\n*Total: ${fmt(total)}*
 
 Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
 
+      const targetPhone = savedOrder.whatsapp;
+      if (!targetPhone) {
+        if (whatsappWindow) {
+          try { whatsappWindow.close(); } catch {}
+        }
+        clearCheckoutToken();
+        closeCart();
+        cart = [];
+        saveAll();
+        updateCartUI();
+        renderProducts();
+        showCheckoutFeedback("Nomor WhatsApp belum diatur oleh pengelola. Hubungi kedai untuk rincian pesanan.");
+        return;
+      }
+
+      const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+
+      clearCheckoutToken();
       closeCart();
       cart = [];
       saveAll();
       updateCartUI();
       renderProducts();
-      const targetPhone = savedOrder.whatsapp;
-      if (!targetPhone) { showCheckoutFeedback("Nomor WhatsApp belum diatur oleh pengelola. Hubungi kedai untuk rincian pesanan."); return; }
-      const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-      toast(`Pesanan ${code} tersimpan.`);
-      setTimeout(() => { window.location.href = `/track/${code}`; }, 2000);
+
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.location.href = url;
+        toast(`Pesanan ${code} tersimpan.`);
+        setTimeout(() => { window.location.href = `/track/${code}`; }, 2000);
+      } else {
+        // The order is already saved; keep it visible so the customer can still open WhatsApp.
+        showWhatsAppFallback(url, code);
+        toast(`Pesanan ${code} tersimpan.`);
+      }
     };
 
     // Copy format

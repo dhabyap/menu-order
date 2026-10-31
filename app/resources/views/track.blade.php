@@ -4,30 +4,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lacak Pesanan — {{ $settings['store_name'] ?? 'Toko' }}</title>
+    <meta name="robots" content="noindex, nofollow">
+    @php
+        $storeName = $settings['store_name'] ?? 'Toko';
+        $storeInitial = mb_substr($storeName, 0, 1);
+        $whatsapp = preg_replace('/\D/', '', $settings['whatsapp'] ?? '');
+        $flow = \App\Support\OrderStatus::flow();
+        $currentStatus = $status ?? null;
+        $currentIndex = $currentStatus ? array_search($currentStatus, $flow, true) : false;
+        $isCancelled = $currentStatus === \App\Support\OrderStatus::CANCELLED;
+        $stepCopy = [
+            \App\Support\OrderStatus::PENDING => 'Pesanan sudah masuk ke toko.',
+            \App\Support\OrderStatus::PROCESSING => 'Pesanan sedang disiapkan.',
+            \App\Support\OrderStatus::COMPLETED => 'Pesanan sudah selesai.',
+        ];
+    @endphp
+    <title>{{ $code ? 'Lacak '.$code : 'Lacak Pesanan' }} — {{ $storeName }}</title>
     <link rel="stylesheet" href="/assets/catalog/catalog.css">
 </head>
 <body>
     <div class="shell">
         <header class="top" id="top">
             <div class="brand">
-                <span class="mark" id="brandMark">R</span>
+                <span class="mark" id="brandMark">{{ $storeInitial }}</span>
                 <div class="brand-text">
-                    <span id="brandTitle">{{ $settings['store_name'] ?? 'Toko' }}</span>
-                    <small id="brandTagline"></small>
+                    <span id="brandTitle">{{ $storeName }}</span>
+                    <small id="brandTagline">{{ $settings['store_tagline'] ?? '' }}</small>
                 </div>
             </div>
             <nav class="site-nav" aria-label="Navigasi utama">
                 <a href="/">Menu</a>
-                <a href="#trackForm">Cek Pesanan</a>
-                <a href="#storeFooter">Kontak</a>
+                <a href="/track">Cek Pesanan</a>
+                <a href="/#storeFooter">Kontak</a>
             </nav>
         </header>
 
         <main id="viewPublic">
             <section class="hero track-hero">
                 <div>
-                    <div class="eyebrow" id="heroEyebrow">Menu {{ $settings['store_name'] ?? '' }}</div>
+                    <div class="eyebrow" id="heroEyebrow">Menu {{ $storeName }}</div>
                     <h1>Lacak Pesanan</h1>
                     <p>Masukkan kode pesanan untuk melihat status dan rincian.</p>
                 </div>
@@ -35,16 +50,38 @@
 
             <section id="trackForm" class="track-form">
                 <form method="GET" action="/track" class="track-form-inner" id="trackLookupForm">
-                    <input type="text" name="code" placeholder="Contoh: RT-261028-ABC12" required class="track-input" value="{{ $code ?? '' }}">
+                    <input type="text" name="code" placeholder="Contoh: RT-261028-ABC12" required class="track-input" value="{{ $code ?? '' }}" aria-label="Kode pesanan">
                     <button type="submit" class="hero-action-primary">Lacak</button>
                 </form>
 
                 @if ($code)
                     <div class="track-card">
                         <div class="track-card-head">
-                            <span class="track-code">#{{ $code }}</span>
+                            <div>
+                                <span class="track-code">#{{ $code }}</span>
+                                <div class="track-meta-inline">Dipesan {{ \Carbon\Carbon::parse($created_at)->format('d M Y H:i') }}</div>
+                            </div>
                             <span class="history-badge history-badge-{{ $status }}">{{ $status_label }}</span>
                         </div>
+
+                        @if ($isCancelled)
+                            <div class="track-cancelled" role="status">
+                                <strong>Pesanan dibatalkan</strong>
+                                <p>Hubungi kedai jika kamu memerlukan bantuan atau ingin membuat pesanan baru.</p>
+                            </div>
+                        @else
+                            <ol class="track-timeline" aria-label="Progres pesanan">
+                                @foreach ($flow as $index => $step)
+                                    <li class="track-step {{ $currentIndex !== false && $index <= $currentIndex ? 'is-done' : '' }} {{ $currentIndex !== false && $index === $currentIndex ? 'is-current' : '' }}">
+                                        <span class="track-step-dot" aria-hidden="true">{{ $index + 1 }}</span>
+                                        <div>
+                                            <strong>{{ \App\Support\OrderStatus::label($step) }}</strong>
+                                            <small>{{ $stepCopy[$step] ?? '' }}</small>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @endif
 
                         <div class="track-grid">
                             <div>
@@ -52,7 +89,12 @@
                                 <div class="track-value">{{ $name }}</div>
 
                                 <div class="track-label">Layanan</div>
-                                <div class="track-value">{{ $service }}</div>
+                                <div class="track-value">
+                                    {{ $service }}
+                                    @if ($service === 'Antar' && $delivery_distance_meters)
+                                        <span class="track-muted">· ±{{ number_format($delivery_distance_meters / 1000, 1, ',', '.') }} km</span>
+                                    @endif
+                                </div>
                             </div>
                             <div>
                                 <div class="track-label">Total</div>
@@ -60,14 +102,36 @@
                             </div>
                         </div>
 
-                        <div class="track-label" style="margin-top:16px">Rincian</div>
+                        @if ($service === 'Antar' && $address)
+                            <div class="track-label">Alamat pengantaran</div>
+                            <div class="track-value track-address">{{ $address }}</div>
+                        @endif
+
+                        @if ($note)
+                            <div class="track-label">Catatan pesanan</div>
+                            <div class="track-note">{{ $note }}</div>
+                        @endif
+
+                        <div class="track-label" style="margin-top:16px">Rincian menu</div>
                         <ul class="track-items">
-                            @foreach ($items as $item)
+                            @forelse ($items as $item)
                                 <li class="track-item">
-                                    <span>{{ $item['quantity'] }}x {{ $item['name'] }}</span>
-                                    <span class="track-item-price">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                                    <div class="track-item-main">
+                                        <span>{{ $item['quantity'] }}x {{ $item['name'] }}</span>
+                                        <span class="track-item-price">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                                    </div>
+                                    @if (!empty($item['options']))
+                                        <div class="track-item-meta">
+                                            {{ collect($item['options'])->map(fn ($value, $key) => $key.': '.$value)->implode(' · ') }}
+                                        </div>
+                                    @endif
+                                    @if (!empty($item['note']))
+                                        <div class="track-item-meta">Catatan: {{ $item['note'] }}</div>
+                                    @endif
                                 </li>
-                            @endforeach
+                            @empty
+                                <li class="track-item"><span>Rincian menu tidak tersedia.</span></li>
+                            @endforelse
                         </ul>
 
                         <div class="track-row track-row-divider">
@@ -86,26 +150,35 @@
                         </div>
 
                         <div class="track-meta">
-                            Dipesan {{ \Carbon\Carbon::parse($created_at)->format('d M Y H:i') }} · Diperbarui {{ \Carbon\Carbon::parse($updated_at)->format('d M Y H:i') }}
+                            Terakhir diperbarui {{ \Carbon\Carbon::parse($updated_at)->format('d M Y H:i') }}
+                        </div>
+
+                        <div class="track-actions">
+                            <a class="hero-action-primary" href="/#productGrid">Pesan lagi</a>
+                            @if ($whatsapp)
+                                <a class="btn-sec-action" href="https://wa.me/{{ $whatsapp }}?text={{ urlencode('Halo '.$storeName.', saya ingin menanyakan pesanan #'.$code.'.') }}" target="_blank" rel="noopener noreferrer">Hubungi kedai</a>
+                            @endif
                         </div>
                     </div>
+                @else
+                    <p class="track-help">Kode pesanan ada di pesan WhatsApp yang dikirim setelah checkout. Belum punya kode? Cari pesanan lewat nomor WhatsApp di halaman menu.</p>
                 @endif
             </section>
         </main>
 
         <footer class="site-footer" id="storeFooter">
             <a class="footer-brand" href="#top" aria-label="Kembali ke atas">
-                <span class="footer-mark" id="footerMark">R</span>
+                <span class="footer-mark" id="footerMark">{{ $storeInitial }}</span>
                 <span>
-                    <strong id="footerStoreName">{{ $settings['store_name'] ?? 'Toko' }}</strong>
+                    <strong id="footerStoreName">{{ $storeName }}</strong>
                     <small id="footerStoreTagline">{{ $settings['store_tagline'] ?? 'Menu dan pemesanan' }}</small>
                 </span>
             </a>
             <div class="footer-links">
                 <a href="/">Menu</a>
-                <a href="#trackForm">Cek pesanan</a>
+                <a href="/track">Cek pesanan</a>
             </div>
-            <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">{{ $settings['store_name'] ?? 'Toko' }}</span></p>
+            <p class="footer-copy">&copy; <span id="footerYear"></span> <span id="footerCopyrightName">{{ $storeName }}</span></p>
             <p class="footer-address" id="footerStoreAddress" style="display:none;"></p>
         </footer>
     </div>
@@ -113,12 +186,6 @@
     <script>
         (function() {
             document.getElementById('footerYear').textContent = new Date().getFullYear();
-            const url = new URL(window.location.href);
-            const code = url.searchParams.get('code');
-            if (code) {
-                const input = document.querySelector('input[name="code"]');
-                if (input) input.value = code;
-            }
             const form = document.getElementById('trackLookupForm');
             if (form) {
                 form.addEventListener('submit', function(e) {

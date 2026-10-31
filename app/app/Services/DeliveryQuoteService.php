@@ -11,9 +11,44 @@ use RuntimeException;
 
 class DeliveryQuoteService
 {
-    public function quote(string $address): array
+    public function quote(string $address, bool $fallback = false): array
     {
         $settings = DB::table('store_settings')->pluck('value', 'key');
+        if ($fallback) {
+            $originLat = $this->coordinate($settings['store_latitude'] ?? null, -90, 90);
+            $originLon = $this->coordinate($settings['store_longitude'] ?? null, -180, 180);
+            if ($originLat === null || $originLon === null) {
+                throw new RuntimeException('Lokasi toko belum dikonfigurasi. Hubungi pengelola toko.');
+            }
+            $baseFee = max(0, (int) ($settings['delivery_fee'] ?? config('store.delivery_fee', 0)));
+            $distanceMeters = 0;
+            $distanceKm = 0;
+            $billableKm = 0;
+            $roundedKm = 0;
+            $expiresAt = now()->addMinutes(15)->timestamp;
+            $payload = [
+                'id' => (string) Str::uuid(),
+                'address_hash' => hash('sha256', Str::of($address)->squish()->lower()->toString()),
+                'distance_meters' => $distanceMeters,
+                'fee' => $baseFee,
+                'base_fee' => $baseFee,
+                'included_km' => max(0, (float) ($settings['delivery_included_km'] ?? 0)),
+                'fee_per_km' => max(0, (int) ($settings['delivery_fee_per_km'] ?? 0)),
+                'rounding_km' => max(0, (float) ($settings['delivery_rounding_km'] ?? 0.5)),
+                'billable_km' => $billableKm,
+                'expires_at' => $expiresAt,
+            ];
+            $response = [
+                'quote_id' => Crypt::encryptString(json_encode($payload, JSON_THROW_ON_ERROR)),
+                'distance_meters' => $distanceMeters,
+                'distance_km' => round($distanceKm, 1),
+                'fee' => $baseFee,
+                'destination_label' => $address,
+                'expires_at' => now()->addMinutes(15)->toIso8601String(),
+            ];
+            return $response;
+        }
+
         $originLat = $this->coordinate($settings['store_latitude'] ?? null, -90, 90);
         $originLon = $this->coordinate($settings['store_longitude'] ?? null, -180, 180);
         if ($originLat === null || $originLon === null) {

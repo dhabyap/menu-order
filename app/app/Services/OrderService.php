@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\StoreHours;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -41,6 +43,17 @@ class OrderService
      */
     public function create(array $data): array
     {
+        $clientToken = trim((string) ($data['client_token'] ?? ''));
+
+        // Retrying the same checkout (double click, lost response, popup retry)
+        // must return the order that was already saved instead of creating a duplicate.
+        if ($clientToken !== '') {
+            $existing = DB::table('orders')->where('client_token', $clientToken)->first();
+            if ($existing) {
+                return $this->resultFromOrder($existing);
+            }
+        }
+
         if ($data['service'] === 'Antar' && empty($data['address'])) {
             throw new RuntimeException(self::MESSAGE_ADDRESS_REQUIRED);
         }
@@ -71,10 +84,7 @@ class OrderService
         [$items, $subtotal] = $this->buildItems($data['items'], $products);
 
         $deliveryFee = DB::table('store_settings')->where('key', 'delivery_fee')->value('value');
-        $whatsapp = trim((string) DB::table('store_settings')->where('key', 'whatsapp')->value('value'));
-        if ($whatsapp === '') {
-            $whatsapp = trim((string) config('store.whatsapp', ''));
-        }
+        $whatsapp = $this->resolveWhatsApp();
         if ($whatsapp === '') {
             throw new RuntimeException(self::MESSAGE_WHATSAPP_NOT_CONFIGURED);
         }
@@ -87,7 +97,40 @@ class OrderService
         $total = $subtotal + $fee;
         $code = 'RT-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
 
-        $id = DB::table('orders')->insertGetId([
+        try {
+            $id = DB::table('orders')->insertGetId([
+                'code' => $code,
+                'client_token' => $clientToken !== '' ? $clientToken : null,
+                'customer_name' => $data['name'],
+                'phone' => $data['phone'],
+                'address' => $data['address'] ?? null,
+                'service' => $data['service'],
+                'note' => $data['note'] ?? null,
+                'subtotal' => $subtotal,
+                'service_fee' => $fee,
+                'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
+                'delivery_base_fee' => $baseFeeSnapshot,
+                'delivery_variable_fee' => $variableFeeSnapshot,
+                'total' => $total,
+                'status' => 'pending',
+                'items' => json_encode($items),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (QueryException $e) {
+            // A concurrent request may have inserted the same token first.
+            if ($clientToken !== '') {
+                $existing = DB::table('orders')->where('client_token', $clientToken)->first();
+                if ($existing) {
+                    return $this->resultFromOrder($existing);
+                }
+            }
+
+            throw $e;
+        }
+
+        return [
+            'id' => $id,
             'code' => $code,
             'customer_name' => $data['name'],
             'phone' => $data['phone'],
@@ -96,24 +139,44 @@ class OrderService
             'note' => $data['note'] ?? null,
             'subtotal' => $subtotal,
             'service_fee' => $fee,
-            'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
-            'delivery_base_fee' => $baseFeeSnapshot,
-            'delivery_variable_fee' => $variableFeeSnapshot,
             'total' => $total,
-            'status' => 'pending',
-            'items' => json_encode($items),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return [
-            'id' => $id,
-            'code' => $code,
-            'total' => $total,
-            'service_fee' => $fee,
             'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
+            'items' => $items,
             'whatsapp' => $whatsapp,
         ];
+    }
+
+    /**
+     * Rebuild the checkout response for an order that already exists.
+     *
+     * @return array<string, mixed>
+     */
+    private function resultFromOrder(object $order): array
+    {
+        $items = is_string($order->items) ? json_decode($order->items, true) : $order->items;
+
+        return [
+            'id' => (int) $order->id,
+            'code' => $order->code,
+            'customer_name' => $order->customer_name,
+            'phone' => $order->phone,
+            'address' => $order->address,
+            'service' => $order->service,
+            'note' => $order->note,
+            'subtotal' => (int) $order->subtotal,
+            'service_fee' => (int) $order->service_fee,
+            'total' => (int) $order->total,
+            'delivery_distance_meters' => $order->delivery_distance_meters ?? null,
+            'items' => is_array($items) ? $items : [],
+            'whatsapp' => $this->resolveWhatsApp(),
+        ];
+    }
+
+    private function resolveWhatsApp(): string
+    {
+        $whatsapp = trim((string) DB::table('store_settings')->where('key', 'whatsapp')->value('value'));
+
+        return $whatsapp !== '' ? $whatsapp : trim((string) config('store.whatsapp', ''));
     }
 
     /**
@@ -155,10 +218,13 @@ class OrderService
             $line = $unit * $row['quantity'];
             $subtotal += $line;
 
+            $note = trim((string) ($row['note'] ?? ''));
+
             $items[] = [
                 'product_id' => $product->id,
                 'name' => $product->name,
                 'options' => $options,
+                'note' => $note !== '' ? $note : null,
                 'unit_price' => $unit,
                 'quantity' => $row['quantity'],
                 'subtotal' => $line,
@@ -170,28 +236,19 @@ class OrderService
 
     private function ensureStoreIsOpen(): void
     {
-        $open = trim((string) DB::table('store_settings')->where('key', 'open_time')->value('value'));
-        $close = trim((string) DB::table('store_settings')->where('key', 'close_time')->value('value'));
+        $settings = DB::table('store_settings')
+            ->whereIn('key', ['open_time', 'close_time'])
+            ->pluck('value', 'key')
+            ->all();
 
-        if ($open === '' || $close === '') {
-            return;
-        }
+        $hours = StoreHours::fromSettings($settings);
 
-        if ($open === $close) {
-            throw new RuntimeException(sprintf(self::MESSAGE_STORE_CLOSED, $open, $close));
-        }
-
-        // Store operating hours use the shop's local timezone, not the server timezone.
-        $now = now(config('store.timezone', 'Asia/Jakarta'))->format('H:i');
-
-        if ($open <= $close) {
-            $closed = $now < $open || $now >= $close;
-        } else {
-            $closed = $now < $open && $now >= $close;
-        }
-
-        if ($closed) {
-            throw new RuntimeException(sprintf(self::MESSAGE_STORE_CLOSED, $open, $close));
+        if (! $hours->isOpen()) {
+            throw new RuntimeException(sprintf(
+                self::MESSAGE_STORE_CLOSED,
+                $hours->openTime(),
+                $hours->closeTime(),
+            ));
         }
     }
 }

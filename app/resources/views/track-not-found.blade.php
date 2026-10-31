@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Kode Tidak Ditemukan — {{ $settings['store_name'] ?? 'Toko' }}</title>
     <link rel="stylesheet" href="/assets/catalog/catalog.css">
 </head>
@@ -11,7 +12,7 @@
     <div class="shell">
         <header class="top" id="top">
             <div class="brand">
-                <span class="mark" id="brandMark">R</span>
+                <span class="mark" id="brandMark">{{ mb_substr($settings['store_name'] ?? 'Toko', 0, 1) }}</span>
                 <div class="brand-text">
                     <span id="brandTitle">{{ $settings['store_name'] ?? 'Toko' }}</span>
                     <small id="brandTagline"></small>
@@ -44,7 +45,7 @@
 
         <footer class="site-footer" id="storeFooter">
             <a class="footer-brand" href="#top" aria-label="Kembali ke atas">
-                <span class="footer-mark" id="footerMark">R</span>
+                <span class="footer-mark" id="footerMark">{{ mb_substr($settings['store_name'] ?? 'Toko', 0, 1) }}</span>
                 <span>
                     <strong id="footerStoreName">{{ $settings['store_name'] ?? 'Toko' }}</strong>
                     <small id="footerStoreTagline">{{ $settings['store_tagline'] ?? 'Menu dan pemesanan' }}</small>

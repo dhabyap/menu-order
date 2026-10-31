@@ -1,4 +1,4 @@
-# Racik Tea — local development
+# Menu ordering app — local development
 
 ## Start
 

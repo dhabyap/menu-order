@@ -2,7 +2,7 @@
             <div>
                 <div class="eyebrow"><span>✿</span> Panel pengelola</div>
                 <h1>Dashboard Pengelola</h1>
-                <p>Halo, {{ auth()->user()->name }}. Kelola menu, pesanan, dan informasi kedai.</p>
+                <p>Halo! Kelola menu, pesanan, dan informasi kedai {{ $storeName }}.</p>
             </div>
         </div>
 

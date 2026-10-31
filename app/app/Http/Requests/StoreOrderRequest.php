@@ -24,6 +24,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'regex:/^(?:\+?62|0)8[1-9][0-9]{7,11}$/'],
+            'client_token' => ['nullable', 'string', 'max:64'],
             'address' => ['nullable', 'string', 'max:1000'],
             'delivery_quote_id' => ['nullable', 'string', 'max:5000'],
             'service' => ['required', 'in:Ambil Sendiri,Antar'],
@@ -32,6 +33,7 @@ class StoreOrderRequest extends FormRequest
             'items.*.product_id' => ['required', 'string', 'exists:products,prototype_id'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
             'items.*.options' => ['nullable', 'array'],
+            'items.*.note' => ['nullable', 'string', 'max:120'],
         ];
     }
 }
