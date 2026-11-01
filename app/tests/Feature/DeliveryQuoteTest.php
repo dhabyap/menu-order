@@ -71,6 +71,74 @@ class DeliveryQuoteTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_quote_for_selected_coordinates_is_signed_and_usable_at_checkout(): void
+    {
+        $this->configureStore();
+        Http::fake([
+            'router.project-osrm.org/*' => Http::response([
+                'code' => 'Ok',
+                'routes' => [['distance' => 4200]],
+            ], 200),
+        ]);
+        $categoryId = DB::table('categories')->insertGetId([
+            'name' => 'Minuman', 'slug' => 'minuman-koordinat', 'sort_order' => 0, 'active' => true,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('products')->insert([
+            'category_id' => $categoryId, 'prototype_id' => 'coordinate-test-product', 'name' => 'Teh',
+            'description' => 'Test', 'price' => 10000, 'tone' => 'green', 'icon' => 'T',
+            'labels' => '[]', 'options' => '[]', 'available' => true, 'sort_order' => 0,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('store_settings')->insert([
+            ['key' => 'whatsapp', 'value' => '6281234567890', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $address = 'Pin peta pelanggan';
+        $quote = $this->postJson('/api/delivery-quote', [
+            'address' => $address,
+            'selected_lat' => -6.210000,
+            'selected_lon' => 106.810000,
+        ])->assertOk()
+            ->assertJson([
+                'distance_meters' => 4200,
+                'fee' => 12000,
+                'quote_source' => 'coordinates+osrm',
+            ])
+            ->assertJsonStructure(['quote_id', 'expires_at'])
+            ->json();
+
+        // The coordinate path must not call Nominatim, only the routing provider.
+        Http::assertSentCount(1);
+
+        $this->postJson('/api/orders', [
+            'name' => 'Pelanggan', 'phone' => '081234567890', 'address' => $address,
+            'service' => 'Antar', 'delivery_quote_id' => $quote['quote_id'],
+            'items' => [['product_id' => 'coordinate-test-product', 'quantity' => 1, 'options' => []]],
+        ])->assertCreated()->assertJson(['total' => 22000, 'service_fee' => 12000]);
+    }
+
+    public function test_retry_after_empty_search_reports_not_found_instead_of_busy(): void
+    {
+        $this->configureStore();
+        Http::fake(['nominatim.openstreetmap.org/*' => Http::response([], 200)]);
+
+        // The address contains a house number, so the service performs a retry
+        // with the number stripped. With multi-provider fallback, when all providers
+        // fail the service returns a base-fee estimate instead of 422.
+        $this->postJson('/api/delivery-quote', ['address' => 'Jalan Contoh Nomor 10, Jakarta'])
+            ->assertOk()
+            ->assertJsonPath('is_estimate', true)
+            ->assertJsonPath('is_base_fee', true)
+            ->assertJsonPath('quote_source', 'base_fee')
+            ->assertJsonPath('distance_km', null)
+            ->assertJsonPath('warning', function ($value) {
+                return is_string($value) && str_contains($value, 'estimasi');
+            });
+
+        Http::assertSentCount(2);
+    }
+
     public function test_order_uses_signed_quote_and_persists_distance_fee_snapshot(): void
     {
         $this->configureStore();
@@ -104,7 +172,6 @@ class DeliveryQuoteTest extends TestCase
     }
 
     public function test_quote_rejects_when_store_origin_is_not_configured(): void
-
     {
         $this->postJson('/api/delivery-quote', ['address' => 'Jalan Contoh Nomor 10, Jakarta'])
             ->assertStatus(422)
@@ -129,8 +196,11 @@ class DeliveryQuoteTest extends TestCase
         Http::fake(['nominatim.openstreetmap.org/*' => Http::response([], 200)]);
 
         $this->postJson('/api/delivery-quote', ['address' => 'zzzz no address found'])
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'Alamat tidak ditemukan. Gunakan nama jalan, kelurahan, kecamatan, dan kota.');
+            ->assertOk()
+            ->assertJsonPath('is_estimate', true)
+            ->assertJsonPath('is_base_fee', true)
+            ->assertJsonPath('quote_source', 'base_fee')
+            ->assertJsonPath('distance_km', null);
     }
 
     public function test_quote_returns_suggestions_when_multiple_matches(): void

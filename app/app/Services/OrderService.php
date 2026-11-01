@@ -97,6 +97,17 @@ class OrderService
         $total = $subtotal + $fee;
         $code = 'RT-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
 
+        // When quote is an estimate, require explicit customer acceptance
+        if (($deliveryQuote['is_estimate'] ?? false) && empty($data['delivery_quote_accepted'])) {
+            throw new RuntimeException('Ongkir ini masih estimasi. Centang konfirmasi estimasi ongkir untuk melanjutkan.');
+        }
+
+        $quoteSource = $deliveryQuote['quote_source'] ?? null;
+        $isEstimate = (bool) ($deliveryQuote['is_estimate'] ?? false);
+        $deliveryLat = $deliveryQuote['lat'] ?? null;
+        $deliveryLon = $deliveryQuote['lon'] ?? null;
+        $confirmedAt = $deliveryQuote !== null ? now() : null;
+
         try {
             $id = DB::table('orders')->insertGetId([
                 'code' => $code,
@@ -111,6 +122,11 @@ class OrderService
                 'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
                 'delivery_base_fee' => $baseFeeSnapshot,
                 'delivery_variable_fee' => $variableFeeSnapshot,
+                'delivery_quote_source' => $quoteSource,
+                'delivery_is_estimate' => $isEstimate,
+                'delivery_lat' => $deliveryLat,
+                'delivery_lon' => $deliveryLon,
+                'delivery_confirmed_at' => $confirmedAt,
                 'total' => $total,
                 'status' => 'pending',
                 'items' => json_encode($items),

@@ -395,9 +395,10 @@
       document.getElementById("btnCheckoutTotal").textContent = fmt(grandTotal);
       document.getElementById("deliveryRow").style.display = service === "Antar" ? "flex" : "none";
       document.querySelector("#deliveryRow span:last-child").textContent = fmt(deliveryFee);
-      document.getElementById("deliveryDistanceLabel").textContent = deliveryQuote && service === "Antar" ? `· ±${(deliveryQuote.distanceMeters / 1000).toFixed(1)} km` : "";
+      document.getElementById("deliveryDistanceLabel").textContent = deliveryQuote && service === "Antar" ? (deliveryQuote.distanceMeters != null ? `· ±${(deliveryQuote.distanceMeters / 1000).toFixed(1)} km` : "· Estimasi tarif dasar") : "";
       const checkoutButton = document.getElementById("btnCheckoutWA");
-      checkoutButton.disabled = checkoutInFlight || count === 0 || !storeIsOpen || (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked));
+      const estimateAcceptChecked = !deliveryQuote?.isEstimate || document.getElementById("deliveryQuoteEstimateAccept").checked;
+      checkoutButton.disabled = checkoutInFlight || count === 0 || !storeIsOpen || (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked || !estimateAcceptChecked));
       const checkoutHint = document.getElementById("checkoutHint");
       if (checkoutHint) {
         checkoutHint.textContent = !storeIsOpen ? (storeStatusMessage || "Toko sedang tutup.") : defaultCheckoutHint;
@@ -916,12 +917,28 @@
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({ address: label, selected_lat: lat, selected_lon: lon }),
       }).then(r => r.ok ? r.json() : Promise.reject(r)).then(result => {
-        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address: label };
+        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: result.distance_meters == null ? null : Number(result.distance_meters), address: label, isEstimate: Boolean(result.is_estimate), isBaseFee: Boolean(result.is_base_fee), quoteSource: result.quote_source || null, warning: result.warning || null };
         document.getElementById("deliveryQuoteCard").hidden = false;
         document.getElementById("deliveryQuoteDest").textContent = result.destination_label || label;
-        document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km`;
+        if (result.distance_km == null || result.is_base_fee) {
+          document.getElementById("deliveryQuoteDist").textContent = "Estimasi tarif dasar";
+          document.getElementById("deliveryQuoteDist").classList.add("dqc-estimate");
+        } else {
+          document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km${result.is_estimate ? " (estimasi)" : ""}`;
+          document.getElementById("deliveryQuoteDist").classList.remove("dqc-estimate");
+        }
         document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
         document.getElementById("deliveryQuoteConfirm").checked = false;
+        document.getElementById("deliveryQuoteEstimateAccept").checked = false;
+        const warningEl = document.getElementById("deliveryQuoteWarning");
+        if (result.warning) {
+          warningEl.hidden = false;
+          document.getElementById("deliveryQuoteWarningMsg").textContent = result.warning;
+        } else {
+          warningEl.hidden = true;
+        }
+        document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = !result.is_estimate;
+        document.getElementById("deliveryQuoteConfirmLabel").textContent = result.is_estimate ? "Saya sudah memeriksa alamat" : "Konfirmasi alamat sudah benar";
         document.getElementById("deliveryQuoteError").hidden = true;
         feedback.textContent = "";
         updateCartUI();
@@ -1017,12 +1034,33 @@
           }
           throw new Error(message);
         }
-        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: Number(result.distance_meters), address };
+        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: result.distance_meters == null ? null : Number(result.distance_meters), address, isEstimate: Boolean(result.is_estimate), isBaseFee: Boolean(result.is_base_fee), quoteSource: result.quote_source || null, warning: result.warning || null };
         successCard.hidden = false;
         document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
-        document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km`;
+        if (result.distance_km == null || result.is_base_fee) {
+          document.getElementById("deliveryQuoteDist").textContent = "Estimasi tarif dasar";
+          document.getElementById("deliveryQuoteDist").classList.add("dqc-estimate");
+        } else {
+          document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km${result.is_estimate ? " (estimasi)" : ""}`;
+          document.getElementById("deliveryQuoteDist").classList.remove("dqc-estimate");
+        }
         document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
         document.getElementById("deliveryQuoteConfirm").checked = false;
+        document.getElementById("deliveryQuoteEstimateAccept").checked = false;
+        const warningEl = document.getElementById("deliveryQuoteWarning");
+        if (result.warning) {
+          warningEl.hidden = false;
+          document.getElementById("deliveryQuoteWarningMsg").textContent = result.warning;
+        } else {
+          warningEl.hidden = true;
+        }
+        document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = !result.is_estimate;
+        document.getElementById("deliveryQuoteConfirmLabel").textContent = result.is_estimate ? "Saya sudah memeriksa alamat" : "Konfirmasi alamat sudah benar";
+        const expiresEl = document.getElementById("deliveryQuoteExpires");
+        if (result.expires_at) {
+          const expDate = new Date(result.expires_at);
+          expiresEl.textContent = `Berlaku sampai ${expDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+        }
         document.getElementById("dq-suggestions").innerHTML = "";
         errorCard.hidden = true;
         feedback.textContent = "";
@@ -1039,6 +1077,14 @@
     });
 
     document.getElementById("deliveryQuoteConfirm").addEventListener("change", () => updateCartUI());
+    document.getElementById("deliveryQuoteEstimateAccept")?.addEventListener("change", () => updateCartUI());
+
+    // Reset estimate accept checkbox when address changes
+    document.getElementById("inputAddress").addEventListener("input", () => {
+      document.getElementById("deliveryQuoteEstimateAccept").checked = false;
+      document.getElementById("deliveryQuoteWarning").hidden = true;
+      document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = true;
+    });
 
     // Delivery fallback: use base fee when geocode fails
     function useDeliveryFallback() {
@@ -1061,17 +1107,27 @@
         deliveryQuote = {
           id: result.quote_id,
           fee: Number(result.fee),
-          distanceMeters: Number(result.distance_meters),
+          distanceMeters: result.distance_meters == null ? null : Number(result.distance_meters),
           address: address,
-          isFallback: true,
+          isEstimate: Boolean(result.is_estimate),
+          isBaseFee: Boolean(result.is_base_fee),
+          quoteSource: result.quote_source || "base_fee",
+          warning: result.warning || "Alamat tidak terdeteksi. Ongkir memakai tarif dasar; kurir bisa konfirmasi.",
         };
         successCard.hidden = false;
         document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
-        document.getElementById("deliveryQuoteDist").textContent = result.distance_km > 0 ? `± ${result.distance_km} km` : "Tarif dasar";
+        document.getElementById("deliveryQuoteDist").textContent = "Estimasi tarif dasar";
+        document.getElementById("deliveryQuoteDist").classList.add("dqc-estimate");
         document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
         document.getElementById("deliveryQuoteConfirm").checked = false;
+        document.getElementById("deliveryQuoteEstimateAccept").checked = false;
+        const warningEl = document.getElementById("deliveryQuoteWarning");
+        warningEl.hidden = false;
+        document.getElementById("deliveryQuoteWarningMsg").textContent = result.warning || "Alamat tidak terdeteksi. Ongkir memakai tarif dasar; kurir bisa konfirmasi.";
+        document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = false;
+        document.getElementById("deliveryQuoteConfirmLabel").textContent = "Saya sudah memeriksa alamat";
         document.getElementById("dq-suggestions").innerHTML = "";
-        feedback.textContent = result.distance_km > 0 ? "Ongkir dihitung dari tarif dasar." : "Alamat tidak terdeteksi. Ongkir memakai tarif dasar; kurir bisa konfirmasi.";
+        feedback.textContent = "";
         updateCartUI();
       }).catch(() => {
         deliveryQuote = null;
@@ -1179,6 +1235,11 @@
         document.getElementById("btnCalculateDelivery").focus();
         return;
       }
+      if (service === "Antar" && deliveryDistanceEnabled && deliveryQuote?.isEstimate && !document.getElementById("deliveryQuoteEstimateAccept").checked) {
+        showCheckoutFeedback("Centang konfirmasi estimasi ongkir untuk melanjutkan.");
+        document.getElementById("deliveryQuoteEstimateAccept").focus();
+        return;
+      }
       clearPhoneError();
       showCheckoutFeedback("");
 
@@ -1225,6 +1286,7 @@
             note,
             client_token: clientToken,
             delivery_quote_id: service === "Antar" && deliveryDistanceEnabled ? deliveryQuote?.id : null,
+            delivery_quote_accepted: service === "Antar" && deliveryDistanceEnabled ? Boolean(deliveryQuote?.isEstimate) : undefined,
             items: itemsPayload,
           }),
         });

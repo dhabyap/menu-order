@@ -1574,11 +1574,31 @@
       word-break: break-word;
     }
 
-    .dqc-rows {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    .dqc-val.dqc-estimate {
+      color: var(--amber, #b45309);
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    .dqc-warning {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px 12px;
       margin-bottom: 10px;
+      background: #fef9c3;
+      border: 1px solid #f5d76e;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #78350f;
+    }
+    .dqc-warning strong {
+      font-size: 12.5px;
+      color: #92400e;
+    }
+    .dqc-warning[hidden] {
+      display: none !important;
     }
 
     .dqc-row {

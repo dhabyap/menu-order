@@ -190,11 +190,19 @@
                 <span class="dqc-val dqc-fee" id="deliveryQuoteFee">Rp0</span>
               </div>
             </div>
+            <div id="deliveryQuoteWarning" class="dqc-warning" hidden role="alert" aria-live="assertive">
+              <strong>⚠️ Alamat belum terverifikasi.</strong>
+              <div id="deliveryQuoteWarningMsg">Ongkir ini estimasi awal. Kurir akan mengonfirmasi biaya final sebelum pengantaran.</div>
+            </div>
             <label class="dqc-confirm" id="deliveryQuoteConfirmWrap">
               <input type="checkbox" id="deliveryQuoteConfirm">
-              <span>Konfirmasi alamat sudah benar</span>
+              <span id="deliveryQuoteConfirmLabel">Konfirmasi alamat sudah benar</span>
             </label>
-            <small class="dqc-expires">Berlaku 15 menit</small>
+            <label class="dqc-confirm" id="deliveryQuoteEstimateAcceptWrap" hidden>
+              <input type="checkbox" id="deliveryQuoteEstimateAccept">
+              <span>Saya mengerti ongkir ini masih estimasi dan bisa berubah.</span>
+            </label>
+            <small class="dqc-expires" id="deliveryQuoteExpires">Berlaku 15 menit</small>
           </div>
 
           <div id="deliveryQuoteError" class="delivery-quote-error" hidden role="alert" aria-live="assertive">

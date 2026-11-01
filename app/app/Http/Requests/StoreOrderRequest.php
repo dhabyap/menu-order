@@ -27,6 +27,7 @@ class StoreOrderRequest extends FormRequest
             'client_token' => ['nullable', 'string', 'max:64'],
             'address' => ['nullable', 'string', 'max:1000'],
             'delivery_quote_id' => ['nullable', 'string', 'max:5000'],
+            'delivery_quote_accepted' => ['nullable', 'boolean'],
             'service' => ['required', 'in:Ambil Sendiri,Antar'],
             'note' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', 'max:50'],
