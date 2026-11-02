@@ -41,37 +41,56 @@ class DeliveryQuoteService
         $baseFee = max(0, (int) ($settings['delivery_fee'] ?? config('store.delivery_fee', 0)));
 
         if ($fallback) {
-            $warning = 'Alamat belum terverifikasi. Ongkir Rp'.number_format($baseFee, 0, ',', '.').' adalah estimasi awal. Kurir akan mengonfirmasi biaya final sebelum pengantaran.';
-            return $this->buildBaseFeeQuote($address, $baseFee, $address, $warning);
-        }
-
-        $destination = null;
-        $routeMeters = null;
-        $source = 'base_fee';
-        $isEstimate = true;
-        $isBaseFee = true;
-        $warning = null;
-
-        try {
-            $destination = $this->geocodeChain($address);
-            if ($destination === null) {
-                throw new RuntimeException('Alamat tidak ditemukan.');
+            // Server should decide when to use base fee, not client.
+            // Attempt geocoding first. Only use base fee if geocoding fails.
+            $result = $this->geocodeChain($address);
+            if ($result !== null) {
+                $routeMeters = $this->routeWithFallback($originLat, $originLon, $result['lat'], $result['lon']);
+                if ($routeMeters === null) {
+                    throw new RuntimeException('Rute tidak dapat dihitung.');
+                }
+                $source = $result['provider'].'+'.($routeMeters['via_haversine'] ? 'haversine' : 'osrm');
+                $isEstimate = $routeMeters['via_haversine'];
+                $isBaseFee = false;
+                if ($routeMeters['via_haversine']) {
+                    $warning = 'Jarak dihitung sebagai estimasi karena rute jalan tidak tersedia. Ongkir final dikonfirmasi kurir.';
+                }
+            } else {
+                // Geocoding failed completely - use base fee
+                $isEstimate = true;
+                $isBaseFee = true;
+                $warning = 'Alamat belum terverifikasi. Ongkir Rp'.number_format($baseFee, 0, ',', '.').' adalah estimasi awal. Kurir akan mengonfirmasi biaya final sebelum pengantaran.';
             }
-            $routeMeters = $this->routeWithFallback($originLat, $originLon, $destination['lat'], $destination['lon']);
-            if ($routeMeters === null) {
-                throw new RuntimeException('Rute tidak dapat dihitung.');
-            }
-            $source = $destination['provider'].'+'.($routeMeters['via_haversine'] ? 'haversine' : 'osrm');
-            $isEstimate = $routeMeters['via_haversine'];
-            $isBaseFee = false;
-            if ($routeMeters['via_haversine']) {
-                $warning = 'Jarak dihitung sebagai estimasi karena rute jalan tidak tersedia. Ongkir final dikonfirmasi kurir.';
-            }
-        } catch (RuntimeException) {
+        } else {
+            // Normal flow - attempt geocoding
+            $destination = null;
+            $routeMeters = null;
+            $source = 'base_fee';
             $isEstimate = true;
             $isBaseFee = true;
-            $source = 'base_fee';
-            $warning = 'Alamat belum terverifikasi. Ongkir Rp'.number_format($baseFee, 0, ',', '.').' adalah estimasi awal. Kurir akan mengonfirmasi biaya final sebelum pengantaran.';
+            $warning = null;
+
+            try {
+                $destination = $this->geocodeChain($address);
+                if ($destination === null) {
+                    throw new RuntimeException('Alamat tidak ditemukan.');
+                }
+                $routeMeters = $this->routeWithFallback($originLat, $originLon, $destination['lat'], $destination['lon']);
+                if ($routeMeters === null) {
+                    throw new RuntimeException('Rute tidak dapat dihitung.');
+                }
+                $source = $destination['provider'].'+'.($routeMeters['via_haversine'] ? 'haversine' : 'osrm');
+                $isEstimate = $routeMeters['via_haversine'];
+                $isBaseFee = false;
+                if ($routeMeters['via_haversine']) {
+                    $warning = 'Jarak dihitung sebagai estimasi karena rute jalan tidak tersedia. Ongkir final dikonfirmasi kurir.';
+                }
+            } catch (RuntimeException) {
+                $isEstimate = true;
+                $isBaseFee = true;
+                $source = 'base_fee';
+                $warning = 'Alamat belum terverifikasi. Ongkir Rp'.number_format($baseFee, 0, ',', '.').' adalah estimasi awal. Kurir akan mengonfirmasi biaya final sebelum pengantaran.';
+            }
         }
 
         if ($isBaseFee) {
