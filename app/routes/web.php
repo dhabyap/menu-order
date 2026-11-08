@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StoreSettingsController;
+use App\Services\EventLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Route;
@@ -44,7 +45,21 @@ Route::middleware(['auth', 'log.activity'])->prefix('admin')->group(function () 
     Route::get('/orders/export', [OrderController::class, 'export'])->name('admin.orders.export');
     Route::get('/backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('admin.backups.index');
     Route::post('/backups/now', function () {
-        \Artisan::call(\App\Console\Commands\BackupDatabase::class);
+        $exitCode = \Artisan::call(\App\Console\Commands\BackupDatabase::class);
+
+        if ($exitCode !== 0) {
+            EventLogger::fail('backup.failed', [
+                'trigger' => 'web',
+                'exit_code' => $exitCode,
+                'user' => auth()->check() ? auth()->user()->email : null,
+            ]);
+            return response()->json([], 500);
+        }
+
+        EventLogger::success('backup.completed', [
+            'trigger' => 'web',
+            'filename' => 'unknown (Artisan exit 0)',
+        ]);
         return response()->json(['message' => 'Backup selesai.']);
     })->name('admin.backups.now');
     Route::get('/backups/download/{filename}', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('admin.backups.download');
@@ -56,5 +71,6 @@ Route::middleware(['auth', 'log.activity'])->prefix('admin')->group(function () 
     Route::patch('/products/{id}', [ProductController::class, 'toggle'])->whereNumber('id')->name('admin.products.toggle');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->whereNumber('id')->name('admin.products.delete');
     Route::get('/activity-log', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('admin.activity-log');
+    Route::get('/system-log', [App\Http\Controllers\Admin\ActivityLogController::class, 'systemLog'])->name('admin.system-log');
     Route::patch('/products/reorder', [ProductController::class, 'reorder'])->name('admin.products.reorder');
 });

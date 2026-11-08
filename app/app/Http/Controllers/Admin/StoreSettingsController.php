@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSettingsRequest;
+use App\Services\EventLogger;
 use App\Services\ProductImageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +52,30 @@ class StoreSettingsController extends Controller
         if (($newLogo || $request->boolean('remove_logo')) && $oldLogo) {
             Storage::disk('public')->delete($oldLogo);
         }
+
+        EventLogger::success('settings.updated', [
+            'changed_keys' => array_values(array_filter([
+                'whatsapp',
+                'delivery_fee',
+                'delivery_fee_per_km',
+                'delivery_included_km',
+                'delivery_rounding_km',
+                'delivery_max_km',
+                'store_address',
+                'store_maps_url',
+                'store_latitude',
+                'store_longitude',
+                'store_name',
+                'store_tagline',
+                'hero_heading',
+                'hero_description',
+                'marketing_badges',
+                'open_time',
+                'close_time',
+                'logo_path',
+            ])),
+            'store_name' => $data['store_name'],
+        ]);
 
         return back()->with('success', 'Pengaturan toko tersimpan.');
     }

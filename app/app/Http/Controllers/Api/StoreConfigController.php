@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\EventLogger;
 use App\Support\StoreBrand;
 use App\Support\StoreHours;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,14 @@ class StoreConfigController extends Controller
         $whatsapp = trim((string) ($settings['whatsapp'] ?? ''));
         if ($whatsapp === '') {
             $whatsapp = trim((string) config('store.whatsapp', ''));
+        }
+
+        // A checkout without a configured WhatsApp number is the single most
+        // common silent revenue leak — make it visible the moment it happens.
+        if ($whatsapp === '') {
+            EventLogger::rejected('store_config.whatsapp_missing', [
+                'reason' => 'whatsapp_not_configured',
+            ]);
         }
 
         $hours = StoreHours::fromSettings($settings->all());

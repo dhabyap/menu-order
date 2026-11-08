@@ -4,8 +4,6 @@
     document.getElementById("footerYear").textContent = new Date().getFullYear();
     let products = [];
     let deliveryFeeConfigured = 0;
-    let deliveryDistanceEnabled = false;
-    let deliveryQuote = null;
     let storeName = "Toko";
     let storeIsOpen = true;
     let storeStatusMessage = "";
@@ -35,9 +33,6 @@
 
         storeName = config.store_name || storeName;
         deliveryFeeConfigured = Number(config.delivery_fee) || 0;
-        deliveryDistanceEnabled = Boolean(config.delivery_enabled);
-        document.getElementById("btnCalculateDelivery").hidden = !deliveryDistanceEnabled;
-        document.getElementById("deliveryQuoteFeedback").textContent = deliveryDistanceEnabled ? "" : "Ongkir memakai tarif tetap. Pengelola dapat mengaktifkan hitung jarak dari dashboard.";
         document.getElementById("brandTitle").textContent = config.store_name;
         document.getElementById("footerStoreName").textContent = config.store_name;
         document.getElementById("footerCopyrightName").textContent = config.store_name;
@@ -365,7 +360,7 @@
     function updateCartUI() {
       const count = cart.reduce((s, x) => s + x.qty, 0);
       const subtotal = cart.reduce((s, x) => s + x.price * x.qty, 0);
-      const deliveryFee = service === "Antar" ? (deliveryDistanceEnabled ? (deliveryQuote?.fee ?? 0) : deliveryFeeConfigured) : 0;
+      const deliveryFee = service === "Antar" ? deliveryFeeConfigured : 0;
       const grandTotal = subtotal + deliveryFee;
 
       // Top header button
@@ -395,10 +390,9 @@
       document.getElementById("btnCheckoutTotal").textContent = fmt(grandTotal);
       document.getElementById("deliveryRow").style.display = service === "Antar" ? "flex" : "none";
       document.querySelector("#deliveryRow span:last-child").textContent = fmt(deliveryFee);
-      document.getElementById("deliveryDistanceLabel").textContent = deliveryQuote && service === "Antar" ? (deliveryQuote.distanceMeters != null ? `· ±${(deliveryQuote.distanceMeters / 1000).toFixed(1)} km` : "· Estimasi tarif dasar") : "";
+      document.getElementById("deliveryDistanceLabel").textContent = "";
       const checkoutButton = document.getElementById("btnCheckoutWA");
-      const estimateAcceptChecked = !deliveryQuote?.isEstimate || document.getElementById("deliveryQuoteEstimateAccept").checked;
-      checkoutButton.disabled = checkoutInFlight || count === 0 || !storeIsOpen || (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked || !estimateAcceptChecked));
+      checkoutButton.disabled = checkoutInFlight || count === 0 || !storeIsOpen;
       const checkoutHint = document.getElementById("checkoutHint");
       if (checkoutHint) {
         checkoutHint.textContent = !storeIsOpen ? (storeStatusMessage || "Toko sedang tutup.") : defaultCheckoutHint;
@@ -657,10 +651,6 @@
       openLayer(document.getElementById("cartDrawer"), document.getElementById("btnCloseCart"));
     }
     function closeCart() {
-      deliveryQuote = null;
-      document.getElementById("deliveryQuoteCard").hidden = true;
-      document.getElementById("deliveryQuoteError").hidden = true;
-      document.getElementById("deliveryQuoteConfirm").checked = false;
       closeLayer(document.getElementById("cartDrawer"));
     }
     document.getElementById("topCartBtn").onclick = openCart;
@@ -893,74 +883,6 @@
       if (el) el.textContent = "";
     }
 
-    function renderSuggestions(suggestions, original) {
-      const container = document.getElementById("dq-suggestions");
-      if (!suggestions.length) { container.innerHTML = ""; return; }
-      container.innerHTML = suggestions.map((s, i) => `<button class="dq-item" type="button" data-index="${i}" data-label="${escapeHtml(s.label).replace(/"/g,"&quot;")}" data-lat="${s.lat}" data-lon="${s.lon}">${escapeHtml(s.label)}</button>`).join("");
-      container.querySelectorAll(".dq-item").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.getElementById("inputAddress").value = btn.dataset.label;
-          selectSuggestion(Number(btn.dataset.lat), Number(btn.dataset.lon), btn.dataset.label);
-        });
-      });
-    }
-
-    function selectSuggestion(lat, lon, label) {
-      const feedback = document.getElementById("deliveryQuoteFeedback");
-      const button = document.getElementById("btnCalculateDelivery");
-      document.getElementById("dq-suggestions").innerHTML = "";
-      feedback.textContent = "Menggunakan alamat terpilih...";
-      button.disabled = true;
-      button.textContent = "Menghitung ongkir...";
-      fetch("/api/delivery-quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({ address: label, selected_lat: lat, selected_lon: lon }),
-      }).then(r => r.ok ? r.json() : Promise.reject(r)).then(result => {
-        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: result.distance_meters == null ? null : Number(result.distance_meters), address: label, isEstimate: Boolean(result.is_estimate), isBaseFee: Boolean(result.is_base_fee), quoteSource: result.quote_source || null, warning: result.warning || null };
-        document.getElementById("deliveryQuoteCard").hidden = false;
-        document.getElementById("deliveryQuoteDest").textContent = result.destination_label || label;
-        if (result.distance_km == null || result.is_base_fee) {
-          document.getElementById("deliveryQuoteDist").textContent = "Estimasi tarif dasar";
-          document.getElementById("deliveryQuoteDist").classList.add("dqc-estimate");
-        } else {
-          document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km${result.is_estimate ? " (estimasi)" : ""}`;
-          document.getElementById("deliveryQuoteDist").classList.remove("dqc-estimate");
-        }
-        document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
-        document.getElementById("deliveryQuoteConfirm").checked = false;
-        document.getElementById("deliveryQuoteEstimateAccept").checked = false;
-        const warningEl = document.getElementById("deliveryQuoteWarning");
-        if (result.warning) {
-          warningEl.hidden = false;
-          document.getElementById("deliveryQuoteWarningMsg").textContent = result.warning;
-        } else {
-          warningEl.hidden = true;
-        }
-        document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = !result.is_estimate;
-        document.getElementById("deliveryQuoteConfirmLabel").textContent = result.is_estimate ? "Saya sudah memeriksa alamat" : "Konfirmasi alamat sudah benar";
-        document.getElementById("deliveryQuoteError").hidden = true;
-        feedback.textContent = "";
-        updateCartUI();
-      }).catch((res) => {
-        deliveryQuote = null;
-        document.getElementById("deliveryQuoteCard").hidden = true;
-        if (res && res.json) {
-          res.json().then(data => {
-            const message = data.message || "Ongkir gagal dihitung.";
-            document.getElementById("deliveryQuoteErrorMsg").textContent = message;
-            document.getElementById("deliveryQuoteError").hidden = false;
-            feedback.textContent = "";
-          });
-        }
-      }).finally(() => {
-        button.disabled = false;
-        button.textContent = "Hitung ongkir";
-      });
-    }
-
-    const escapeHtml = (str) => String(str ?? "").replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
     document.getElementById("inputPhone").addEventListener("input", () => {
       clearPhoneError();
       showCheckoutFeedback("");
@@ -973,172 +895,8 @@
 
     document.getElementById("inputAddress").addEventListener("input", () => {
       clearAddressError();
-      deliveryQuote = null;
-      document.getElementById("deliveryQuoteConfirm").checked = false;
-      document.getElementById("deliveryQuoteCard").hidden = true;
-      document.getElementById("deliveryQuoteError").hidden = true;
-      document.getElementById("deliveryQuoteFeedback").textContent = "Alamat berubah. Hitung ulang ongkir.";
-      document.getElementById("dq-suggestions").innerHTML = "";
       updateCartUI();
     });
-
-    document.getElementById("btnCalculateDelivery").addEventListener("click", async (event) => {
-      const button = event.currentTarget;
-      const address = document.getElementById("inputAddress").value.trim();
-      const feedback = document.getElementById("deliveryQuoteFeedback");
-      const errorCard = document.getElementById("deliveryQuoteError");
-      const errorMsg = document.getElementById("deliveryQuoteErrorMsg");
-      const errorTitle = errorCard.querySelector(".dqe-title");
-      const successCard = document.getElementById("deliveryQuoteCard");
-
-      if (!address) {
-        feedback.textContent = "Masukkan alamat pengantaran terlebih dahulu.";
-        errorCard.hidden = true;
-        successCard.hidden = true;
-        document.getElementById("inputAddress").focus();
-        return;
-      }
-      button.disabled = true;
-      button.textContent = "Menghitung ongkir...";
-      errorCard.hidden = true;
-      successCard.hidden = true;
-      feedback.textContent = "Mencari alamat dan menghitung rute jalan...";
-      try {
-        const response = await fetch("/api/delivery-quote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({ address }),
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          if (result.suggestions && result.suggestions.length) {
-            renderSuggestions(result.suggestions, address);
-            feedback.textContent = "Pilih salah satu alamat di bawah ini.";
-            button.disabled = false;
-            button.textContent = "Hitung ongkir";
-            return;
-          }
-          const message = result.message || "Ongkir gagal dihitung.";
-          errorCard.hidden = false;
-          errorMsg.textContent = message;
-          errorTitle.textContent = message.includes("tidak ditemukan") ? "Alamat tidak ditemukan" : "Gagal menghitung ongkir";
-          feedback.textContent = "";
-          document.getElementById("dq-suggestions").innerHTML = "";
-          if (message.includes("tidak ditemukan")) {
-            const fallbackBtn = document.getElementById("btnDeliveryFallback");
-            if (fallbackBtn) {
-              fallbackBtn.hidden = false;
-              fallbackBtn.disabled = false;
-              fallbackBtn.textContent = "Gunakan tarif dasar";
-            }
-          }
-          throw new Error(message);
-        }
-        deliveryQuote = { id: result.quote_id, fee: Number(result.fee), distanceMeters: result.distance_meters == null ? null : Number(result.distance_meters), address, isEstimate: Boolean(result.is_estimate), isBaseFee: Boolean(result.is_base_fee), quoteSource: result.quote_source || null, warning: result.warning || null };
-        successCard.hidden = false;
-        document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
-        if (result.distance_km == null || result.is_base_fee) {
-          document.getElementById("deliveryQuoteDist").textContent = "Estimasi tarif dasar";
-          document.getElementById("deliveryQuoteDist").classList.add("dqc-estimate");
-        } else {
-          document.getElementById("deliveryQuoteDist").textContent = `± ${result.distance_km} km${result.is_estimate ? " (estimasi)" : ""}`;
-          document.getElementById("deliveryQuoteDist").classList.remove("dqc-estimate");
-        }
-        document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
-        document.getElementById("deliveryQuoteConfirm").checked = false;
-        document.getElementById("deliveryQuoteEstimateAccept").checked = false;
-        const warningEl = document.getElementById("deliveryQuoteWarning");
-        if (result.warning) {
-          warningEl.hidden = false;
-          document.getElementById("deliveryQuoteWarningMsg").textContent = result.warning;
-        } else {
-          warningEl.hidden = true;
-        }
-        document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = !result.is_estimate;
-        document.getElementById("deliveryQuoteConfirmLabel").textContent = result.is_estimate ? "Saya sudah memeriksa alamat" : "Konfirmasi alamat sudah benar";
-        const expiresEl = document.getElementById("deliveryQuoteExpires");
-        if (result.expires_at) {
-          const expDate = new Date(result.expires_at);
-          expiresEl.textContent = `Berlaku sampai ${expDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
-        }
-        document.getElementById("dq-suggestions").innerHTML = "";
-        errorCard.hidden = true;
-        feedback.textContent = "";
-        updateCartUI();
-      } catch (error) {
-        deliveryQuote = null;
-        successCard.hidden = true;
-        feedback.textContent = "";
-        updateCartUI();
-      } finally {
-        button.disabled = false;
-        button.textContent = "Hitung ongkir";
-      }
-    });
-
-    document.getElementById("deliveryQuoteConfirm").addEventListener("change", () => updateCartUI());
-    document.getElementById("deliveryQuoteEstimateAccept")?.addEventListener("change", () => updateCartUI());
-
-    // Reset estimate accept checkbox when address changes
-    document.getElementById("inputAddress").addEventListener("input", () => {
-      document.getElementById("deliveryQuoteEstimateAccept").checked = false;
-      document.getElementById("deliveryQuoteWarning").hidden = true;
-      document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = true;
-    });
-
-    // Delivery fallback: use base fee when geocode fails
-    function useDeliveryFallback() {
-      const address = document.getElementById("inputAddress").value.trim();
-      if (!address) return;
-      const feedback = document.getElementById("deliveryQuoteFeedback");
-      const errorCard = document.getElementById("deliveryQuoteError");
-      const successCard = document.getElementById("deliveryQuoteCard");
-      const fallbackBtn = document.getElementById("btnDeliveryFallback");
-      fallbackBtn.hidden = true;
-      fallbackBtn.disabled = true;
-      feedback.textContent = "Menghitung ongkir dengan tarif dasar...";
-      errorCard.hidden = true;
-      successCard.hidden = true;
-      fetch("/api/delivery-quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({ address, fallback: true }),
-      }).then(r => r.ok ? r.json() : Promise.reject(r)).then(result => {
-        deliveryQuote = {
-          id: result.quote_id,
-          fee: Number(result.fee),
-          distanceMeters: result.distance_meters == null ? null : Number(result.distance_meters),
-          address: address,
-          isEstimate: Boolean(result.is_estimate),
-          isBaseFee: Boolean(result.is_base_fee),
-          quoteSource: result.quote_source || "base_fee",
-          warning: result.warning || "Alamat tidak terdeteksi. Ongkir memakai tarif dasar; kurir bisa konfirmasi.",
-        };
-        successCard.hidden = false;
-        document.getElementById("deliveryQuoteDest").textContent = result.destination_label || address;
-        document.getElementById("deliveryQuoteDist").textContent = "Estimasi tarif dasar";
-        document.getElementById("deliveryQuoteDist").classList.add("dqc-estimate");
-        document.getElementById("deliveryQuoteFee").textContent = fmt(result.fee);
-        document.getElementById("deliveryQuoteConfirm").checked = false;
-        document.getElementById("deliveryQuoteEstimateAccept").checked = false;
-        const warningEl = document.getElementById("deliveryQuoteWarning");
-        warningEl.hidden = false;
-        document.getElementById("deliveryQuoteWarningMsg").textContent = result.warning || "Alamat tidak terdeteksi. Ongkir memakai tarif dasar; kurir bisa konfirmasi.";
-        document.getElementById("deliveryQuoteEstimateAcceptWrap").hidden = false;
-        document.getElementById("deliveryQuoteConfirmLabel").textContent = "Saya sudah memeriksa alamat";
-        document.getElementById("dq-suggestions").innerHTML = "";
-        feedback.textContent = "";
-        updateCartUI();
-      }).catch(() => {
-        deliveryQuote = null;
-        successCard.hidden = true;
-        feedback.textContent = "Gagal memuat tarif dasar. Coba lagi.";
-        errorCard.hidden = false;
-        updateCartUI();
-      });
-    }
-    document.getElementById("btnDeliveryFallback")?.addEventListener("click", useDeliveryFallback);
-
 
     function populateProfile() {
       if (profile.name) document.getElementById("inputName").value = profile.name;
@@ -1230,16 +988,6 @@
         document.getElementById("inputAddress").focus();
         return;
       }
-      if (service === "Antar" && deliveryDistanceEnabled && (!deliveryQuote || !document.getElementById("deliveryQuoteConfirm").checked)) {
-        showCheckoutFeedback("Hitung dan konfirmasi ongkir sebelum mengirim pesanan.");
-        document.getElementById("btnCalculateDelivery").focus();
-        return;
-      }
-      if (service === "Antar" && deliveryDistanceEnabled && deliveryQuote?.isEstimate && !document.getElementById("deliveryQuoteEstimateAccept").checked) {
-        showCheckoutFeedback("Centang konfirmasi estimasi ongkir untuk melanjutkan.");
-        document.getElementById("deliveryQuoteEstimateAccept").focus();
-        return;
-      }
       clearPhoneError();
       showCheckoutFeedback("");
 
@@ -1285,8 +1033,6 @@
             service,
             note,
             client_token: clientToken,
-            delivery_quote_id: service === "Antar" && deliveryDistanceEnabled ? deliveryQuote?.id : null,
-            delivery_quote_accepted: service === "Antar" && deliveryDistanceEnabled ? Boolean(deliveryQuote?.isEstimate) : undefined,
             items: itemsPayload,
           }),
         });
@@ -1337,6 +1083,7 @@ ${itemsText}
 -------------------------------------
 *Subtotal: ${fmt(subtotal)}*\n${(savedOrder.service || service) === "Antar" ? `Ongkos antar: ${fmt(delivery)}\n` : ""}\n*Total: ${fmt(total)}*
 
+${(savedOrder.service || service) === "Antar" ? "Ongkos antar final dikonfirmasi via WhatsApp setelah pesanan masuk." : ""}
 Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
 
       const targetPhone = savedOrder.whatsapp;
@@ -1382,7 +1129,7 @@ Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
       const addr = document.getElementById("inputAddress").value.trim();
       const note = document.getElementById("inputNote").value.trim();
       const subtotal = cart.reduce((s, x) => s + x.price * x.qty, 0);
-      const delivery = service === "Antar" ? (deliveryQuote?.fee ?? deliveryFeeConfigured) : 0;
+      const delivery = service === "Antar" ? deliveryFeeConfigured : 0;
       const items = cart.map((item, i) =>
         `${i + 1}. ${item.qty}x ${item.name} (${item.options.join(", ")}) — ${fmt(item.price * item.qty)}${item.note ? `\n   Catatan: ${item.note}` : ""}`,
       ).join("\n");

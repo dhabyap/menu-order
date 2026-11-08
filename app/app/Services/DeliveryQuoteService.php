@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\EventLogger;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -432,6 +433,10 @@ class DeliveryQuoteService
             ]);
 
         if (! $response->successful()) {
+            EventLogger::fail('quote.provider_error', [
+                'provider' => 'opencage',
+                'status' => $response->status(),
+            ]);
             return null;
         }
 
@@ -496,6 +501,10 @@ class DeliveryQuoteService
             ]);
 
         if (! $response->successful()) {
+            EventLogger::fail('quote.provider_error', [
+                'provider' => 'mapbox',
+                'status' => $response->status(),
+            ]);
             return null;
         }
 
@@ -616,6 +625,10 @@ class DeliveryQuoteService
             ]);
 
         if (! $response->successful()) {
+            EventLogger::fail('quote.provider_error', [
+                'provider' => 'nominatim',
+                'status' => $response->status(),
+            ]);
             return null;
         }
 
@@ -693,6 +706,11 @@ class DeliveryQuoteService
         $response = Http::acceptJson()->timeout(8)->get($url, ['overview' => 'false', 'steps' => 'false']);
         $distance = $response->json('routes.0.distance');
         if (! $response->successful() || $response->json('code') !== 'Ok' || ! is_numeric($distance) || $distance <= 0) {
+            EventLogger::fail('quote.provider_error', [
+                'provider' => 'osrm',
+                'status' => $response->status(),
+                'code' => $response->json('code'),
+            ]);
             throw new RuntimeException('Rute pengantaran tidak dapat dihitung.');
         }
 

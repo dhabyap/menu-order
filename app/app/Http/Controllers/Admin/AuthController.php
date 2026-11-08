@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\AdminAuthService;
+use App\Services\EventLogger;
 use Illuminate\Http\Request;
 
 /**
@@ -34,8 +35,16 @@ class AuthController extends Controller
         if ($this->adminAuth->attempt($credentials['email'], $credentials['password'], $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            EventLogger::success('admin.login.success', [
+                'email' => $request->user()?->email,
+            ]);
+
             return redirect()->intended('/admin');
         }
+
+        EventLogger::rejected('admin.login.failed', [
+            'email_attempted' => $credentials['email'],
+        ]);
 
         return back()
             ->withErrors(['email' => 'Email atau password salah.'])
@@ -47,9 +56,12 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $email = $request->user()?->email;
         auth()->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        EventLogger::success('admin.logout', ['email' => $email]);
 
         return redirect('/admin/login');
     }

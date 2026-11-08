@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LookupOrderRequest;
+use App\Services\EventLogger;
 use App\Support\OrderStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -50,6 +51,11 @@ class OrderLookupController extends Controller
             'items' => $this->items($row->items),
         ])->values()->all();
 
+        EventLogger::success('order.lookup', [
+            'phone_masked' => OrderLookupController::maskPhonePublic($phone),
+            'orders_found' => count($orders),
+        ]);
+
         return Response::json(['orders' => $orders]);
     }
 
@@ -67,6 +73,17 @@ class OrderLookupController extends Controller
         }
 
         return $digits;
+    }
+
+    /**
+     * Mask a phone number for public display. Keeps only the last 4 digits
+     * so lookups cannot be reverse-engineered to a real caller.
+     */
+    public static function maskPhonePublic(string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', $phone) ?? '';
+
+        return $digits === '' ? '****' : str_repeat('*', max(0, strlen($digits) - 4)).substr($digits, -4);
     }
 
     /**
@@ -127,8 +144,14 @@ class OrderLookupController extends Controller
      */
     public function showForm()
     {
+        $settings = $this->settings();
+
+        EventLogger::success('track.form', [
+            'code' => null,
+        ]);
+
         return view('track', [
-            'settings' => $this->settings(),
+            'settings' => $settings,
             'code' => null,
         ]);
     }
@@ -136,6 +159,7 @@ class OrderLookupController extends Controller
     public function showPublic(string $code)
     {
         $settings = $this->settings();
+        EventLogger::success('track.viewed', ['code' => $code]);
 
         $order = DB::table('orders')
             ->where('code', $code)

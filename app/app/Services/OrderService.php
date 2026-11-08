@@ -50,68 +50,122 @@ class OrderService
         if ($clientToken !== '') {
             $existing = DB::table('orders')->where('client_token', $clientToken)->first();
             if ($existing) {
+                EventLogger::success('order.duplicate', [
+                    'order_id' => $existing->id,
+                    'client_token' => $clientToken,
+                ]);
+
                 return $this->resultFromOrder($existing);
             }
         }
 
         if ($data['service'] === 'Antar' && empty($data['address'])) {
+            EventLogger::rejected('order.rejected', ['reason' => 'address_required']);
             throw new RuntimeException(self::MESSAGE_ADDRESS_REQUIRED);
         }
 
-        $this->ensureStoreIsOpen();
-        $deliveryQuote = null;
-        if ($data['service'] === 'Antar') {
-            $hasConfiguredOrigin = DB::table('store_settings')->where('key', 'store_latitude')->value('value') !== null
-                && DB::table('store_settings')->where('key', 'store_longitude')->value('value') !== null;
-            if ($hasConfiguredOrigin) {
-                if (empty($data['delivery_quote_id'])) {
-                    throw new RuntimeException('Hitung dan konfirmasi ongkir sebelum membuat pesanan.');
-                }
+        try {
+            $this->ensureStoreIsOpen();
+            $deliveryQuote = null;
+            if ($data['service'] === 'Antar' && !empty($data['delivery_quote_id'])) {
                 $deliveryQuote = $this->deliveryQuotes->validateQuote($data['delivery_quote_id'], $data['address']);
             }
-        }
 
-        $products = DB::table('products')
-            ->whereIn('prototype_id', collect($data['items'])->pluck('product_id'))
-            ->where('available', true)
-            ->get()
-            ->keyBy('prototype_id');
+            $products = DB::table('products')
+                ->whereIn('prototype_id', collect($data['items'])->pluck('product_id'))
+                ->where('available', true)
+                ->get()
+                ->keyBy('prototype_id');
 
-        if ($products->count() !== count($data['items'])) {
-            throw new RuntimeException(self::MESSAGE_PRODUCT_UNAVAILABLE);
-        }
+            if ($products->count() !== count($data['items'])) {
+                EventLogger::rejected('order.rejected', ['reason' => 'product_unavailable']);
+                throw new RuntimeException(self::MESSAGE_PRODUCT_UNAVAILABLE);
+            }
 
-        [$items, $subtotal] = $this->buildItems($data['items'], $products);
+            [$items, $subtotal] = $this->buildItems($data['items'], $products);
 
-        $deliveryFee = DB::table('store_settings')->where('key', 'delivery_fee')->value('value');
-        $whatsapp = $this->resolveWhatsApp();
-        if ($whatsapp === '') {
-            throw new RuntimeException(self::MESSAGE_WHATSAPP_NOT_CONFIGURED);
-        }
+            $deliveryFee = DB::table('store_settings')->where('key', 'delivery_fee')->value('value');
+            $whatsapp = $this->resolveWhatsApp();
+            if ($whatsapp === '') {
+                EventLogger::rejected('order.rejected', ['reason' => 'whatsapp_not_configured']);
+                throw new RuntimeException(self::MESSAGE_WHATSAPP_NOT_CONFIGURED);
+            }
 
-        $fee = $data['service'] === 'Antar'
-            ? (int) ($deliveryQuote['fee'] ?? $deliveryFee ?? config('store.delivery_fee', 0))
-            : 0;
-        $baseFeeSnapshot = $deliveryQuote['base_fee'] ?? ($data['service'] === 'Antar' ? $fee : 0);
-        $variableFeeSnapshot = $deliveryQuote ? max(0, $fee - (int) $baseFeeSnapshot) : 0;
-        $total = $subtotal + $fee;
-        $code = 'RT-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
+            $fee = $data['service'] === 'Antar'
+                ? (int) ($deliveryQuote['fee'] ?? $deliveryFee ?? config('store.delivery_fee', 0))
+                : 0;
+            $baseFeeSnapshot = $deliveryQuote['base_fee'] ?? ($data['service'] === 'Antar' ? $fee : 0);
+            $variableFeeSnapshot = $deliveryQuote ? max(0, $fee - (int) $baseFeeSnapshot) : 0;
+            $total = $subtotal + $fee;
+            $code = 'RT-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
 
-        // When quote is an estimate, require explicit customer acceptance
-        if (($deliveryQuote['is_estimate'] ?? false) && empty($data['delivery_quote_accepted'])) {
-            throw new RuntimeException('Ongkir ini masih estimasi. Centang konfirmasi estimasi ongkir untuk melanjutkan.');
-        }
+            // When quote is an estimate, require explicit customer acceptance
+            if (($deliveryQuote['is_estimate'] ?? false) && empty($data['delivery_quote_accepted'])) {
+                EventLogger::rejected('order.rejected', ['reason' => 'delivery_quote_estimate']);
+                throw new RuntimeException('Ongkir ini masih estimasi. Centang konfirmasi estimasi ongkir untuk melanjutkan.');
+            }
 
-        $quoteSource = $deliveryQuote['quote_source'] ?? null;
-        $isEstimate = (bool) ($deliveryQuote['is_estimate'] ?? false);
-        $deliveryLat = $deliveryQuote['lat'] ?? null;
-        $deliveryLon = $deliveryQuote['lon'] ?? null;
-        $confirmedAt = $deliveryQuote !== null ? now() : null;
+            $quoteSource = $deliveryQuote['quote_source'] ?? null;
+            $isEstimate = (bool) ($deliveryQuote['is_estimate'] ?? false);
+            $deliveryLat = $deliveryQuote['lat'] ?? null;
+            $deliveryLon = $deliveryQuote['lon'] ?? null;
+            $confirmedAt = $deliveryQuote !== null ? now() : null;
 
-        try {
-            $id = DB::table('orders')->insertGetId([
+            try {
+                $id = DB::table('orders')->insertGetId([
+                    'code' => $code,
+                    'client_token' => $clientToken !== '' ? $clientToken : null,
+                    'customer_name' => $data['name'],
+                    'phone' => $data['phone'],
+                    'address' => $data['address'] ?? null,
+                    'service' => $data['service'],
+                    'note' => $data['note'] ?? null,
+                    'subtotal' => $subtotal,
+                    'service_fee' => $fee,
+                    'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
+                    'delivery_base_fee' => $baseFeeSnapshot,
+                    'delivery_variable_fee' => $variableFeeSnapshot,
+                    'delivery_quote_source' => $quoteSource,
+                    'delivery_is_estimate' => $isEstimate,
+                    'delivery_lat' => $deliveryLat,
+                    'delivery_lon' => $deliveryLon,
+                    'delivery_confirmed_at' => $confirmedAt,
+                    'total' => $total,
+                    'status' => 'pending',
+                    'items' => json_encode($items),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                EventLogger::success('order.created', [
+                    'order_id' => $id,
+                    'code' => $code,
+                    'total' => $total,
+                    'service' => $data['service'],
+                    'items_count' => count($items),
+                    'quote_source' => $quoteSource,
+                    'is_estimate' => $isEstimate,
+                ]);
+            } catch (QueryException $e) {
+                // A concurrent request may have inserted the same token first.
+                if ($clientToken !== '') {
+                    $existing = DB::table('orders')->where('client_token', $clientToken)->first();
+                    if ($existing) {
+                        return $this->resultFromOrder($existing);
+                    }
+                }
+
+                EventLogger::fail('order.db_failed', [
+                    'sql_state' => $e->getSqlState(),
+                    'client_token' => $clientToken,
+                ]);
+
+                throw new RuntimeException('Tidak dapat menyimpan pesanan. Silakan coba lagi beberapa saat lagi.', $e->getCode(), $e);
+            }
+
+            return [
+                'id' => $id,
                 'code' => $code,
-                'client_token' => $clientToken !== '' ? $clientToken : null,
                 'customer_name' => $data['name'],
                 'phone' => $data['phone'],
                 'address' => $data['address'] ?? null,
@@ -119,47 +173,15 @@ class OrderService
                 'note' => $data['note'] ?? null,
                 'subtotal' => $subtotal,
                 'service_fee' => $fee,
-                'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
-                'delivery_base_fee' => $baseFeeSnapshot,
-                'delivery_variable_fee' => $variableFeeSnapshot,
-                'delivery_quote_source' => $quoteSource,
-                'delivery_is_estimate' => $isEstimate,
-                'delivery_lat' => $deliveryLat,
-                'delivery_lon' => $deliveryLon,
-                'delivery_confirmed_at' => $confirmedAt,
                 'total' => $total,
-                'status' => 'pending',
-                'items' => json_encode($items),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } catch (QueryException $e) {
-            // A concurrent request may have inserted the same token first.
-            if ($clientToken !== '') {
-                $existing = DB::table('orders')->where('client_token', $clientToken)->first();
-                if ($existing) {
-                    return $this->resultFromOrder($existing);
-                }
-            }
-
+                'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
+                'items' => $items,
+                'whatsapp' => $whatsapp,
+            ];
+        } catch (RuntimeException $e) {
+            // Business rejections already logged at their throw site.
             throw $e;
         }
-
-        return [
-            'id' => $id,
-            'code' => $code,
-            'customer_name' => $data['name'],
-            'phone' => $data['phone'],
-            'address' => $data['address'] ?? null,
-            'service' => $data['service'],
-            'note' => $data['note'] ?? null,
-            'subtotal' => $subtotal,
-            'service_fee' => $fee,
-            'total' => $total,
-            'delivery_distance_meters' => $deliveryQuote['distance_meters'] ?? null,
-            'items' => $items,
-            'whatsapp' => $whatsapp,
-        ];
     }
 
     /**
@@ -216,6 +238,7 @@ class OrderService
             $extra = 0;
 
             if (count($options) !== count($availableOptions)) {
+                EventLogger::rejected('order.rejected', ['reason' => 'option_required']);
                 throw new RuntimeException(self::MESSAGE_OPTION_REQUIRED);
             }
 
@@ -224,6 +247,7 @@ class OrderService
                 $option = $valid ? collect($valid['options'])->firstWhere('label', $choice) : null;
 
                 if (! $option) {
+                    EventLogger::rejected('order.rejected', ['reason' => 'option_invalid']);
                     throw new RuntimeException(self::MESSAGE_OPTION_INVALID);
                 }
 
@@ -260,6 +284,10 @@ class OrderService
         $hours = StoreHours::fromSettings($settings);
 
         if (! $hours->isOpen()) {
+            EventLogger::rejected('order.rejected', [
+                'reason' => 'store_closed',
+                'context' => ['open_time' => $hours->openTime(), 'close_time' => $hours->closeTime()],
+            ]);
             throw new RuntimeException(sprintf(
                 self::MESSAGE_STORE_CLOSED,
                 $hours->openTime(),

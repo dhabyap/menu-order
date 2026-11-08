@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeliveryQuoteRequest;
 use App\Services\DeliveryQuoteService;
+use App\Services\EventLogger;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
 use Throwable;
@@ -19,18 +20,37 @@ class DeliveryQuoteController extends Controller
             $selectedLon = $request->input('selected_lon');
             $fallback = (bool) $request->boolean('fallback');
 
+            $result = null;
             if ($selectedLat !== null && $selectedLon !== null) {
-                return response()->json($quotes->quoteForCoordinates(
+                $result = $quotes->quoteForCoordinates(
                     $address,
                     (float) $selectedLat,
                     (float) $selectedLon
-                ));
+                );
+            } else {
+                $result = $quotes->quote($address, $fallback);
             }
 
-            return response()->json($quotes->quote($address, $fallback));
+            EventLogger::success('quote.calculated', [
+                'fee' => $result['fee'] ?? 0,
+                'distance_m' => $result['distance_meters'] ?? null,
+                'source' => $result['quote_source'] ?? null,
+                'is_estimate' => (bool) ($result['is_estimate'] ?? false),
+            ]);
+
+            return response()->json($result);
         } catch (RuntimeException $error) {
+            EventLogger::rejected('quote.failed', [
+                'reason' => $error->getMessage(),
+            ]);
+
             return response()->json(['message' => $error->getMessage()], 422);
         } catch (Throwable $error) {
+            EventLogger::fail('quote.failed', [
+                'reason' => $error->getMessage(),
+                'exception_class' => get_class($error),
+            ]);
+
             report($error);
 
             return response()->json(['message' => 'Estimasi ongkir sementara gagal. Coba lagi nanti.'], 503);

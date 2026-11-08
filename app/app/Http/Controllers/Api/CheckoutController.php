@@ -25,6 +25,7 @@ class CheckoutController extends Controller
         try {
             $result = $this->orders->create($request->validated());
         } catch (RuntimeException $e) {
+            // order.rejected already logged at the throw site in OrderService.
             return Response::json(['message' => $e->getMessage()], 422);
         }
 

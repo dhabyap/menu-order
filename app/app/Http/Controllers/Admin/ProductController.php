@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
+use App\Services\EventLogger;
 use App\Services\ProductImageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -24,7 +25,7 @@ class ProductController extends Controller
         $categoryId = $this->syncCategory($data['category']);
         $imagePath = $request->hasFile('image') ? $this->images->store($request->file('image')) : null;
 
-        DB::table('products')->insert([
+        $product = DB::table('products')->insert([
             'category_id' => $categoryId,
             'prototype_id' => (string) Str::uuid(),
             'name' => $data['name'],
@@ -37,6 +38,13 @@ class ProductController extends Controller
             'sort_order' => DB::table('products')->max('sort_order') + 1,
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+
+        EventLogger::success('product.created', [
+            'subject_type' => 'product',
+            'subject_id' => $product,
+            'name' => $data['name'],
+            'price' => $data['price'],
         ]);
 
         return back()->with('success', 'Menu baru berhasil ditambahkan.');
@@ -77,6 +85,18 @@ class ProductController extends Controller
             $this->images->delete($product->image_path);
         }
 
+        EventLogger::success('product.updated', [
+            'subject_type' => 'product',
+            'subject_id' => $id,
+            'name' => $data['name'],
+            'changed_fields' => [
+                'name' => $data['name'] !== $product->name,
+                'price' => $data['price'] !== $product->price,
+                'description' => ($data['description'] ?? '') !== $product->description,
+                'image_path' => $imagePath !== $product->image_path,
+            ],
+        ]);
+
         return back()->with('success', 'Perubahan menu berhasil disimpan.');
     }
 
@@ -92,6 +112,12 @@ class ProductController extends Controller
             'updated_at' => now(),
         ]);
 
+        EventLogger::success('product.unavailable', [
+            'subject_type' => 'product',
+            'subject_id' => $id,
+            'available' => ! $available,
+        ]);
+
         return back();
     }
 
@@ -105,6 +131,12 @@ class ProductController extends Controller
 
         DB::table('products')->where('id', $id)->delete();
         $this->images->delete($product->image_path);
+
+        EventLogger::success('product.deleted', [
+            'subject_type' => 'product',
+            'subject_id' => $id,
+            'name' => $product->name,
+        ]);
 
         return back();
     }

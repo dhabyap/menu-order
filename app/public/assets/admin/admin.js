@@ -1,3 +1,48 @@
+// --- Client-side error reporting (admin dashboard) ---
+// Same mechanism as the customer catalog: uncaught errors and unhandled
+// promise rejections are sent to /api/client-logs so operators can see what
+// broke in the dashboard without asking the admin to check dev tools.
+(function initAdminErrorReporting() {
+  let lastRequestId = null;
+  window.addEventListener("error", (event) => {
+    reportAdminError(event.error?.message || String(event.error), {
+      stack: event.error?.stack,
+      line: event.lineno,
+      col: event.colno,
+    });
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason && (event.reason.message || event.reason);
+    reportAdminError(String(reason), { stack: event.reason?.stack });
+  });
+  window.fetch = (async function (originalFetch) {
+    return function (...args) {
+      const response = await originalFetch.apply(this, args);
+      const header = response.headers.get("X-Request-Id");
+      if (header) lastRequestId = header;
+      return response;
+    };
+  })(window.fetch);
+
+  function reportAdminError(message, details = {}) {
+    if (lastRequestId) details.request_id = lastRequestId;
+    details.url = location.href;
+    fetch("/api/client-logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        message: String(message).slice(0, 1000),
+        stack: details.stack ? String(details.stack).slice(0, 4000) : null,
+        line: details.line,
+        col: details.col,
+        source: "admin",
+        url: details.url,
+        request_id: details.request_id,
+      }),
+    }).catch(() => {});
+  }
+})();
+
 document.querySelectorAll('.edit-trigger-button').forEach((button) => {
     button.addEventListener('click', () => {
         const row = button.closest('tr');
@@ -561,4 +606,52 @@ if (recentActivityBody) {
     };
     loadRecentActivity();
     setInterval(loadRecentActivity, 60000);
+}
+
+const systemLogBody = document.getElementById('system-log-body');
+if (systemLogBody) {
+    let currentFilter = 'all';
+
+    const loadSystemLog = async (level = currentFilter) => {
+        try {
+            const url = level && level !== 'all' ? `/admin/system-log?level=${encodeURIComponent(level)}` : '/admin/system-log';
+            const response = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const data = await response.json();
+            const events = Array.isArray(data.events) ? data.events.slice(0, 20) : [];
+
+            if (!events.length) {
+                systemLogBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted);">Belum ada catatan sistem.</td></tr>';
+                return;
+            }
+
+            systemLogBody.innerHTML = events.map(evt => {
+                const date = new Date(evt.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' });
+                const reqId = evt.request_id ? `<code>${escapeHtml(evt.request_id.slice(0, 8))}…</code>` : '—';
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td><span class="order-status status-${escapeHtml(evt.level)}">${escapeHtml(evt.level)}</span></td>
+                        <td><code>${escapeHtml(evt.event)}</code></td>
+                        <td>${escapeHtml(evt.message || '—')}</td>
+                        <td>${reqId}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch {
+            systemLogBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted);">Gagal memuat log sistem.</td></tr>';
+        }
+    };
+
+    document.querySelectorAll('#system-log-filters [data-level]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentFilter = btn.dataset.level;
+            document.querySelectorAll('#system-log-filters [data-level]').forEach(b => b.classList.remove('button-primary'));
+            btn.classList.add('button-primary');
+            loadSystemLog(currentFilter);
+        });
+    });
+
+    loadSystemLog();
+    setInterval(() => loadSystemLog(currentFilter), 30000);
 }

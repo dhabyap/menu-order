@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ActivityLog extends Model
 {
+    use HasFactory;
+
     protected $table = 'activity_logs';
 
     protected $fillable = [
@@ -16,8 +19,11 @@ class ActivityLog extends Model
         'user_agent',
     ];
 
-    public function scopeLatest($query, int $limit = 50)
+    protected function casts(): array
     {
-        return $query->latest()->limit($limit);
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
     }
 }

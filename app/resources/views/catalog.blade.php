@@ -168,53 +168,7 @@
           <label for="inputAddress">Alamat Pengantaran *</label>
           <textarea id="inputAddress" autocomplete="street-address" maxlength="1000" rows="2" aria-describedby="addressError" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>
           <span class="field-error" id="addressError" aria-live="polite"></span>
-          <button class="btn-sec-action" type="button" id="btnCalculateDelivery" hidden>Hitung ongkir</button>
-          <p class="field-hint">Alamat digunakan untuk mencari rute dan menghitung estimasi ongkir.</p>
-          <div id="dq-suggestions" class="dq-suggestions" role="listbox" aria-label="Saran alamat"></div>
-
-          <div id="deliveryQuoteCard" class="delivery-quote-card" hidden aria-live="polite">
-            <div class="dqc-head">
-              <span class="dqc-icon">📍</span>
-              <div class="dqc-main">
-                <div class="dqc-label">Tujuan pengantaran</div>
-                <div class="dqc-dest" id="deliveryQuoteDest">—</div>
-              </div>
-            </div>
-            <div class="dqc-rows">
-              <div class="dqc-row">
-                <span class="dqc-key">Estimasi rute</span>
-                <span class="dqc-val" id="deliveryQuoteDist">—</span>
-              </div>
-              <div class="dqc-row dqc-row-fee">
-                <span class="dqc-key">Ongkos kirim</span>
-                <span class="dqc-val dqc-fee" id="deliveryQuoteFee">Rp0</span>
-              </div>
-            </div>
-            <div id="deliveryQuoteWarning" class="dqc-warning" hidden role="alert" aria-live="assertive">
-              <strong>⚠️ Alamat belum terverifikasi.</strong>
-              <div id="deliveryQuoteWarningMsg">Ongkir ini estimasi awal. Kurir akan mengonfirmasi biaya final sebelum pengantaran.</div>
-            </div>
-            <label class="dqc-confirm" id="deliveryQuoteConfirmWrap">
-              <input type="checkbox" id="deliveryQuoteConfirm">
-              <span id="deliveryQuoteConfirmLabel">Konfirmasi alamat sudah benar</span>
-            </label>
-            <label class="dqc-confirm" id="deliveryQuoteEstimateAcceptWrap" hidden>
-              <input type="checkbox" id="deliveryQuoteEstimateAccept">
-              <span>Saya mengerti ongkir ini masih estimasi dan bisa berubah.</span>
-            </label>
-            <small class="dqc-expires" id="deliveryQuoteExpires">Berlaku 15 menit</small>
-          </div>
-
-          <div id="deliveryQuoteError" class="delivery-quote-error" hidden role="alert" aria-live="assertive">
-            <span class="dqe-icon">⚠️</span>
-            <div class="dqe-main">
-              <div class="dqe-title">Alamat tidak ditemukan</div>
-              <div class="dqe-msg" id="deliveryQuoteErrorMsg">Masukkan alamat yang lebih lengkap.</div>
-              <button class="btn-action-text" type="button" id="btnDeliveryFallback" hidden>Gunakan tarif dasar</button>
-            </div>
-          </div>
-
-          <p id="deliveryQuoteFeedback" class="checkout-hint" role="status" aria-live="polite"></p>
+          <p class="field-hint">Tulis alamat lengkap. Ongkir akan dikonfirmasi melalui WhatsApp setelah pesanan masuk.</p>
         </div>
 
         <div class="field">

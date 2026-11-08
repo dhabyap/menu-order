@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\EventLogger;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -32,15 +33,33 @@ class BackupDatabase extends Command
         $filename = 'backup-'.now()->format('Y-m-d_His').'.sql';
         $target = $backupDir.'/'.$filename;
 
+        EventLogger::success('backup.started', [
+            'trigger' => app()->runningInConsole() ? 'cli' : 'web',
+            'user' => auth()->check() ? auth()->user()->email : null,
+        ], null);
+
+        $startedAt = microtime(true);
         $sql = $this->dumpSql();
 
         if ($sql === false) {
             $this->error('Gagal membuat backup database.');
+            EventLogger::fail('backup.failed', [
+                'trigger' => app()->runningInConsole() ? 'cli' : 'web',
+                'reason' => 'dump_sql_failed',
+                'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            ]);
             return 1;
         }
 
         file_put_contents($target, $sql);
         $this->info('Backup dibuat: '.$target);
+
+        EventLogger::success('backup.completed', [
+            'trigger' => app()->runningInConsole() ? 'cli' : 'web',
+            'filename' => $filename,
+            'size_bytes' => filesize($target),
+            'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
 
         $this->purgeOldBackups($backupDir);
 
@@ -105,6 +124,10 @@ class BackupDatabase extends Command
 
             $sql .= "\n";
         } catch (\Exception $e) {
+            EventLogger::fail('backup.table_failed', [
+                'table' => $table,
+                'exception' => $e->getMessage(),
+            ]);
             $sql .= "-- Warning: failed to dump table {$table}: ".$e->getMessage()."\n\n";
         }
 

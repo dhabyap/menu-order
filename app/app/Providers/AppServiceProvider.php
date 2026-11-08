@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\PurgeOldLogs;
 use App\Support\StoreBrand;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 

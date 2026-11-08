@@ -52,6 +52,27 @@
                     <tbody id="recent-activity-body"></tbody>
                 </table>
             </div>
+
+            <div class="panel-heading" style="margin-top: 24px;">
+                <div>
+                    <h2>Log Sistem</h2>
+                    <p>Peristiwa terstruktur dari seluruh aplikasi — checkout, login, backup, error browser.</p>
+                </div>
+                <div class="tab-actions" id="system-log-filters">
+                    <button class="button button-soft button-small" data-level="all" type="button">Semua</button>
+                    <button class="button button-soft button-small" data-level="critical" type="button">Critical</button>
+                    <button class="button button-soft button-small" data-level="error" type="button">Error</button>
+                    <button class="button button-soft button-small" data-level="warning" type="button">Warning</button>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table class="orders-table" id="system-log-table">
+                    <thead><tr><th>Waktu</th><th>Level</th><th>Peristiwa</th><th>Deskripsi</th><th>Request ID</th></tr></thead>
+                    <tbody id="system-log-body">
+                        <tr><td colspan="5" style="text-align:center; color: var(--muted);">Memuat…</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <section class="panel tab-panel" data-tab="menu" aria-labelledby="tab-menu-title">

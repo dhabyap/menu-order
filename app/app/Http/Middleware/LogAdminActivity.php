@@ -3,17 +3,13 @@
 namespace App\Http\Middleware;
 
 use App\Models\ActivityLog;
+use App\Services\EventLogger;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class LogAdminActivity
 {
-    /**
-     * Routes that should NOT be logged (GET dashboard/stats).
-     */
-    private const EXCLUDED_METHODS = ['GET'];
-
     private const ACTION_DESCRIPTIONS = [
         'admin.products.create' => 'Menambahkan menu baru',
         'admin.products.update' => 'Mengubah menu',
@@ -25,36 +21,71 @@ class LogAdminActivity
         'admin.backups.now' => 'Membuat backup database',
     ];
 
+    /**
+     * Sensitive read actions that touch customer data — audited even though
+     * they are GETs.
+     */
+    private const AUDITED_GET_EVENTS = [
+        'admin.orders.export' => 'data.exported',
+        'admin.backups.download' => 'admin.backup_downloaded',
+        'admin.orders.show' => 'admin.order_viewed',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
         $routeName = $request->route()?->getName();
 
-        if (! $routeName || ! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        if (! $routeName || ! str_starts_with($routeName, 'admin.')) {
             return $response;
         }
 
-        if (! str_starts_with($routeName, 'admin.')) {
+        // Sensitive GET actions are always audited (they expose customer data).
+        if (isset(self::AUDITED_GET_EVENTS[$routeName])) {
+            EventLogger::success(self::AUDITED_GET_EVENTS[$routeName], [
+                'route' => $routeName,
+                'description' => $this->buildDescription($request, $routeName),
+            ]);
+            return $response;
+        }
+
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
             return $response;
         }
 
         $description = $this->buildDescription($request, $routeName);
 
-        ActivityLog::create([
-            'user_email' => $request->user()?->email,
-            'action' => $routeName,
-            'description' => $description,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        // 4xx/5xx means the mutation did not actually happen — do not write a
+        // success row into the audit table; still record the attempt so failed
+        // mutations are discoverable.
+        if ($response->getStatusCode() < 400) {
+            ActivityLog::create([
+                'user_email' => $request->user()?->email,
+                'action' => $routeName,
+                'description' => $description,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            EventLogger::success('admin.action.success', [
+                'route' => $routeName,
+                'description' => $description,
+            ]);
+        } else {
+            EventLogger::rejected('admin.action.failed', [
+                'route' => $routeName,
+                'description' => $description,
+                'status' => $response->getStatusCode(),
+            ]);
+        }
 
         return $response;
     }
 
     private function buildDescription(Request $request, string $routeName): string
     {
-        $base = self::ACTION_DESCRIPTIONS[$routeName] ?? 'Aksi admin: '.$routeName;
+        $base = self::ACTION_DESCRIPTIONS[$routeName] ?? (self::AUDITED_GET_EVENTS[$routeName] ?? 'Aksi admin: '.$routeName);
 
         switch ($routeName) {
             case 'admin.products.create':
@@ -73,6 +104,12 @@ class LogAdminActivity
             case 'admin.settings.update':
                 $name = $request->input('store_name');
                 return $name ? "Mengubah pengaturan toko: {$name}" : 'Mengubah pengaturan toko';
+            case 'admin.orders.export':
+                return 'Mengunduh daftar pesanan (CSV)';
+            case 'admin.backups.download':
+                return 'Mengunduh backup: '.$request->route('filename');
+            case 'admin.orders.show':
+                return 'Melihat detail pesanan #'.$request->route('id');
             default:
                 return $base;
         }

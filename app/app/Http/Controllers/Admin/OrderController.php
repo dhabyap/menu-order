@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\EventLogger;
 use App\Support\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -96,9 +97,18 @@ class OrderController extends Controller
             'status' => ['required', Rule::in(array_keys(OrderStatus::labels()))],
         ]);
 
+        $oldStatus = DB::table('orders')->where('id', $id)->value('status');
+
         DB::table('orders')->where('id', $id)->update([
             'status' => $data['status'],
             'updated_at' => now(),
+        ]);
+
+        EventLogger::success('order.status_changed', [
+            'subject_type' => 'order',
+            'subject_id' => $id,
+            'from' => $oldStatus,
+            'to' => $data['status'],
         ]);
 
         return response()->json([
