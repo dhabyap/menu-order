@@ -15,8 +15,8 @@
     const reason = event.reason && (event.reason.message || event.reason);
     reportAdminError(String(reason), { stack: event.reason?.stack });
   });
-  window.fetch = (async function (originalFetch) {
-    return function (...args) {
+  window.fetch = (function (originalFetch) {
+    return async function (...args) {
       const response = await originalFetch.apply(this, args);
       const header = response.headers.get("X-Request-Id");
       if (header) lastRequestId = header;
