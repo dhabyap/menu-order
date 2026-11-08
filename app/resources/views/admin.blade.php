@@ -130,7 +130,7 @@
                 </div>
             </div>
             <div class="settings-panel">
-                @include('admin.partials.settings')
+                @include('admin.partials.settings', ['hideOwnHeading' => true])
             </div>
         </section>
     </main>
