@@ -1,7 +1,7 @@
-        <details class="settings-details" {{ empty($hideOwnHeading ?? false) ? 'open' : '' }}>
-            @if(empty($hideOwnHeading ?? false))
-                <summary>Pengaturan Toko</summary>
-            @endif
+        @if(empty($hideOwnHeading ?? false))
+        <details class="settings-details" open>
+            <summary>Pengaturan Toko</summary>
+        @endif
             <div class="settings-content">
                 <form method="post" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data">
                     @csrf
@@ -49,5 +49,7 @@
                 </form>
 
             </div>
+            @if(empty($hideOwnHeading ?? false))
         </details>
+            @endif
 
