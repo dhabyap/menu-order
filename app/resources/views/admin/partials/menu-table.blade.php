@@ -6,7 +6,7 @@
 
             <div class="table-scroll">
                 <table class="menu-table">
-                    <thead><tr><th style="width:40px" aria-label="Urutkan">☰</th><th>Menu Minuman</th><th>Kategori</th><th>Harga Dasar</th><th>Status Stok</th><th style="text-align:right">Tindakan</th></tr></thead>
+                    <thead><tr><th style="width:40px" aria-label="Urutkan">☰</th><th>Menu Minuman</th><th>Kategori</th><th>Harga Dasar</th><th>Status Stok</th><th>Rekomendasi</th><th style="text-align:right">Tindakan</th></tr></thead>
                     <tbody id="products-table-body">
                     @forelse($products as $product)
                         <tr data-id="{{ $product->id }}" data-name="{{ $product->name }}" data-category="{{ $product->category ?: '' }}">
@@ -15,6 +15,7 @@
                             <td><span class="category-pill">{{ $product->category ?: 'Tanpa kategori' }}</span></td>
                             <td><strong>Rp{{ number_format($product->price, 0, ',', '.') }}</strong></td>
                             <td><span class="status-pill {{ $product->available ? 'available' : 'unavailable' }}">{{ $product->available ? 'Tersedia' : 'Habis' }}</span></td>
+                            <td><span class="status-pill {{ $product->is_recommended ? 'available' : 'unavailable' }}">{{ $product->is_recommended ? 'Ya' : 'Tidak' }}</span></td>
                             <td>
                                 <div class="row-actions">
                                     <button class="action-button action-edit edit-trigger-button" type="button">Edit</button>
@@ -44,7 +45,8 @@
                                                 <div class="field"><label>Label</label><input name="labels" maxlength="200" value="{{ implode(', ', json_decode($product->labels ?: '[]', true) ?: []) }}"></div>
                                                 <div class="field full"><label>Deskripsi</label><input name="description" maxlength="1000" value="{{ $product->description }}"></div>
                                                 <div class="field full"><label>Foto menu (opsional)</label><div class="image-upload"><span class="edit-image-preview">@if($product->image_path)<img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) }}" alt="Foto {{ $product->name }}">@else<span>✿</span>@endif</span><span><input type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-label="Ganti foto {{ $product->name }}"><span class="field-hint">JPEG, PNG, atau WebP · maks. 5 MB dan 4000 × 4000 piksel. Pilih gambar baru untuk mengganti (otomatis dikompresi).</span>@if($product->image_path)<label class="remove-image"><input type="checkbox" name="remove_image" value="1"> Hapus foto saat menyimpan</label>@endif</span></div></div>
-                                                <div class="field full"><label>Opsi racikan (JSON)</label><textarea name="options_json">{{ json_encode(json_decode($product->options ?: '[]', true) ?: [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</textarea><span class="field-hint">Array JSON berisi nama kelompok beserta opsi dan harga tambahannya.</span></div>
+                                                <div class="field"><label>Tampilkan sebagai rekomendasi</label><div class="checkbox-field"><input name="is_recommended" type="checkbox" value="1" {{ $product->is_recommended ? 'checked' : '' }}> <span>Ya, tampilkan di daftar Rekomendasi</span></div></div>
+                                                 <div class="field full"><label>Opsi racikan (JSON)</label><textarea name="options_json">{{ json_encode(json_decode($product->options ?: '[]', true) ?: [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</textarea><span class="field-hint">Array JSON berisi nama kelompok beserta opsi dan harga tambahannya.</span></div>
                                             </div>
                                             <div class="form-actions"><button class="button button-soft" type="button" onclick="this.closest('details').open=false">Batal</button><button class="button button-primary" type="submit">Simpan Perubahan</button></div>
                                         </form>

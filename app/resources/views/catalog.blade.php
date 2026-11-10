@@ -78,6 +78,7 @@
         <div class="search-box">
           <input type="text" id="searchInput" placeholder="Cari teh, melati, lemon, manis..." aria-label="Cari menu" />
         </div>
+        <nav class="special-filters" id="specialFilters" aria-label="Filter Khusus"></nav>
         <nav class="category-nav" id="categoryNav" aria-label="Kategori Menu"></nav>
       </section>
 

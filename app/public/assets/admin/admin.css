@@ -125,6 +125,8 @@ tbody tr:hover td { background: #fffefa; }
 .image-upload input[type="file"] { min-height: auto; padding: 8px; background: var(--surface); }
 .remove-image { display: inline-flex; align-items: center; gap: 7px; margin-top: 8px; color: var(--rose); font-size: 10px; font-weight: 700; }
 .remove-image input { width: 15px; min-height: 15px; accent-color: var(--rose); }
+.checkbox-field { min-height: 40px; display: flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--muted); font-size: 11px; }
+.checkbox-field input { width: 16px; min-height: 16px; flex: 0 0 16px; margin: 0; accent-color: var(--green); }
 .edit-image-preview { position: relative; width: 52px; height: 52px; overflow: hidden; border-radius: 10px; background: var(--green-light); }
 .edit-image-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .option-groups { display: grid; gap: 10px; }

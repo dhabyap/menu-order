@@ -35,6 +35,7 @@ class ProductController extends Controller
             'labels' => json_encode($this->parseLabels($data['labels'] ?? '')),
             'options' => ($data['options_json'] ?? '[]') ?: '[]',
             'available' => true,
+            'is_recommended' => $request->boolean('is_recommended'),
             'sort_order' => DB::table('products')->max('sort_order') + 1,
             'created_at' => now(),
             'updated_at' => now(),
@@ -78,6 +79,7 @@ class ProductController extends Controller
             'image_path' => $imagePath,
             'labels' => json_encode($this->parseLabels($data['labels'] ?? '')),
             'options' => ($data['options_json'] ?? '[]') ?: '[]',
+            'is_recommended' => $request->boolean('is_recommended'),
             'updated_at' => now(),
         ]);
 

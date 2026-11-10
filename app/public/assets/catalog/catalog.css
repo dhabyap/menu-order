@@ -331,6 +331,30 @@
       font-size: 18px;
     }
 
+    .special-filters {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .special-filter-btn {
+      white-space: nowrap;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 7px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #555a50;
+      transition: all 0.15s;
+    }
+
+    .special-filter-btn.active {
+      background: var(--gold, #c58738);
+      border-color: var(--gold, #c58738);
+      color: #fff;
+    }
+
     .category-nav {
       display: flex;
       gap: 7px;
@@ -593,6 +617,36 @@
       font-size: 10px;
       font-weight: 700;
       z-index: 3;
+    }
+
+    .product-badges {
+      position: absolute;
+      left: 10px;
+      top: 38px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 3;
+    }
+
+    .product-badge {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(4px);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 9px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .product-badge--recommended {
+      color: var(--rose, #a8564a);
+      border: 1px solid var(--rose, #a8564a);
+    }
+
+    .product-badge--bestseller {
+      color: var(--gold, #c58738);
+      border: 1px solid var(--gold, #c58738);
     }
 
     .sold {

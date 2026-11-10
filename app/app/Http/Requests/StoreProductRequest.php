@@ -49,6 +49,7 @@ class StoreProductRequest extends FormRequest
                 },
             ],
             'remove_image' => ['nullable', 'boolean'],
+            'is_recommended' => ['nullable', 'boolean'],
         ];
     }
 

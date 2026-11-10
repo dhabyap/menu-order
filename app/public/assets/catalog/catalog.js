@@ -86,7 +86,7 @@
       }
     }
     loadStoreConfig();
-    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [] })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
+    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [], isRecommended:Boolean(p.is_recommended), soldQuantity:Number(p.sold_quantity || 0), isBestSeller:Boolean(p.is_best_seller), bestSellerRank:p.best_seller_rank == null ? null : Number(p.best_seller_rank) })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
     const grid = document.getElementById("productGrid");
     if (grid && !products.length) { grid.innerHTML = Array.from({length:8}, () => `<div class="product-skeleton" aria-hidden="true"></div>`).join(""); }
     localStorage.removeItem("racik_cart_v2");
@@ -95,6 +95,7 @@
     let profile = JSON.parse(localStorage.getItem("racik_prof_v2") || '{"name":"","phone":"","address":"","srv":"Ambil Sendiri"}');
     let activeCategory = "Semua";
     let searchQuery = "";
+    let specialFilter = "all"; // "all" | "recommended" | "best_seller"
     let service = profile.srv || "Ambil Sendiri";
     let currentCustomItem = null;
     let currentCustomOpts = {};
@@ -137,9 +138,34 @@
     function resetCatalog() {
       activeCategory = "Semua";
       searchQuery = "";
+      specialFilter = "all";
       document.getElementById("searchInput").value = "";
       renderCategories();
+      renderSpecialFilters();
       renderProducts();
+    }
+
+    function renderSpecialFilters() {
+      const container = document.getElementById("specialFilters");
+      if (!container) return;
+      const filters = [
+        { value: "all", label: "Semua" },
+        { value: "recommended", label: "Rekomendasi" },
+        { value: "best_seller", label: "Terlaris" },
+      ];
+      container.innerHTML = filters
+        .map(
+          (f) =>
+            `<button type="button" class="special-filter-btn ${specialFilter === f.value ? "active" : ""}" data-filter="${esc(f.value)}" aria-pressed="${specialFilter === f.value}">${esc(f.label)}</button>`
+        )
+        .join("");
+      container.querySelectorAll("[data-filter]").forEach((b) => {
+        b.onclick = () => {
+          specialFilter = b.dataset.filter;
+          renderSpecialFilters();
+          renderProducts();
+        };
+      });
     }
 
     function closeLayer(layer) {
@@ -250,7 +276,9 @@
 
     function renderProducts() {
       const grid = document.getElementById("productGrid");
-      const filtered = products.filter((p) => {
+      let filtered = products.filter((p) => {
+        if (specialFilter === "recommended" && !p.isRecommended) return false;
+        if (specialFilter === "best_seller" && !p.isBestSeller) return false;
         if (activeCategory !== "Semua" && p.category !== activeCategory) return false;
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
@@ -258,6 +286,14 @@
         }
         return true;
       });
+
+      if (specialFilter === "best_seller") {
+        filtered.sort((a, b) => {
+          const ra = a.bestSellerRank ?? Infinity;
+          const rb = b.bestSellerRank ?? Infinity;
+          return ra - rb;
+        });
+      }
 
       if (!filtered.length) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border-radius:16px;border:1px solid var(--line)" role="status">
@@ -271,10 +307,15 @@
       grid.innerHTML = filtered
         .map((p) => {
           const inCartQty = cart.filter((c) => c.id === p.id).reduce((s, x) => s + x.qty, 0);
+          const badges = [];
+          if (p.isRecommended) badges.push(`<span class="product-badge product-badge--recommended">Rekomendasi</span>`);
+          if (p.isBestSeller && p.bestSellerRank != null) badges.push(`<span class="product-badge product-badge--bestseller">Terlaris #${p.bestSellerRank}</span>`);
+          const badgeHtml = badges.length ? `<div class="product-badges">${badges.join("")}</div>` : "";
           return `<article class="product ${p.available ? "" : "product-unavailable"}">
       <div class="prod-art ${p.tone || "green"} ${p.imageUrl ? "has-photo" : ""}" role="img" aria-label="${esc(p.name)}">
         ${p.imageUrl ? `<img class="prod-photo" src="${esc(p.imageUrl)}" alt="${esc(p.name)}" loading="lazy">` : ""}
         <span class="tag">${esc((p.labels || [])[0] || p.category)}</span>
+        ${badgeHtml}
         ${p.available ? `
         <div class="steam-group">
           <div class="steam"></div><div class="steam"></div><div class="steam"></div>
