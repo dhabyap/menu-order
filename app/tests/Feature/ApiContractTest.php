@@ -113,6 +113,27 @@ class ApiContractTest extends TestCase
             ]);
     }
 
+    public function test_products_endpoint_returns_view_count_and_view_endpoint_increments_it(): void
+    {
+        $this->seedProduct();
+
+        $this->getJson('/api/products')
+            ->assertOk()
+            ->assertJsonFragment(['view_count' => 0]);
+
+        $this->postJson('/api/products/view', ['product_id' => 'proto-1'])
+            ->assertAccepted()
+            ->assertJson(['tracked' => true]);
+
+        $this->assertSame(1, (int) DB::table('products')->where('prototype_id', 'proto-1')->value('view_count'));
+    }
+
+    public function test_product_view_endpoint_rejects_unknown_product(): void
+    {
+        $this->postJson('/api/products/view', ['product_id' => 'missing'])
+            ->assertNotFound();
+    }
+
     public function test_products_endpoint_includes_image_url(): void
     {
         Storage::fake('public');

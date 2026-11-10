@@ -79,6 +79,14 @@
           <input type="text" id="searchInput" placeholder="Cari teh, melati, lemon, manis..." aria-label="Cari menu" />
         </div>
         <nav class="special-filters" id="specialFilters" aria-label="Filter Khusus"></nav>
+        <label class="catalog-sort-label" for="productSort">Urutkan
+          <select id="productSort" class="catalog-sort">
+            <option value="featured">Unggulan</option>
+            <option value="name_asc">Nama: A–Z</option>
+            <option value="price_asc">Harga: Termurah</option>
+            <option value="price_desc">Harga: Termahal</option>
+          </select>
+        </label>
         <nav class="category-nav" id="categoryNav" aria-label="Kategori Menu"></nav>
       </section>
 

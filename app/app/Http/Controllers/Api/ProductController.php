@@ -51,6 +51,7 @@ class ProductController extends Controller
             $product->groups = json_decode($product->options, true) ?: [];
             $product->labels = json_decode($product->labels, true) ?: [];
             $product->is_recommended = (bool) $product->is_recommended;
+            $product->view_count = (int) ($product->view_count ?? 0);
             $product->sold_quantity = $sales[$productId] ?? 0;
             $product->best_seller_rank = $ranks[$productId] ?? null;
             $product->is_best_seller = isset($ranks[$productId]);

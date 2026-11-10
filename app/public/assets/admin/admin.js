@@ -46,9 +46,44 @@
 document.querySelectorAll('.edit-trigger-button').forEach((button) => {
     button.addEventListener('click', () => {
         const row = button.closest('tr');
-        const editor = row.nextElementSibling?.querySelector('.edit-details');
-        if (editor) editor.open = !editor.open;
-        if (editor?.open) editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const editRow = row.nextElementSibling;
+        if (editRow && editRow.classList.contains('edit-row')) {
+            const isHidden = editRow.hidden;
+            editRow.hidden = !isHidden;
+            button.setAttribute('aria-expanded', String(!isHidden));
+            button.textContent = isHidden ? 'Tutup edit' : 'Edit';
+            if (!isHidden) {
+                editRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+});
+
+document.querySelectorAll('[data-copy-example]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const code = button.closest('.option-example-body')?.querySelector('pre code')?.textContent || '';
+        try {
+            await navigator.clipboard.writeText(code);
+            button.textContent = 'Tersalin';
+        } catch {
+            button.textContent = 'Gagal menyalin, salin manual';
+        }
+        setTimeout(() => { button.textContent = 'Salin contoh'; }, 2200);
+    });
+});
+
+document.querySelectorAll('.edit-close, .edit-cancel').forEach((button) => {
+    button.addEventListener('click', () => {
+        const editRow = button.closest('.edit-row');
+        if (editRow) {
+            editRow.hidden = true;
+            const productRow = editRow.previousElementSibling;
+            const trigger = productRow?.querySelector('.edit-trigger-button');
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.textContent = 'Edit';
+            }
+        }
     });
 });
 
@@ -118,33 +153,20 @@ const makeField = (labelText, input, className = 'field') => {
     return field;
 };
 
-const addOptionRow = (rows) => {
+const addOptionRow = (rows, initial = {}) => {
     const row = document.createElement('div');
     row.className = 'option-row';
-
     const labelInput = document.createElement('input');
-    labelInput.type = 'text';
-    labelInput.required = true;
-    labelInput.maxLength = 80;
-    labelInput.placeholder = 'Contoh: Large';
-    labelInput.dataset.optionLabel = '';
-    labelInput.setAttribute('aria-label', 'Nama pilihan');
-
+    labelInput.type = 'text'; labelInput.required = true; labelInput.maxLength = 80;
+    labelInput.placeholder = 'Contoh: Large'; labelInput.dataset.optionLabel = '';
+    labelInput.setAttribute('aria-label', 'Nama pilihan'); labelInput.value = initial.label ?? '';
     const priceInput = document.createElement('input');
-    priceInput.type = 'number';
-    priceInput.required = true;
-    priceInput.min = '0';
-    priceInput.max = '10000000';
-    priceInput.step = '1';
-    priceInput.inputMode = 'numeric';
-    priceInput.placeholder = '0';
-    priceInput.dataset.optionPrice = '';
-    priceInput.setAttribute('aria-label', 'Harga tambahan dalam rupiah');
-
+    priceInput.type = 'number'; priceInput.required = true; priceInput.min = '0';
+    priceInput.max = '10000000'; priceInput.step = '1'; priceInput.inputMode = 'numeric';
+    priceInput.placeholder = '0'; priceInput.dataset.optionPrice = '';
+    priceInput.setAttribute('aria-label', 'Harga tambahan dalam rupiah'); priceInput.value = initial.price ?? 0;
     const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'remove-option';
-    remove.textContent = '×';
+    remove.type = 'button'; remove.className = 'remove-option'; remove.textContent = '×';
     remove.setAttribute('aria-label', 'Hapus pilihan');
     remove.addEventListener('click', () => {
         const group = rows.closest('.option-group');
@@ -152,82 +174,90 @@ const addOptionRow = (rows) => {
         if (!rows.querySelector('.option-row')) addOptionRow(rows);
         group.querySelector('[data-option-label]').focus();
     });
-
-    row.append(
-        makeField('Nama pilihan', labelInput),
-        makeField('Tambah harga (Rp)', priceInput),
-        remove
-    );
+    row.append(makeField('Nama pilihan', labelInput), makeField('Tambah harga (Rp)', priceInput), remove);
     rows.append(row);
 };
 
-document.getElementById('add-option-group').addEventListener('click', () => {
-    optionGroups.querySelector('.option-empty')?.remove();
+const addOptionGroup = (container, initial = {}, focus = true) => {
+    container.querySelector('.option-empty')?.remove();
     const group = document.createElement('fieldset');
     group.className = 'option-group';
-
     const groupHead = document.createElement('div');
     groupHead.className = 'option-group-head';
     const groupName = document.createElement('input');
-    groupName.type = 'text';
-    groupName.required = true;
-    groupName.maxLength = 80;
-    groupName.placeholder = 'Contoh: Ukuran';
-    groupName.dataset.groupName = '';
-    groupName.setAttribute('aria-label', 'Nama grup pilihan');
+    groupName.type = 'text'; groupName.required = true; groupName.maxLength = 80;
+    groupName.placeholder = 'Contoh: Ukuran'; groupName.dataset.groupName = '';
+    groupName.setAttribute('aria-label', 'Nama grup pilihan'); groupName.value = initial.name ?? '';
     groupHead.append(makeField('Nama grup', groupName));
-
     const removeGroup = document.createElement('button');
-    removeGroup.type = 'button';
-    removeGroup.className = 'button button-danger button-small';
+    removeGroup.type = 'button'; removeGroup.className = 'button button-danger button-small';
     removeGroup.textContent = 'Hapus grup';
     removeGroup.addEventListener('click', () => {
         group.remove();
-        if (!optionGroups.querySelector('.option-group')) {
+        if (!container.querySelector('.option-group')) {
             const empty = document.createElement('div');
             empty.className = 'option-empty';
             empty.textContent = 'Belum ada pilihan tambahan. Menu tetap bisa dipesan tanpa opsi.';
-            optionGroups.append(empty);
+            container.append(empty);
         }
     });
     groupHead.append(removeGroup);
-
-    const rows = document.createElement('div');
-    rows.className = 'option-rows';
-    const actions = document.createElement('div');
-    actions.className = 'option-group-actions';
-    const hint = document.createElement('span');
-    hint.className = 'field-hint';
+    const rows = document.createElement('div'); rows.className = 'option-rows';
+    const actions = document.createElement('div'); actions.className = 'option-group-actions';
+    const hint = document.createElement('span'); hint.className = 'field-hint';
     hint.textContent = 'Tambahkan pilihan dan harga tambahannya.';
     const addChoice = document.createElement('button');
-    addChoice.type = 'button';
-    addChoice.className = 'button button-soft button-small';
+    addChoice.type = 'button'; addChoice.className = 'button button-soft button-small';
     addChoice.textContent = '＋ Tambah Pilihan';
     addChoice.addEventListener('click', () => addOptionRow(rows));
     actions.append(hint, addChoice);
-
     group.append(groupHead, rows, actions);
-    optionGroups.append(group);
-    addOptionRow(rows);
-    groupName.focus();
-});
+    container.append(group);
+    const choices = Array.isArray(initial.options) && initial.options.length ? initial.options : [{}];
+    choices.forEach((option) => addOptionRow(rows, option));
+    if (focus) groupName.focus();
+};
 
-addMenuForm.addEventListener('submit', (event) => {
-    const groups = [...optionGroups.querySelectorAll('.option-group')].map((group) => ({
+const serializeBuilder = (container, hiddenInput) => {
+    const groups = [...container.querySelectorAll('.option-group')].map((group) => ({
         name: group.querySelector('[data-group-name]').value.trim(),
         options: [...group.querySelectorAll('.option-row')].map((row) => ({
             label: row.querySelector('[data-option-label]').value.trim(),
             price: Number(row.querySelector('[data-option-price]').value),
         })),
     }));
+    if (groups.some((group) => !group.name || group.options.some((option) => !option.label || !Number.isInteger(option.price) || option.price < 0))) return false;
+    hiddenInput.value = JSON.stringify(groups);
+    return true;
+};
 
-    if (groups.some((group) => !group.name || group.options.some((option) => !option.label || !Number.isInteger(option.price) || option.price < 0))) {
-        event.preventDefault();
-        return;
-    }
-
-    optionsJson.value = JSON.stringify(groups);
+document.getElementById('add-option-group').addEventListener('click', () => addOptionGroup(optionGroups));
+addMenuForm.addEventListener('submit', (event) => {
+    if (!serializeBuilder(optionGroups, optionsJson)) event.preventDefault();
 });
+
+document.querySelectorAll('[data-edit-option-builder]').forEach((container) => {
+    let initial;
+    try { initial = JSON.parse(container.dataset.options || '[]'); } catch { initial = []; }
+    if (Array.isArray(initial)) initial.forEach((group) => addOptionGroup(container, group, false));
+    if (!container.querySelector('.option-group')) {
+        const empty = document.createElement('div'); empty.className = 'option-empty';
+        empty.textContent = 'Belum ada pilihan tambahan. Menu tetap bisa dipesan tanpa opsi.';
+        container.append(empty);
+    }
+    container.closest('form').addEventListener('submit', (event) => {
+        if (!serializeBuilder(container, container.closest('form').querySelector('[name="options_json"]'))) event.preventDefault();
+    });
+});
+
+document.querySelectorAll('[data-add-option-group]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const container = button.closest('.field').querySelector('[data-edit-option-builder]');
+        if (container) addOptionGroup(container);
+    });
+});
+
+// Remove legacy JSON example panel from edit forms; all options use visual fields now.
 
 // Order processing: change status, live counter, and auto-refresh.
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -532,16 +562,41 @@ document.getElementById('quick-export')?.addEventListener('click', (event) => {
 });
 
 const productsSearch = document.getElementById('products-search');
-if (productsSearch) {
-    productsSearch.addEventListener('input', () => {
-        const q = productsSearch.value.trim().toLowerCase();
-        document.querySelectorAll('#products-table-body tr[data-name]').forEach(row => {
-            const name = (row.dataset.name || '').toLowerCase();
-            const cat = (row.dataset.category || '').toLowerCase();
-            row.style.display = (!q || name.includes(q) || cat.includes(q)) ? '' : 'none';
-        });
+const menuFilterButtons = [...document.querySelectorAll('[data-menu-filter]')];
+let activeMenuFilter = 'all';
+function filterMenuRows() {
+    const q = (productsSearch?.value || '').trim().toLocaleLowerCase('id-ID');
+    let visibleCount = 0;
+    document.querySelectorAll('#products-table-body .product-row').forEach(row => {
+        const matchesQuery = !q || `${row.dataset.name || ''} ${row.dataset.category || ''}`.toLocaleLowerCase('id-ID').includes(q);
+        const matchesFilter = activeMenuFilter === 'all'
+            || (activeMenuFilter === 'available' && row.dataset.available === '1')
+            || (activeMenuFilter === 'recommended' && row.dataset.recommended === '1');
+        const visible = matchesQuery && matchesFilter;
+        row.hidden = !visible;
+        const editRow = row.nextElementSibling?.classList.contains('edit-row') ? row.nextElementSibling : null;
+        if (editRow) editRow.hidden = !visible;
+        if (visible) visibleCount++;
     });
+    const count = document.getElementById('menu-result-count');
+    if (count) count.textContent = `${visibleCount} menu${visibleCount === 1 ? '' : ''}`;
 }
+productsSearch?.addEventListener('input', filterMenuRows);
+menuFilterButtons.forEach(button => button.addEventListener('click', () => {
+    activeMenuFilter = button.dataset.menuFilter;
+    menuFilterButtons.forEach(item => {
+        const active = item === button;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-pressed', String(active));
+    });
+    filterMenuRows();
+}));
+document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && productsSearch) {
+        event.preventDefault();
+        productsSearch.focus();
+    }
+});
 
 const ordersStatusFilter = document.getElementById('orders-status-filter');
 if (ordersStatusFilter) {

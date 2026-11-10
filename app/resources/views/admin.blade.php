@@ -75,18 +75,27 @@
             </div>
         </section>
 
-        <section class="panel tab-panel" data-tab="menu" aria-labelledby="tab-menu-title">
-            <div class="panel-heading" id="tab-menu-head">
+        <section class="panel tab-panel menu-workspace" data-tab="menu" aria-labelledby="tab-menu-title">
+            <div class="menu-heading">
                 <div>
-                    <h2 id="tab-menu-title">Daftar Menu &amp; Ketersediaan Stok</h2>
-                    <p>Atur harga, pilihan racikan, dan ketersediaan menu.</p>
+                    <p class="menu-kicker">Katalog kedai</p>
+                    <h2 id="tab-menu-title">Menu kedai</h2>
+                    <p>Kelola harga, ketersediaan, dan pilihan pelanggan.</p>
                 </div>
-                <button class="button button-primary" type="button" id="open-add-menu">＋ Tambah Menu</button>
+                <button class="button button-primary" type="button" id="open-add-menu"><span aria-hidden="true">＋</span> Tambah menu</button>
             </div>
-            <input id="products-search" type="text" placeholder="Cari nama menu atau kategori…" aria-label="Filter menu" style="width:100%; margin-bottom:12px;">
-            <div class="table-scroll">
+            <div class="menu-toolbar">
+                <label class="menu-search" for="products-search"><span aria-hidden="true">⌕</span><input id="products-search" type="search" placeholder="Cari nama atau kategori menu" autocomplete="off"><kbd>Ctrl K</kbd></label>
+                <div class="menu-filters" role="group" aria-label="Filter status menu">
+                    <button class="menu-filter active" type="button" data-menu-filter="all" aria-pressed="true">Semua <span>{{ $products->count() }}</span></button>
+                    <button class="menu-filter" type="button" data-menu-filter="available" aria-pressed="false">Tersedia</button>
+                    <button class="menu-filter" type="button" data-menu-filter="recommended" aria-pressed="false">Rekomendasi</button>
+                </div>
+            </div>
+            <div class="menu-table-wrap">
                 @include('admin.partials.menu-table', ['products' => $products])
             </div>
+            <p class="menu-result-count" id="menu-result-count" aria-live="polite">{{ $products->count() }} menu</p>
         </section>
 
         <section class="panel tab-panel" data-tab="pesanan" aria-labelledby="tab-orders-title">

@@ -26,7 +26,7 @@
                         <div><h3 id="options-title">Pilihan racikan <span style="font:500 10px 'Plus Jakarta Sans',sans-serif;color:var(--muted)">(opsional)</span></h3><p>Contoh: ukuran, tingkat gula, atau topping. Harga di bawah adalah tambahan.</p></div>
                         <button class="button button-soft button-small" id="add-option-group" type="button">＋ Tambah Grup</button>
                     </div>
-                    <div class="option-groups" id="option-groups"><div class="option-empty">Belum ada pilihan tambahan. Menu tetap bisa dipesan tanpa opsi.</div></div>
+                    <div class="option-groups" id="option-groups"><div class="option-empty"><strong>Belum ada pilihan tambahan.</strong> Menu tetap bisa dipesan tanpa opsi. Contoh pemakaian: klik <b>＋ Tambah Grup</b>, isi nama grup <b>Ukuran</b>, lalu tambah opsi <b>Regular</b> (harga tambahan 0) dan <b>Large</b> (harga tambahan 3000). Pelanggan lalu bisa memilih salah satu saat memesan.</div></div>
                 </section>
             </div>
             <div class="dialog-footer">

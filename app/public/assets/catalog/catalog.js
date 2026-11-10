@@ -86,7 +86,7 @@
       }
     }
     loadStoreConfig();
-    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [], isRecommended:Boolean(p.is_recommended), soldQuantity:Number(p.sold_quantity || 0), isBestSeller:Boolean(p.is_best_seller), bestSellerRank:p.best_seller_rank == null ? null : Number(p.best_seller_rank) })); renderCategories(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderProducts(); });
+    fetch("/api/products").then(r => r.ok ? r.json() : []).then(rows => { products = rows.map(p => ({ id:p.id, name:p.name, category:p.category_name || p.category, desc:p.desc || "", price:Number(p.price), available:Boolean(p.available), tone:p.tone || "green", icon:p.icon || "✿", imageUrl:p.image_url || "", labels:p.labels || [], groups:p.groups || [], isRecommended:Boolean(p.is_recommended), soldQuantity:Number(p.sold_quantity || 0), isBestSeller:Boolean(p.is_best_seller), bestSellerRank:p.best_seller_rank == null ? null : Number(p.best_seller_rank), viewCount:Number(p.view_count || 0) })); renderCategories(); renderSpecialFilters(); renderProducts(); }).catch(() => { products = []; renderCategories(); renderSpecialFilters(); renderProducts(); });
     const grid = document.getElementById("productGrid");
     if (grid && !products.length) { grid.innerHTML = Array.from({length:8}, () => `<div class="product-skeleton" aria-hidden="true"></div>`).join(""); }
     localStorage.removeItem("racik_cart_v2");
@@ -95,7 +95,8 @@
     let profile = JSON.parse(localStorage.getItem("racik_prof_v2") || '{"name":"","phone":"","address":"","srv":"Ambil Sendiri"}');
     let activeCategory = "Semua";
     let searchQuery = "";
-    let specialFilter = "all"; // "all" | "recommended" | "best_seller"
+    let specialFilter = "all"; // "all" | "recommended" | "best_seller" | "most_viewed"
+    let sortMode = "featured"; // "featured" | "name_asc" | "price_asc" | "price_desc"
     let service = profile.srv || "Ambil Sendiri";
     let currentCustomItem = null;
     let currentCustomOpts = {};
@@ -139,7 +140,9 @@
       activeCategory = "Semua";
       searchQuery = "";
       specialFilter = "all";
+      sortMode = "featured";
       document.getElementById("searchInput").value = "";
+      document.getElementById("productSort").value = sortMode;
       renderCategories();
       renderSpecialFilters();
       renderProducts();
@@ -152,6 +155,7 @@
         { value: "all", label: "Semua" },
         { value: "recommended", label: "Rekomendasi" },
         { value: "best_seller", label: "Terlaris" },
+        ...(products.some((product) => product.viewCount > 0) ? [{ value: "most_viewed", label: "Paling Dilihat" }] : []),
       ];
       container.innerHTML = filters
         .map(
@@ -279,6 +283,7 @@
       let filtered = products.filter((p) => {
         if (specialFilter === "recommended" && !p.isRecommended) return false;
         if (specialFilter === "best_seller" && !p.isBestSeller) return false;
+        if (specialFilter === "most_viewed" && !(p.viewCount > 0)) return false;
         if (activeCategory !== "Semua" && p.category !== activeCategory) return false;
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
@@ -288,11 +293,17 @@
       });
 
       if (specialFilter === "best_seller") {
-        filtered.sort((a, b) => {
-          const ra = a.bestSellerRank ?? Infinity;
-          const rb = b.bestSellerRank ?? Infinity;
-          return ra - rb;
-        });
+        filtered.sort((a, b) => (a.bestSellerRank ?? Infinity) - (b.bestSellerRank ?? Infinity));
+      } else if (specialFilter === "most_viewed") {
+        filtered.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      } else if (sortMode === "name_asc") {
+        filtered.sort((a, b) => a.name.localeCompare(b.name, "id"));
+      } else if (sortMode === "price_asc") {
+        filtered.sort((a, b) => a.price - b.price || a.name.localeCompare(b.name, "id"));
+      } else if (sortMode === "price_desc") {
+        filtered.sort((a, b) => b.price - a.price || a.name.localeCompare(b.name, "id"));
+      } else if (specialFilter === "recommended") {
+        filtered.sort((a, b) => Number(b.isRecommended) - Number(a.isRecommended));
       }
 
       if (!filtered.length) {
@@ -525,8 +536,20 @@
     function openCustomize(id, cartIndex = null) {
       const p = products.find((x) => x.id === id);
       if (!p || !p.available) return;
+      if (!p._viewTracked) {
+        p._viewTracked = true;
+        fetch('/api/products/view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ product_id: p.id }),
+          keepalive: true,
+        }).catch(() => {});
+        p.viewCount = (p.viewCount || 0) + 1;
+        renderSpecialFilters();
+      }
 
       currentCustomItem = p;
+      if (specialFilter === "most_viewed") renderProducts();
       editingCartIndex = cartIndex;
       const editingItem = cartIndex == null ? null : cart[cartIndex];
       currentCustomQty = editingItem ? editingItem.qty : 1;
@@ -1226,9 +1249,13 @@ Pesanan tersimpan dengan kode ${code}. Terima kasih.`;
       toast("Keranjang dikosongkan.");
     };
 
-    // Search listener
+    // Search and sort listeners
     document.getElementById("searchInput").addEventListener("input", (e) => {
       searchQuery = e.target.value;
+      renderProducts();
+    });
+    document.getElementById("productSort")?.addEventListener("change", (event) => {
+      sortMode = event.target.value;
       renderProducts();
     });
 
