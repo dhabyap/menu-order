@@ -74,11 +74,13 @@ class ApiContractTest extends TestCase
             ]);
     }
 
-    public function test_store_config_exposes_store_address_and_map_link(): void
+    public function test_store_config_exposes_store_address_map_link_and_coordinates(): void
     {
         DB::table('store_settings')->insert([
             ['key' => 'store_address', 'value' => 'Jl. Melati No. 10, Bandung', 'created_at' => now(), 'updated_at' => now()],
             ['key' => 'store_maps_url', 'value' => 'https://maps.google.com/?q=shop', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'store_latitude', 'value' => '-6.9175', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'store_longitude', 'value' => '107.6191', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $this->getJson('/api/store-config')
@@ -86,6 +88,8 @@ class ApiContractTest extends TestCase
             ->assertJson([
                 'store_address' => 'Jl. Melati No. 10, Bandung',
                 'store_maps_url' => 'https://maps.google.com/?q=shop',
+                'store_latitude' => -6.9175,
+                'store_longitude' => 107.6191,
             ]);
     }
 

@@ -60,6 +60,8 @@ class StoreConfigController extends Controller
             'marketing_badges' => array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $settings['marketing_badges'] ?? '')))),
             'store_address' => $settings['store_address'] ?? '',
             'store_maps_url' => $settings['store_maps_url'] ?? '',
+            'store_latitude' => is_numeric($settings['store_latitude'] ?? null) ? (float) $settings['store_latitude'] : null,
+            'store_longitude' => is_numeric($settings['store_longitude'] ?? null) ? (float) $settings['store_longitude'] : null,
         ], $schedule);
     }
 }

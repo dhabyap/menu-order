@@ -3,6 +3,7 @@
             <tr>
                 <th class="menu-sort-heading" aria-label="Urutan"></th>
                 <th>Nama menu</th>
+                <th>Dilihat</th>
                 <th>Kategori</th>
                 <th>Harga</th>
                 <th>Ketersediaan</th>
@@ -20,6 +21,7 @@
                         <span class="menu-name"><strong>{{ $product->name }}</strong><small>{{ $product->description ?: 'Deskripsi belum diisi' }}</small></span>
                     </div>
                 </td>
+                <td><span class="view-count-pill" title="Total pelanggan membuka menu">{{ number_format((int) ($product->view_count ?? 0), 0, ',', '.') }} <small>kali</small></span></td>
                 <td><span class="category-pill">{{ $product->category ?: 'Tanpa kategori' }}</span></td>
                 <td class="menu-price">Rp{{ number_format($product->price, 0, ',', '.') }}</td>
                 <td><span class="menu-status {{ $product->available ? 'is-available' : 'is-unavailable' }}"><span aria-hidden="true"></span>{{ $product->available ? 'Tersedia' : 'Habis' }}</span></td>
@@ -45,7 +47,7 @@
                 </td>
             </tr>
             <tr class="edit-row" data-edit-for="{{ $product->id }}" hidden>
-                <td colspan="7">
+                <td colspan="8">
                     <div class="edit-panel">
                         <div class="edit-panel-heading"><div><p class="menu-kicker">Detail menu</p><h3>Edit {{ $product->name }}</h3></div><button class="edit-close" type="button" aria-label="Tutup editor">Tutup</button></div>
                         <form method="post" action="{{ route('admin.products.update', $product->id) }}" enctype="multipart/form-data">
@@ -71,7 +73,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="7"><div class="empty-state"><strong>Belum ada menu</strong>Tambahkan menu pertama agar pelanggan bisa mulai memesan.</div></td></tr>
+            <tr><td colspan="8"><div class="empty-state"><strong>Belum ada menu</strong>Tambahkan menu pertama agar pelanggan bisa mulai memesan.</div></td></tr>
         @endforelse
         </tbody>
     </table>

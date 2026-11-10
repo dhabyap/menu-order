@@ -245,7 +245,7 @@ body.dialog-open { overflow: hidden; }
 .menu-filter.active { background: #fff; color: var(--green); box-shadow: 0 1px 4px rgba(28,34,26,.1); }
 .menu-filter span { margin-left: 4px; color: #8a9084; font-size: 10px; }
 .menu-table-wrap { overflow-x: auto; }
-.menu-table { min-width: 780px; }
+.menu-table { min-width: 850px; }
 .menu-table th { padding: 11px 13px; border-bottom: 1px solid #eae8df; background: #fffefa; color: #85897f; font-size: 9px; letter-spacing: .65px; }
 .menu-table td { padding: 12px 13px; }
 .menu-table tbody tr.product-row { transition: background .12s ease; }
@@ -259,6 +259,8 @@ body.dialog-open { overflow: hidden; }
 .menu-art { width: 44px; height: 44px; flex-basis: 44px; border: 1px solid rgba(46,67,52,.08); border-radius: 12px; }
 .menu-cell strong { font-size: 12px; font-weight: 700; }
 .menu-cell small { max-width: 245px; margin-top: 2px; font-size: 10px; }
+.view-count-pill { display: inline-flex; align-items: baseline; gap: 4px; padding: 5px 8px; border: 1px solid #e7ebdf; border-radius: 8px; background: #f6f8f1; color: #3f5b43; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.view-count-pill small { color: #798371; font-size: 9px; font-weight: 600; }
 .category-pill { padding: 5px 9px; background: #f3f1ea; color: #555d50; font-size: 10px; }
 .menu-price { color: var(--ink); font-size: 12px; font-weight: 800; white-space: nowrap; }
 .menu-status { display: inline-flex; align-items: center; gap: 6px; color: #53604f; font-size: 10px; font-weight: 700; white-space: nowrap; }

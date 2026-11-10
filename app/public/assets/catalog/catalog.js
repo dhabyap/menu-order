@@ -36,9 +36,24 @@
         const originName = document.getElementById("storeOriginName");
         const originAddress = document.getElementById("storeOriginAddress");
         const originMap = document.getElementById("storeOriginMap");
+        const originMapFrame = document.getElementById("storeOriginMapFrame");
+        const originMapEmbed = document.getElementById("storeOriginMapEmbed");
         if (originName) originName.textContent = storeName;
         if (originAddress) originAddress.textContent = config.store_address || "Alamat toko belum tersedia.";
-        if (originMap && config.store_maps_url) {
+        const latitude = Number(config.store_latitude);
+        const longitude = Number(config.store_longitude);
+        const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude)
+          && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+        if (hasCoordinates && originMapFrame && originMapEmbed) {
+          const delta = 0.008;
+          const bbox = [longitude - delta, latitude - delta, longitude + delta, latitude + delta].join(",");
+          originMapEmbed.src = `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(`${latitude},${longitude}`)}`;
+          originMapFrame.hidden = false;
+          if (originMap) {
+            originMap.href = config.store_maps_url || `https://www.google.com/maps?q=${encodeURIComponent(`${latitude},${longitude}`)}`;
+            originMap.hidden = false;
+          }
+        } else if (originMap && config.store_maps_url) {
           originMap.href = config.store_maps_url;
           originMap.hidden = false;
         }
@@ -151,7 +166,8 @@
       specialFilter = "all";
       sortMode = "featured";
       document.getElementById("searchInput").value = "";
-      document.getElementById("productSort").value = sortMode;
+      const sortControl = document.getElementById("productSort");
+      if (sortControl) sortControl.value = sortMode;
       renderCategories();
       renderSpecialFilters();
       renderProducts();
@@ -289,31 +305,41 @@
 
     function renderProducts() {
       const grid = document.getElementById("productGrid");
+      const featuredSection = document.getElementById("featuredSection");
+      const featuredGrid = document.getElementById("featuredGrid");
+      const query = searchQuery.trim().toLocaleLowerCase("id-ID");
+      const hasRefinement = Boolean(query) || activeCategory !== "Semua" || specialFilter !== "all";
+      let featured = !hasRefinement && sortMode === "featured"
+        ? products.filter((p) => p.isRecommended).slice(0, 4)
+        : [];
       let filtered = products.filter((p) => {
         if (specialFilter === "recommended" && !p.isRecommended) return false;
         if (specialFilter === "best_seller" && !p.isBestSeller) return false;
         if (specialFilter === "most_viewed" && !(p.viewCount > 0)) return false;
         if (activeCategory !== "Semua" && p.category !== activeCategory) return false;
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          return p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
-        }
-        return true;
+        if (query && ![p.name, p.desc, p.category].some((value) => String(value || "").toLocaleLowerCase("id-ID").includes(query))) return false;
+        return !featured.some((item) => item.id === p.id);
       });
 
-      if (specialFilter === "best_seller") {
-        filtered.sort((a, b) => (a.bestSellerRank ?? Infinity) - (b.bestSellerRank ?? Infinity));
-      } else if (specialFilter === "most_viewed") {
-        filtered.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
-      } else if (sortMode === "name_asc") {
+      // Explicit sort always wins; special filters only choose the subset.
+      if (sortMode === "name_asc") {
         filtered.sort((a, b) => a.name.localeCompare(b.name, "id"));
       } else if (sortMode === "price_asc") {
         filtered.sort((a, b) => a.price - b.price || a.name.localeCompare(b.name, "id"));
       } else if (sortMode === "price_desc") {
         filtered.sort((a, b) => b.price - a.price || a.name.localeCompare(b.name, "id"));
-      } else if (specialFilter === "recommended") {
-        filtered.sort((a, b) => Number(b.isRecommended) - Number(a.isRecommended));
+      } else if (sortMode === "most_viewed" || specialFilter === "most_viewed") {
+        filtered.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0) || a.name.localeCompare(b.name, "id"));
+      } else if (sortMode === "best_seller" || specialFilter === "best_seller") {
+        filtered.sort((a, b) => (a.bestSellerRank ?? Infinity) - (b.bestSellerRank ?? Infinity) || a.name.localeCompare(b.name, "id"));
       }
+
+      if (featuredSection && featuredGrid) {
+        featuredSection.hidden = featured.length === 0;
+        featuredGrid.innerHTML = featured.map((p) => renderProductCard(p)).join("");
+      }
+      const count = document.getElementById("catalogCount");
+      if (count) count.textContent = `${filtered.length} menu`;
 
       if (!filtered.length) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border-radius:16px;border:1px solid var(--line)" role="status">
@@ -325,7 +351,11 @@
       }
 
       grid.innerHTML = filtered
-        .map((p) => {
+        .map((p) => renderProductCard(p))
+        .join("");
+    }
+
+    function renderProductCard(p) {
           const inCartQty = cart.filter((c) => c.id === p.id).reduce((s, x) => s + x.qty, 0);
           const badges = [];
           if (p.isRecommended) badges.push(`<span class="product-badge product-badge--recommended">Rekomendasi</span>`);
@@ -384,8 +414,6 @@
         </div>
       </div>
     </article>`;
-        })
-        .join("");
     }
 
     // --- Cart Logic & Steppers ---

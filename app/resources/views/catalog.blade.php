@@ -70,13 +70,16 @@
           <div class="store-origin-heading"><span class="store-origin-mark" aria-hidden="true">⌖</span><div><b>Dikirim dari</b><small id="storeOriginName">{{ $settings['store_name'] ?? 'Toko' }}</small></div></div>
           <p class="store-origin-address" id="storeOriginAddress">{{ $settings['store_address'] ?? 'Alamat toko belum tersedia.' }}</p>
           <a class="store-origin-map" id="storeOriginMap" href="#" target="_blank" rel="noopener noreferrer" hidden>Lihat lokasi toko <span aria-hidden="true">↗</span></a>
+          <div class="store-origin-map-frame" id="storeOriginMapFrame" hidden>
+            <iframe id="storeOriginMapEmbed" title="Peta lokasi toko" loading="lazy" referrerpolicy="no-referrer" allowfullscreen></iframe>
+          </div>
           <span class="store-origin-note">Pemesanan dan pengantaran dimulai dari lokasi ini.</span>
         </div>
       </section>
 
 
       <!-- Catalog Sticky Tools -->
-      <section class="catalog-tools">
+      <section class="catalog-tools" aria-label="Pencarian dan pengurutan menu">
         <div class="search-box">
           <input type="text" id="searchInput" placeholder="Cari teh, melati, lemon, manis..." aria-label="Cari menu" />
         </div>
@@ -87,13 +90,22 @@
             <option value="name_asc">Nama: A–Z</option>
             <option value="price_asc">Harga: Termurah</option>
             <option value="price_desc">Harga: Termahal</option>
+            <option value="most_viewed">Paling banyak dilihat</option>
+            <option value="best_seller">Terlaris</option>
           </select>
         </label>
         <nav class="category-nav" id="categoryNav" aria-label="Kategori Menu"></nav>
       </section>
 
-      <!-- Products Grid -->
-      <div class="products" id="productGrid"></div>
+      <section class="featured-section" id="featuredSection" aria-labelledby="featuredTitle" hidden>
+        <div class="featured-heading"><div><span class="eyebrow">Pilihan kedai</span><h2 id="featuredTitle">Menu unggulan</h2><p>Rekomendasi pilihan dari kedai untuk dicoba.</p></div><span class="featured-mark" aria-hidden="true">✦</span></div>
+        <div class="products featured-products" id="featuredGrid"></div>
+      </section>
+
+      <section class="catalog-section" aria-labelledby="catalogTitle">
+        <div class="catalog-section-heading"><div><span class="eyebrow">Jelajahi</span><h2 id="catalogTitle">Semua menu</h2></div><span id="catalogCount" class="catalog-count" aria-live="polite"></span></div>
+        <div class="products" id="productGrid"></div>
+      </section>
 
       <section class="order-guide" id="orderGuide" aria-labelledby="orderGuideTitle">
         <div class="section-heading">
