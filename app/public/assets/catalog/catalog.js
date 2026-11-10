@@ -33,6 +33,15 @@
 
         storeName = config.store_name || storeName;
         deliveryFeeConfigured = Number(config.delivery_fee) || 0;
+        const originName = document.getElementById("storeOriginName");
+        const originAddress = document.getElementById("storeOriginAddress");
+        const originMap = document.getElementById("storeOriginMap");
+        if (originName) originName.textContent = storeName;
+        if (originAddress) originAddress.textContent = config.store_address || "Alamat toko belum tersedia.";
+        if (originMap && config.store_maps_url) {
+          originMap.href = config.store_maps_url;
+          originMap.hidden = false;
+        }
         document.getElementById("brandTitle").textContent = config.store_name;
         document.getElementById("footerStoreName").textContent = config.store_name;
         document.getElementById("footerCopyrightName").textContent = config.store_name;

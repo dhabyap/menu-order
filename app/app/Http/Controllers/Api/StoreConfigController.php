@@ -59,6 +59,7 @@ class StoreConfigController extends Controller
             'hero_description' => $settings['hero_description'] ?? 'Telusuri menu yang tersedia dan sesuaikan racikan sebelum memesan.',
             'marketing_badges' => array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $settings['marketing_badges'] ?? '')))),
             'store_address' => $settings['store_address'] ?? '',
+            'store_maps_url' => $settings['store_maps_url'] ?? '',
         ], $schedule);
     }
 }

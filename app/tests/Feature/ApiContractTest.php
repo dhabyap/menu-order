@@ -74,6 +74,21 @@ class ApiContractTest extends TestCase
             ]);
     }
 
+    public function test_store_config_exposes_store_address_and_map_link(): void
+    {
+        DB::table('store_settings')->insert([
+            ['key' => 'store_address', 'value' => 'Jl. Melati No. 10, Bandung', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'store_maps_url', 'value' => 'https://maps.google.com/?q=shop', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $this->getJson('/api/store-config')
+            ->assertOk()
+            ->assertJson([
+                'store_address' => 'Jl. Melati No. 10, Bandung',
+                'store_maps_url' => 'https://maps.google.com/?q=shop',
+            ]);
+    }
+
     public function test_store_config_falls_back_to_environment_whatsapp_when_saved_number_is_blank(): void
     {
         config()->set('store.whatsapp', '6281234567890');

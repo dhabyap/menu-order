@@ -66,9 +66,11 @@
           <div class="hero-badges" id="heroBadges" hidden>
           </div>
         </div>
-        <div class="promo-box">
-          <b>Pesan dengan mudah</b>
-          <span>Pilih menu yang tersedia dan sesuaikan racikannya. Pesanan disimpan sebelum diteruskan ke WhatsApp.</span>
+        <div class="promo-box" id="storeOriginCard" aria-live="polite">
+          <div class="store-origin-heading"><span class="store-origin-mark" aria-hidden="true">⌖</span><div><b>Dikirim dari</b><small id="storeOriginName">{{ $settings['store_name'] ?? 'Toko' }}</small></div></div>
+          <p class="store-origin-address" id="storeOriginAddress">{{ $settings['store_address'] ?? 'Alamat toko belum tersedia.' }}</p>
+          <a class="store-origin-map" id="storeOriginMap" href="#" target="_blank" rel="noopener noreferrer" hidden>Lihat lokasi toko <span aria-hidden="true">↗</span></a>
+          <span class="store-origin-note">Pemesanan dan pengantaran dimulai dari lokasi ini.</span>
         </div>
       </section>
 
