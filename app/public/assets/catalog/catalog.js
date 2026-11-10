@@ -362,7 +362,7 @@
           if (p.isBestSeller && p.bestSellerRank != null) badges.push(`<span class="product-badge product-badge--bestseller">Terlaris #${p.bestSellerRank}</span>`);
           const badgeHtml = badges.length ? `<div class="product-badges">${badges.join("")}</div>` : "";
           return `<article class="product ${p.available ? "" : "product-unavailable"}">
-      <div class="prod-art ${p.tone || "green"} ${p.imageUrl ? "has-photo" : ""}" role="img" aria-label="${esc(p.name)}">
+      <div class="prod-art ${p.tone || "green"} ${p.imageUrl ? "has-photo" : ""} ${p.available ? "clickable" : ""}" role="img" aria-label="${esc(p.name)}" ${p.available ? `onclick="openCustomize('${esc(p.id)}')"` : ""} tabindex="${p.available ? "0" : "-1"}" onkeydown="${p.available ? `event.key==='Enter'&&openCustomize('${esc(p.id)}')` : ''}">
         ${p.imageUrl ? `<img class="prod-photo" src="${esc(p.imageUrl)}" alt="${esc(p.name)}" loading="lazy">` : ""}
         <span class="tag">${esc((p.labels || [])[0] || p.category)}</span>
         ${badgeHtml}

@@ -534,6 +534,20 @@
       color: #723b30;
     }
 
+    .prod-art.clickable {
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .prod-art.clickable:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 18px rgba(48,55,39,.12);
+    }
+    .prod-art.clickable:focus-visible {
+      outline: 3px solid rgba(46,67,52,.55);
+      outline-offset: 2px;
+      z-index: 1;
+    }
+
     .cup {
       width: 68px;
       height: 78px;
