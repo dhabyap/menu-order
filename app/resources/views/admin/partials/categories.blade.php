@@ -35,7 +35,7 @@
                     </span>
                 </td>
                 <td class="category-count">
-                    {{ $category->products()->count() }} produk
+                    {{ optional($category->products())->count() ?? 0 }} produk
                 </td>
                 <td class="category-actions">
                     <button class="button button-soft button-small edit-category" data-id="{{ $category->id }}" data-name="{{ $category->name }}" data-sort="{{ $category->sort_order }}" data-active="{{ $category->active ? '1' : '0' }}" aria-label="Edit kategori {{ $category->name }}">Edit</button>
@@ -66,7 +66,7 @@
             <label style="display: block; font-size: 12px; margin-bottom: 4px;">Kategori Sumber (minimal 2)</label>
             <select id="merge-source" multiple size="4" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
                 @foreach($categories as $category)
-                    <option value="{{ $category->id }}">{{ $category->name }} ({{ $category->products()->count() }} produk)</option>
+                    <option value="{{ $category->id }}">{{ $category->name }} ({{ optional($category->products())->count() ?? 0 }} produk)</option>
                 @endforeach
             </select>
         </div>
