@@ -2,8 +2,8 @@
     $orderStatuses = \App\Support\OrderStatus::labels();
 @endphp
 
-<div class="categories-toolbar">
-    <label class="categories-search" for="categories-search">
+<div class="menu-toolbar categories-toolbar">
+    <label class="menu-search categories-search" for="categories-search">
         <span aria-hidden="true">⌕</span>
         <input id="categories-search" type="search" placeholder="Cari nama kategori" autocomplete="off">
         <kbd>Ctrl K</kbd>
@@ -56,23 +56,21 @@
 </table>
 
 @if(count($categories) > 1)
-<div class="merge-form" style="margin-top: 16px; padding: 16px; background: var(--bg-soft); border-radius: 12px; border: 1px solid var(--line);">
-    <h4 style="margin: 0 0 12px;">Gabung Kategori</h4>
-    <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">
-        Pilih beberapa kategori sumber dan satu kategori target. Semua produk dari kategori sumber akan dipindahkan ke kategori target, lalu kategori sumber dihapus.
-    </p>
+<div class="merge-form">
+    <h4>Gabung Kategori</h4>
+    <p>Pilih beberapa kategori sumber dan satu kategori target. Semua produk dari kategori sumber akan dipindahkan ke kategori target, lalu kategori sumber dihapus.</p>
     <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end;">
         <div style="flex: 1; min-width: 200px;">
-            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Kategori Sumber (minimal 2)</label>
-            <select id="merge-source" multiple size="4" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+            <label>Kategori Sumber (minimal 2)</label>
+            <select id="merge-source" multiple size="4">
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}">{{ $category->name }} ({{ count($category->products ?? []) }} produk)</option>
                 @endforeach
             </select>
         </div>
         <div style="flex: 1; min-width: 200px;">
-            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Kategori Target</label>
-            <select id="merge-target" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+            <label>Kategori Target</label>
+            <select id="merge-target">
                 <option value="">Pilih kategori target</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}">{{ $category->name }}</option>
