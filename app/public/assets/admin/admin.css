@@ -360,6 +360,37 @@ body.dialog-open { overflow: hidden; }
     .menu-search.categories-search { width: 100%; }
 }
 
+/* Orders workspace: consistent with menu workspace */
+.orders-table-wrap { overflow-x: auto; }
+.orders-table { min-width: 850px; }
+.orders-table th { padding: 11px 13px; border-bottom: 1px solid #eae8df; background: #fffefa; color: #85897f; font-size: 9px; letter-spacing: .65px; }
+.orders-table td { padding: 12px 13px; }
+.orders-table tbody tr { transition: background .12s ease; }
+.orders-table tbody tr:hover td { background: #fdfcf8; }
+.orders-table .order-code { font-weight: 700; font-size: 12px; color: var(--ink); }
+.orders-table .order-time { color: var(--muted); font-size: 10px; margin-top: 2px; display: block; }
+.orders-table .order-customer strong { font-size: 12px; }
+.orders-table .order-customer small { color: var(--muted); font-size: 10px; }
+.orders-table .order-items { font-size: 11px; color: var(--ink); max-width: 280px; }
+.orders-table .order-total { color: var(--ink); font-size: 12px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.orders-table .order-status-select { min-height: 30px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); font-size: 10px; font-weight: 700; }
+.orders-table .action-button { min-height: 30px; padding: 6px 9px; border-radius: 7px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+
+.orders-toolbar { padding: 14px 24px; }
+.orders-filters .order-date-filter { display: flex; align-items: center; gap: 4px; }
+.orders-filters .order-date-filter input { width: auto; min-width: 130px; }
+.orders-filters .order-date-filter span { font-size: 10px; color: #85897f; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+
+@media (max-width: 620px) {
+    .orders-table-wrap { padding: 0 15px; }
+    .orders-table { min-width: 700px; }
+    .orders-table th, .orders-table td { padding-right: 9px; padding-left: 9px; }
+    .menu-toolbar.orders-toolbar { align-items: stretch; padding: 12px 15px; }
+    .menu-search.orders-search { width: 100%; }
+    .menu-filters.orders-filters { width: 100%; justify-content: space-between; }
+    .orders-filters .order-date-filter input { min-width: 100px; }
+}
+
 /* Toast notifications */
 #toast-container {
     position: fixed;

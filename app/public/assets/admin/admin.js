@@ -301,8 +301,8 @@ document.querySelectorAll('[data-add-option-group]').forEach((button) => {
 // Order processing: change status, live counter, and auto-refresh.
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 const ordersBody = document.getElementById('orders-body');
-const ordersLive = document.getElementById('orders-live');
-const ordersRefresh = document.getElementById('orders-refresh');
+const ordersLive = document.getElementById('orders-live'); // may be null after redesign
+const ordersRefresh = document.getElementById('orders-refresh'); // may be null after redesign
 const totalOrdersStat = document.querySelector('.stats .stat-card strong');
 const revenueStat = document.querySelector('.stats .stat-card:nth-child(4) strong');
 let latestOrderId = 0;
@@ -342,7 +342,9 @@ if (ordersBody) {
     refreshOrderSummary();
     window.setInterval(() => refreshOrderSummary(), 20000);
 
-    ordersRefresh?.addEventListener('click', () => refreshOrderSummary());
+    if (ordersRefresh) {
+        ordersRefresh.addEventListener('click', () => refreshOrderSummary());
+    }
 
     ordersBody.addEventListener('change', async (event) => {
         const select = event.target.closest('select[data-order-status]');

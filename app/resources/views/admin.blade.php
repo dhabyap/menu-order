@@ -120,35 +120,51 @@
                     <h2 id="tab-orders-title">Riwayat Pesanan</h2>
                     <p>Pesanan yang masuk tersimpan di database toko. Ubah status untuk memproses pesanan.</p>
                 </div>
-                <div class="tab-actions">
-                    <select id="orders-status-filter" class="order-status-select" aria-label="Filter status pesanan">
-                        <option value="">Semua status</option>
-                        <option value="pending">Menunggu</option>
-                        <option value="processing">Sedang Diproses</option>
-                        <option value="completed">Selesai</option>
-                        <option value="cancelled">Dibatalkan</option>
-                    </select>
-                    <input type="search" id="orders-search" class="order-search" placeholder="Cari kode, nama, telepon" aria-label="Cari pesanan" />
-                    <label class="order-date-filter">
-                        Dari
-                        <input type="date" id="orders-from" aria-label="Tanggal mulai" />
-                    </label>
-                    <label class="order-date-filter">
-                        Sampai
-                        <input type="date" id="orders-to" aria-label="Tanggal akhir" />
-                    </label>
-                    <span class="orders-live" id="orders-live" aria-live="polite">Memuat…</span>
-                    <button class="button button-soft button-small" type="button" id="orders-refresh">⟳ Muat ulang</button>
-                    <a class="button button-soft button-small" href="{{ route('admin.orders.export') }}" download>Export CSV</a>
-                </div>
             </div>
-            <div class="table-scroll">
-                <table class="orders-table">
-                    <thead><tr><th>Kode</th><th>Pemesan</th><th>Layanan</th><th>Rincian Menu</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
-                    <tbody id="orders-body">
-                        @include('admin.partials.orders-rows', ['orders' => $orders])
-                    </tbody>
-                </table>
+            <div class="menu-workspace">
+                <div class="menu-toolbar orders-toolbar">
+                    <label class="menu-search orders-search" for="orders-search">
+                        <span aria-hidden="true">⌕</span>
+                        <input id="orders-search" type="search" placeholder="Cari kode, nama, telepon" autocomplete="off" aria-label="Cari pesanan">
+                        <kbd>Ctrl K</kbd>
+                    </label>
+                    <div class="menu-filters orders-filters">
+                        <select id="orders-status-filter" class="menu-filter" aria-label="Filter status pesanan">
+                            <option value="">Semua status</option>
+                            <option value="pending">Menunggu</option>
+                            <option value="processing">Sedang Diproses</option>
+                            <option value="completed">Selesai</option>
+                            <option value="cancelled">Dibatalkan</option>
+                        </select>
+                        <label class="menu-filter order-date-filter">
+                            <input type="date" id="orders-from" aria-label="Tanggal mulai" />
+                            <span>Dari</span>
+                        </label>
+                        <label class="menu-filter order-date-filter">
+                            <input type="date" id="orders-to" aria-label="Tanggal akhir" />
+                            <span>Sampai</span>
+                        </label>
+                        <a class="menu-filter button button-soft button-small" href="{{ route('admin.orders.export') }}" download aria-label="Export CSV">Export CSV</a>
+                    </div>
+                </div>
+                <div class="menu-table-wrap orders-table-wrap">
+                    <table class="menu-table orders-table" id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Pemesan</th>
+                                <th>Layanan</th>
+                                <th>Rincian Menu</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-body">
+                            @include('admin.partials.orders-rows', ['orders' => $orders])
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
