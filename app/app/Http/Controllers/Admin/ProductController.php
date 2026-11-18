@@ -107,20 +107,26 @@ class ProductController extends Controller
      */
     public function toggle(int $id)
     {
-        $available = DB::table('products')->where('id', $id)->value('available');
+        $product = DB::table('products')->where('id', $id)->first();
+        abort_unless($product, 404);
+
+        $nowAvailable = ! $product->available;
 
         DB::table('products')->where('id', $id)->update([
-            'available' => ! $available,
+            'available' => $nowAvailable,
             'updated_at' => now(),
         ]);
 
-        EventLogger::success('product.unavailable', [
+        EventLogger::success($nowAvailable ? 'product.available' : 'product.unavailable', [
             'subject_type' => 'product',
             'subject_id' => $id,
-            'available' => ! $available,
+            'name' => $product->name,
+            'available' => $nowAvailable,
         ]);
 
-        return back();
+        return back()->with('success', $nowAvailable
+            ? 'Menu "'.$product->name.'" diaktifkan — tampil lagi di katalog.'
+            : 'Menu "'.$product->name.'" ditandai habis — tidak tampil di katalog.');
     }
 
     /**
@@ -140,7 +146,7 @@ class ProductController extends Controller
             'name' => $product->name,
         ]);
 
-        return back();
+        return back()->with('success', 'Menu "'.$product->name.'" dihapus.');
     }
 
     /**

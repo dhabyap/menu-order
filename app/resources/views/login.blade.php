@@ -36,6 +36,9 @@
                 @if($errors->any())
                     <div class="error-message" role="alert"><span>!</span><div>{{ $errors->first('email') }}</div></div>
                 @endif
+                @if(session('success'))
+                    <div class="success-message" role="status"><span>✓</span><div>{{ session('success') }}</div></div>
+                @endif
                 <form method="post" action="{{ route('admin.login.post') }}">
                     @csrf
                     <div class="field">

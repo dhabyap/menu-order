@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\AdminAuthService;
 use App\Services\EventLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Handles admin sign in and sign out.
@@ -19,7 +20,7 @@ class AuthController extends Controller
      */
     public function showLoginForm()
     {
-        return auth()->check() ? redirect('/admin') : view('login');
+        return Auth::guard('admin')->check() ? redirect('/admin') : view('login');
     }
 
     /**
@@ -36,7 +37,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             EventLogger::success('admin.login.success', [
-                'email' => $request->user()?->email,
+                'email' => Auth::guard('admin')->user()?->email,
             ]);
 
             return redirect()->intended('/admin');
@@ -56,13 +57,13 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $email = $request->user()?->email;
-        auth()->logout();
+        $email = Auth::guard('admin')->user()?->email;
+        Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         EventLogger::success('admin.logout', ['email' => $email]);
 
-        return redirect('/admin/login');
+        return redirect('/admin/login')->with('success', 'Anda berhasil keluar. Silakan masuk kembali bila perlu.');
     }
 }

@@ -43,6 +43,45 @@
   }
 })();
 
+// Global toast notification. Bottom-anchored so it stays reachable on
+// mobile; click a toast to dismiss it early.
+function toast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.setAttribute('aria-live', 'polite');
+        document.body.appendChild(container);
+    }
+
+    const item = document.createElement('div');
+    item.className = 'admin-toast admin-toast--' + type;
+    item.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    item.textContent = message;
+
+    const dismiss = () => {
+        if (!item.isConnected) return;
+        item.classList.add('admin-toast--out');
+        setTimeout(() => item.remove(), 250);
+    };
+    item.addEventListener('click', dismiss);
+
+    container.appendChild(item);
+    setTimeout(dismiss, type === 'error' ? 6000 : 4000);
+}
+window.toast = toast;
+
+// Surface server-side flash messages as toasts on page load, and make
+// sure a validation error banner is in view even after scroll restore.
+const flashSuccess = document.getElementById('flash-success');
+if (flashSuccess && flashSuccess.dataset.message) {
+    toast(flashSuccess.dataset.message, 'success');
+}
+const flashErrors = document.getElementById('flash-errors');
+if (flashErrors) {
+    flashErrors.scrollIntoView({ block: 'center' });
+}
+
 document.querySelectorAll('.edit-trigger-button').forEach((button) => {
     button.addEventListener('click', () => {
         const row = button.closest('tr');
@@ -303,7 +342,7 @@ if (ordersBody) {
     refreshOrderSummary();
     window.setInterval(() => refreshOrderSummary(), 20000);
 
-    ordersRefresh?.addEventListener('click', () => refreshOrderSummary(true));
+    ordersRefresh?.addEventListener('click', () => refreshOrderSummary());
 
     ordersBody.addEventListener('change', async (event) => {
         const select = event.target.closest('select[data-order-status]');
@@ -327,9 +366,17 @@ if (ordersBody) {
         if (!response.ok) {
             select.value = previous;
             select.dataset.previous = previous;
+            let message = 'Gagal mengubah status pesanan.';
+            try {
+                const payload = await response.json();
+                if (payload && payload.message) message = payload.message;
+            } catch (_) { /* non-JSON error body */ }
+            toast(message, 'error');
             return;
         }
         select.className = statusClass(select.value);
+        const statusLabel = select.options[select.selectedIndex]?.text || select.value;
+        toast(`Status pesanan #${id} → ${statusLabel}`, 'success');
     });
 }
 
@@ -483,6 +530,7 @@ const reloadBackups = async () => {
         `).join('');
     } catch {
         backupsBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--muted);">Gagal memuat backup.</td></tr>';
+        toast('Gagal memuat daftar backup.', 'error');
     }
 };
 
@@ -491,10 +539,12 @@ if (backupNow) {
         backupNow.disabled = true;
         backupNow.textContent = 'Membuat…';
         try {
-            await fetch('/admin/backups/now', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' } });
+            const response = await fetch('/admin/backups/now', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' } });
+            if (!response.ok) throw new Error('backup failed');
             await reloadBackups();
+            toast('Backup berhasil dibuat.', 'success');
         } catch {
-            alert('Gagal membuat backup.');
+            toast('Gagal membuat backup.', 'error');
         } finally {
             backupNow.disabled = false;
             backupNow.textContent = 'Backup Sekarang';
@@ -599,13 +649,97 @@ document.addEventListener('keydown', event => {
 });
 
 const ordersStatusFilter = document.getElementById('orders-status-filter');
-if (ordersStatusFilter) {
-    ordersStatusFilter.addEventListener('change', () => {
-        const q = ordersStatusFilter.value;
-        document.querySelectorAll('#orders-body tr[data-status]').forEach(row => {
-            row.style.display = (!q || row.dataset.status === q) ? '' : 'none';
-        });
+const ordersSearch = document.getElementById('orders-search');
+const ordersFrom = document.getElementById('orders-from');
+const ordersTo = document.getElementById('orders-to');
+
+let ordersDebounceTimer = null;
+
+function buildOrdersQueryParams() {
+    const params = new URLSearchParams();
+    if (ordersStatusFilter?.value) params.set('status', ordersStatusFilter.value);
+    if (ordersSearch?.value) params.set('search', ordersSearch.value);
+    if (ordersFrom?.value) params.set('from', ordersFrom.value);
+    if (ordersTo?.value) params.set('to', ordersTo.value);
+    return params.toString();
+}
+
+async function reloadOrdersTable(appendPage = false) {
+    if (!ordersBody) return;
+    const query = buildOrdersQueryParams();
+    const url = `/admin/orders/table?${query}`;
+
+    try {
+        const response = await fetch(url, { headers: { Accept: 'text/html' } });
+        if (!response.ok) throw new Error('failed');
+        const html = await response.text();
+
+        if (appendPage) {
+            // For pagination: append to existing body (though we'll just replace for simplicity)
+            ordersBody.innerHTML = html;
+        } else {
+            ordersBody.innerHTML = html;
+        }
+        updateOrdersIndicator(response.headers.get('X-Total-Count') ?? document.querySelectorAll('#orders-body tr[data-status]').length);
+        rebindOrderDetailTriggers();
+    } catch {
+        ordersBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--muted);">Gagal memuat pesanan.</td></tr>';
+    }
+}
+
+function debouncedReloadOrders() {
+    clearTimeout(ordersDebounceTimer);
+    ordersDebounceTimer = setTimeout(() => reloadOrdersTable(), 300);
+}
+
+function rebindOrderDetailTriggers() {
+    if (!ordersBody || ordersBody._detailBound) return;
+    ordersBody._detailBound = true;
+    ordersBody.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-order-detail]');
+        if (!button) return;
+        event.preventDefault();
+        openOrderDetail(button.dataset.id);
     });
+}
+
+// Filter event listeners
+if (ordersStatusFilter) {
+    ordersStatusFilter.addEventListener('change', debouncedReloadOrders);
+}
+if (ordersSearch) {
+    ordersSearch.addEventListener('input', debouncedReloadOrders);
+}
+if (ordersFrom) {
+    ordersFrom.addEventListener('change', debouncedReloadOrders);
+}
+if (ordersTo) {
+    ordersTo.addEventListener('change', debouncedReloadOrders);
+}
+if (ordersRefresh) {
+    ordersRefresh.addEventListener('click', () => reloadOrdersTable());
+}
+
+// Pagination: delegate clicks on pagination links in orders-body
+if (ordersBody) {
+    ordersBody.addEventListener('click', (event) => {
+        const link = event.target.closest('.pagination a[href]');
+        if (!link) return;
+        event.preventDefault();
+        const url = new URL(link.href, window.location.origin);
+        // Load the page via AJAX
+        fetch(url.pathname + url.search, { headers: { Accept: 'text/html' } })
+            .then(r => r.ok ? r.text() : Promise.reject())
+            .then(html => {
+                ordersBody.innerHTML = html;
+                rebindOrderDetailTriggers();
+            })
+            .catch(() => {
+                ordersBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--muted);">Gagal memuat halaman.</td></tr>';
+            });
+    });
+    // Initial bind
+    rebindOrderDetailTriggers();
 }
 
 const recentOrdersBody = document.getElementById('recent-orders-body');
@@ -710,3 +844,314 @@ if (systemLogBody) {
     loadSystemLog();
     setInterval(() => loadSystemLog(currentFilter), 30000);
 }
+
+// =============================================================================
+// CATEGORIES TAB FUNCTIONALITY
+// =============================================================================
+
+(function initCategoriesTab() {
+    const categoriesBody = document.getElementById('categories-body');
+    const categoriesSearch = document.getElementById('categories-search');
+    const addCategoryBtn = document.getElementById('open-add-category');
+    const addCategoryDialog = document.getElementById('add-category-dialog');
+    const addCategoryForm = document.getElementById('add-category-form');
+    const editCategoryDialog = document.getElementById('edit-category-dialog');
+    const editCategoryForm = document.getElementById('edit-category-form');
+    const mergeSourceSelect = document.getElementById('merge-source');
+    const mergeTargetSelect = document.getElementById('merge-target');
+    const mergeBtn = document.getElementById('btn-merge-categories');
+    const mergeResult = document.getElementById('merge-result');
+
+    if (!categoriesBody) return;
+
+    // CSRF token helper
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]').content;
+    }
+
+    // Load categories table via AJAX
+    async function loadCategoriesTable() {
+        try {
+            const search = categoriesSearch?.value || '';
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+
+            const response = await fetch(`/admin/categories?${params.toString()}`, {
+                headers: { Accept: 'text/html' }
+            });
+            if (!response.ok) throw new Error('Failed to load categories');
+
+            const html = await response.text();
+            categoriesBody.innerHTML = html;
+
+            // Re-initialize SortableJS after content is loaded
+            initSortable();
+        } catch (error) {
+            categoriesBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--muted);">Gagal memuat kategori.</td></tr>';
+            console.error('Load categories error:', error);
+        }
+    }
+
+    // Initialize SortableJS for drag-drop sorting
+    function initSortable() {
+        if (typeof Sortable === 'undefined') {
+            // Load SortableJS if not already loaded - use local file first
+            const script = document.createElement('script');
+            script.src = '/assets/admin/vendor/sortable.min.js';
+            script.onload = initSortable;
+            script.onerror = function() {
+                // Fallback to CDN if local file fails
+                script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+            };
+            document.head.appendChild(script);
+            return;
+        }
+
+        const tbody = categoriesBody;
+        if (tbody._sortable) {
+            tbody._sortable.destroy();
+        }
+
+        tbody._sortable = new Sortable(tbody, {
+            handle: '.sort-handle',
+            draggable: '.category-row',
+            animation: 140,
+            onEnd: function (evt) {
+                const rows = Array.from(tbody.querySelectorAll('.category-row'));
+                const ids = rows.map(row => row.dataset.id);
+
+                // Update sort_order via AJAX
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/categories/reorder';
+                ids.forEach((id, index) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'order[]';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+                const method = document.createElement('input');
+                method.type = 'hidden'; method.name = '_method'; method.value = 'PATCH'; form.appendChild(method);
+                const token = document.createElement('input');
+                token.type = 'hidden'; token.name = '_token'; token.value = getCsrfToken(); form.appendChild(token);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    // Dialog helpers
+    function openDialog(dialog) {
+        if (!dialog) return;
+        dialog.showModal();
+        const focusTarget = dialog.querySelector('[autofocus]') || dialog.querySelector('input, select, textarea, button');
+        focusTarget?.focus();
+    }
+
+    function closeDialog(dialog) {
+        if (!dialog) return;
+        dialog.close();
+        const form = dialog.querySelector('form');
+        if (form) form.reset();
+    }
+
+    // Add category dialog
+    if (addCategoryBtn && addCategoryDialog && addCategoryForm) {
+        addCategoryBtn.addEventListener('click', () => openDialog(addCategoryDialog));
+
+        addCategoryDialog.addEventListener('click', (e) => {
+            if (e.target === addCategoryDialog || e.target.classList.contains('dialog-close') || e.target.classList.contains('dialog-cancel')) {
+                closeDialog(addCategoryDialog);
+            }
+        });
+
+        addCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(addCategoryForm);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/admin/categories', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menambah kategori');
+                }
+
+                toast('Kategori berhasil ditambahkan', 'success');
+                closeDialog(addCategoryDialog);
+                loadCategoriesTable();
+            } catch (error) {
+                toast(error.message || 'Gagal menambah kategori', 'error');
+            }
+        });
+    }
+
+    // Edit category dialog
+    let editingCategoryId = null;
+
+    if (categoriesBody && editCategoryDialog && editCategoryForm) {
+        // Delegate click on edit buttons
+        categoriesBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.edit-category');
+            if (!btn) return;
+
+            editingCategoryId = btn.dataset.id;
+            document.getElementById('edit-cat-id').value = btn.dataset.id;
+            document.getElementById('edit-cat-name').value = btn.dataset.name;
+            document.getElementById('edit-cat-sort').value = btn.dataset.sort || 0;
+            document.getElementById('edit-cat-active').checked = btn.dataset.active === '1';
+
+            openDialog(editCategoryDialog);
+        });
+
+        editCategoryDialog.addEventListener('click', (e) => {
+            if (e.target === editCategoryDialog || e.target.classList.contains('dialog-close') || e.target.classList.contains('dialog-cancel')) {
+                closeDialog(editCategoryDialog);
+                editingCategoryId = null;
+            }
+        });
+
+        editCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!editingCategoryId) return;
+
+            const formData = new FormData(editCategoryForm);
+            const data = Object.fromEntries(formData);
+            // Convert active checkbox to boolean
+            data.active = data.active === '1';
+
+            try {
+                const response = await fetch(`/admin/categories/${editingCategoryId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal mengupdate kategori');
+                }
+
+                toast('Kategori berhasil diupdate', 'success');
+                closeDialog(editCategoryDialog);
+                editingCategoryId = null;
+                loadCategoriesTable();
+            } catch (error) {
+                toast(error.message || 'Gagal mengupdate kategori', 'error');
+            }
+        });
+    }
+
+    // Delete category
+    if (categoriesBody) {
+        categoriesBody.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.delete-category');
+            if (!btn) return;
+
+            const name = btn.dataset.name;
+            if (!confirm(`Hapus kategori "${name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+
+            try {
+                const response = await fetch(`/admin/categories/${btn.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    },
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menghapus kategori');
+                }
+
+                toast('Kategori dihapus', 'success');
+                loadCategoriesTable();
+            } catch (error) {
+                toast(error.message || 'Gagal menghapus kategori', 'error');
+            }
+        });
+    }
+
+    // Merge categories
+    if (mergeBtn && mergeSourceSelect && mergeTargetSelect && mergeResult) {
+        mergeBtn.addEventListener('click', async () => {
+            const sourceIds = Array.from(mergeSourceSelect.selectedOptions).map(o => o.value);
+            const targetId = mergeTargetSelect.value;
+
+            if (sourceIds.length < 2) {
+                mergeResult.textContent = 'Pilih minimal 2 kategori sumber.';
+                mergeResult.style.color = 'var(--danger)';
+                return;
+            }
+            if (!targetId) {
+                mergeResult.textContent = 'Pilih kategori target.';
+                mergeResult.style.color = 'var(--danger)';
+                return;
+            }
+            if (sourceIds.includes(targetId)) {
+                mergeResult.textContent = 'Kategori target tidak boleh dipilih sebagai sumber.';
+                mergeResult.style.color = 'var(--danger)';
+                return;
+            }
+
+            mergeBtn.disabled = true;
+            mergeResult.textContent = 'Menggabungkan...';
+            mergeResult.style.color = 'var(--muted)';
+
+            try {
+                const response = await fetch('/admin/categories/merge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    },
+                    body: JSON.stringify({ ids: sourceIds, target_id: targetId }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menggabungkan kategori');
+                }
+
+                toast('Kategori berhasil digabung', 'success');
+                mergeResult.textContent = 'Berhasil!';
+                mergeResult.style.color = 'var(--success)';
+                loadCategoriesTable();
+            } catch (error) {
+                toast(error.message || 'Gagal menggabungkan kategori', 'error');
+                mergeResult.textContent = 'Gagal: ' + error.message;
+                mergeResult.style.color = 'var(--danger)';
+            } finally {
+                mergeBtn.disabled = false;
+            }
+        });
+    }
+
+    // Search filter
+    if (categoriesSearch) {
+        let searchDebounce = null;
+        categoriesSearch.addEventListener('input', () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(loadCategoriesTable, 300);
+        });
+    }
+
+    // Initial load
+    initSortable();
+})();

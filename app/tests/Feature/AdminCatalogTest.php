@@ -75,9 +75,13 @@ class AdminCatalogTest extends TestCase
         ])->assertRedirect();
         $this->assertDatabaseHas('products', ['id' => $product->id, 'name' => 'Teh Melati Large', 'price' => 14000]);
 
-        $this->patch('/admin/products/'.$product->id)->assertRedirect();
+        $this->patch('/admin/products/'.$product->id)
+            ->assertRedirect()
+            ->assertSessionHas('success');
         $this->assertDatabaseHas('products', ['id' => $product->id, 'available' => false]);
-        $this->delete('/admin/products/'.$product->id)->assertRedirect();
+        $this->delete('/admin/products/'.$product->id)
+            ->assertRedirect()
+            ->assertSessionHas('success');
         $this->assertDatabaseMissing('products', ['id' => $product->id]);
     }
 

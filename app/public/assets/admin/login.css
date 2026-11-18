@@ -49,6 +49,8 @@
         .field input::placeholder { color: #a1a497; }
         .error-message { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 16px; padding: 10px 11px; border: 1px solid #e8c9c3; border-radius: 9px; background: var(--rose-light); color: #853f35; font-size: 11px; }
         .error-message span { font-weight: 800; }
+        .success-message { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 16px; padding: 10px 11px; border: 1px solid #cdd9cd; border-radius: 9px; background: var(--green-light); color: var(--green); font-size: 11px; }
+        .success-message span { font-weight: 800; }
         .remember { display: flex; align-items: center; gap: 8px; margin: 2px 0 18px; color: var(--muted); font-size: 11px; }
         .remember input { width: 15px; height: 15px; margin: 0; accent-color: var(--green); }
         .submit-button { width: 100%; min-height: 45px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: var(--green); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 10px rgba(46, 67, 52, .16); transition: background .15s, transform .15s; }

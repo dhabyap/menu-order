@@ -77,7 +77,7 @@
         @endforelse
         </tbody>
     </table>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="/assets/admin/vendor/sortable.min.js"></script>
 <script>
 (function () {
     const tbody = document.getElementById('products-table-body');
@@ -109,6 +109,17 @@
             const token = document.createElement('input');
             token.type = 'hidden'; token.name = '_token'; token.value = document.querySelector('meta[name="csrf-token"]').content; form.appendChild(token);
             document.body.appendChild(form); form.submit();
+        }
+    });
+
+    // Visual pending state on toggle/delete submit (mobile-friendly)
+    tbody.addEventListener('submit', function(e) {
+        const form = e.target.closest('form.inline-form');
+        if (!form) return;
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn && !btn.disabled) {
+            btn.dataset.originalText = btn.textContent;
+            btn.textContent = 'Menyimpan…';
         }
     });
 })();

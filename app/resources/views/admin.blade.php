@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard Pengelola · {{ $storeName }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/admin/admin.css') }}">
+    <link rel="preload" href="/css/fonts.css" as="style" />
+    <link rel="stylesheet" href="/css/fonts.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/css/fonts.css"></noscript>
+    <link rel="stylesheet" href="{{ asset('assets/admin/admin.css') }}?v=2">
 </head>
 <body>
 <div class="shell">
@@ -17,6 +17,7 @@
     <nav class="tabs" aria-label="Tabs dashboard">
         <button class="tab-link" data-tab="ringkasan">Ringkasan</button>
         <button class="tab-link" data-tab="menu">Menu</button>
+        <button class="tab-link" data-tab="kategori">Kategori</button>
         <button class="tab-link" data-tab="pesanan">Pesanan</button>
         <button class="tab-link" data-tab="pengaturan">Pengaturan</button>
     </nav>
@@ -98,6 +99,21 @@
             <p class="menu-result-count" id="menu-result-count" aria-live="polite">{{ $products->count() }} menu</p>
         </section>
 
+        <section class="panel tab-panel" data-tab="kategori" aria-labelledby="tab-categories-title">
+            <div class="panel-heading" id="tab-categories-head">
+                <div>
+                    <h2 id="tab-categories-title">Kategori Menu</h2>
+                    <p>Kelola kategori produk, urutan tampil, dan status aktif.</p>
+                </div>
+                <button class="button button-primary" type="button" id="open-add-category">
+                    <span aria-hidden="true">＋</span> Tambah Kategori
+                </button>
+            </div>
+            <div class="categories-table-wrap">
+                @include('admin.partials.categories', ['categories' => $categories ?? []])
+            </div>
+        </section>
+
         <section class="panel tab-panel" data-tab="pesanan" aria-labelledby="tab-orders-title">
             <div class="panel-heading" id="tab-orders-head">
                 <div>
@@ -112,6 +128,15 @@
                         <option value="completed">Selesai</option>
                         <option value="cancelled">Dibatalkan</option>
                     </select>
+                    <input type="search" id="orders-search" class="order-search" placeholder="Cari kode, nama, telepon" aria-label="Cari pesanan" />
+                    <label class="order-date-filter">
+                        Dari
+                        <input type="date" id="orders-from" aria-label="Tanggal mulai" />
+                    </label>
+                    <label class="order-date-filter">
+                        Sampai
+                        <input type="date" id="orders-to" aria-label="Tanggal akhir" />
+                    </label>
                     <span class="orders-live" id="orders-live" aria-live="polite">Memuat…</span>
                     <button class="button button-soft button-small" type="button" id="orders-refresh">⟳ Muat ulang</button>
                     <a class="button button-soft button-small" href="{{ route('admin.orders.export') }}" download>Export CSV</a>
@@ -146,6 +171,6 @@
 </div>
 @include('admin.partials.order-detail-dialog')
 @include('admin.partials.add-menu-dialog')
-<script src="{{ asset('assets/admin/admin.js') }}"></script>
+<script src="{{ asset('assets/admin/admin.js') }}?v=2"></script>
 </body>
 </html>
