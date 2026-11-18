@@ -21,10 +21,11 @@ class ProductController extends Controller
     private const BEST_SELLER_DAYS = 30;
 
     /**
-     * List all products with their category, image, and racikan options.
+     * List available products with their category, image, and racikan options.
      *
-     * Adds recommendation flag and best-seller metadata derived from stored
-     * order line quantities inside the ranking period.
+     * Products marked unavailable (habis) are excluded so they never show on
+     * the customer catalog. Adds recommendation flag and best-seller metadata
+     * derived from stored order line quantities inside the ranking period.
      *
      * @return \Illuminate\Support\Collection<int, \stdClass>
      */
@@ -32,6 +33,7 @@ class ProductController extends Controller
     {
         $products = DB::table('products')
             ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            ->where('products.available', true)
             ->select('products.*', 'categories.name as category_name')
             ->orderBy('products.sort_order')
             ->orderBy('products.id')
