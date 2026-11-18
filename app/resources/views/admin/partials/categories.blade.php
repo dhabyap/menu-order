@@ -55,7 +55,7 @@
     </tbody>
 </table>
 
-@if($categories->count() > 1)
+@if(count($categories) > 1)
 <div class="merge-form" style="margin-top: 16px; padding: 16px; background: var(--bg-soft); border-radius: 12px; border: 1px solid var(--line);">
     <h4 style="margin: 0 0 12px;">Gabung Kategori</h4>
     <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">
